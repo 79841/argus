@@ -8,8 +8,10 @@ export const EFFICIENCY_THRESHOLDS = {
 export type EfficiencyInput = {
   cacheReadTokens: number
   inputTokens: number
+  outputTokens: number
   requestCount: number
   costUsd: number
+  totalDurationMs: number
 }
 
 export type EfficiencyResult = {
@@ -17,10 +19,12 @@ export type EfficiencyResult = {
   cacheEfficiency: number
   costEfficiency: number
   requestsPerDollar: number
+  tokenEfficiency: number
+  avgDurationMs: number
 }
 
 export const calculateEfficiency = (input: EfficiencyInput): EfficiencyResult => {
-  const { cacheReadTokens, inputTokens, requestCount, costUsd } = input
+  const { cacheReadTokens, inputTokens, outputTokens, requestCount, costUsd, totalDurationMs } = input
 
   const totalInput = cacheReadTokens + inputTokens
   const cacheEfficiency = totalInput > 0
@@ -34,11 +38,19 @@ export const calculateEfficiency = (input: EfficiencyInput): EfficiencyResult =>
     costEfficiency = Math.min(1, requestsPerDollar / REQUESTS_PER_DOLLAR_TARGET)
   }
 
+  const tokenEfficiency = totalInput > 0
+    ? Math.min(1, outputTokens / totalInput)
+    : 0
+
+  const avgDurationMs = requestCount > 0
+    ? totalDurationMs / requestCount
+    : 0
+
   const score = Math.round(
     (cacheEfficiency * 50) + (costEfficiency * 50)
   )
 
-  return { score, cacheEfficiency, costEfficiency, requestsPerDollar }
+  return { score, cacheEfficiency, costEfficiency, requestsPerDollar, tokenEfficiency, avgDurationMs }
 }
 
 export const getScoreColor = (score: number): string => {
