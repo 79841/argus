@@ -4,7 +4,7 @@ import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
-  getStatusCode, extractProjectFromArgs,
+  getStatusCode, extractProjectFromArgs, getToolCategory,
 } from '../ingest-utils'
 import type { KeyValue } from '../ingest-utils'
 import { initSchema, seedPricing } from '../db'
@@ -352,6 +352,49 @@ describe('extractProjectFromArgs', () => {
   it('returns empty when workdir not in arguments', () => {
     const attrs = [mkAttr('arguments', '{"command":"ls"}')]
     expect(extractProjectFromArgs(attrs)).toBe('')
+  })
+})
+
+// --- getToolCategory ---
+
+describe('getToolCategory', () => {
+  it('maps Claude Code file read tool', () => {
+    expect(getToolCategory('Read')).toBe('File Read')
+  })
+  it('maps Gemini CLI file read tool', () => {
+    expect(getToolCategory('read_file')).toBe('File Read')
+  })
+  it('maps file write tools', () => {
+    expect(getToolCategory('Write')).toBe('File Write')
+    expect(getToolCategory('write_file')).toBe('File Write')
+    expect(getToolCategory('patch_file')).toBe('File Write')
+  })
+  it('maps file edit tools', () => {
+    expect(getToolCategory('Edit')).toBe('File Edit')
+    expect(getToolCategory('edit_file')).toBe('File Edit')
+  })
+  it('maps shell tools across agents', () => {
+    expect(getToolCategory('Bash')).toBe('Shell')
+    expect(getToolCategory('shell')).toBe('Shell')
+    expect(getToolCategory('run_shell_command')).toBe('Shell')
+  })
+  it('maps search tools', () => {
+    expect(getToolCategory('Glob')).toBe('Search')
+    expect(getToolCategory('Grep')).toBe('Search')
+    expect(getToolCategory('list_directory')).toBe('Search')
+    expect(getToolCategory('web_search')).toBe('Search')
+  })
+  it('maps orchestration tools', () => {
+    expect(getToolCategory('Agent')).toBe('Orchestration')
+    expect(getToolCategory('Skill')).toBe('Orchestration')
+  })
+  it('maps MCP tools by prefix', () => {
+    expect(getToolCategory('mcp__linear__create_issue')).toBe('MCP')
+    expect(getToolCategory('mcp__github__pr')).toBe('MCP')
+  })
+  it('returns Other for unknown tools', () => {
+    expect(getToolCategory('unknown_tool')).toBe('Other')
+    expect(getToolCategory('CustomTool')).toBe('Other')
   })
 })
 
