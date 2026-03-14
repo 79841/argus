@@ -1,26 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AgentFilter } from '@/components/agent-filter'
-import { ProjectFilter } from '@/components/project-filter'
 import { CostChart } from '@/components/cost-chart'
 import type { ConfigChangeMarker } from '@/components/cost-chart'
 import { TokenChart } from '@/components/token-chart'
-import type { AgentType } from '@/lib/agents'
 import type { DailyStats } from '@/lib/queries'
 import type { ConfigChange } from '@/lib/config-tracker'
+import { useTopBar } from '@/components/top-bar-context'
 
 export default function DailyPage() {
-  const [agentType, setAgentType] = useState<AgentType>('all')
-  const [project, setProject] = useState('all')
+  const { agentType, project, dateRange } = useTopBar()
   const [data, setData] = useState<DailyStats[]>([])
   const [configChanges, setConfigChanges] = useState<ConfigChangeMarker[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
+    const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
     Promise.all([
-      fetch(`/api/daily?agent_type=${agentType}&project=${project}&days=30`).then((r) => r.json()),
+      fetch(`/api/daily?${q}`).then((r) => r.json()),
       fetch('/api/config-history?days=30').then((r) => r.json()),
     ])
       .then(([dailyData, configData]) => {
@@ -47,16 +45,12 @@ export default function DailyPage() {
         setConfigChanges([])
         setLoading(false)
       })
-  }, [agentType, project])
+  }, [agentType, project, dateRange])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Daily Trends</h1>
-        <div className="flex items-center gap-3">
-          <ProjectFilter value={project} onChange={setProject} />
-          <AgentFilter value={agentType} onChange={setAgentType} />
-        </div>
       </div>
 
       {loading ? (

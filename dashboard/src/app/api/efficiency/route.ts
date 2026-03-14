@@ -3,10 +3,13 @@ import { getEfficiencyStats, getEfficiencyComparison } from '@/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
-    const days = parseInt(request.nextUrl.searchParams.get('days') || '7', 10)
-    const project = request.nextUrl.searchParams.get('project') || 'all'
-    const data = await getEfficiencyStats(days, project)
-    const comparison = await getEfficiencyComparison(days, project)
+    const sp = request.nextUrl.searchParams
+    const days = parseInt(sp.get('days') || '7', 10)
+    const project = sp.get('project') || 'all'
+    const from = sp.get('from') || undefined
+    const to = sp.get('to') || undefined
+    const data = await getEfficiencyStats(days, project, from, to)
+    const comparison = await getEfficiencyComparison(days, project, from, to)
     return NextResponse.json({ data, comparison })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
