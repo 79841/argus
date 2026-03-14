@@ -50,6 +50,7 @@ export type DailyStats = {
   cost: number
   input_tokens: number
   output_tokens: number
+  cache_read_tokens: number
   agent_type: string
 }
 
@@ -65,7 +66,8 @@ export const getDailyStats = async (agentType: string, days: number = 30, projec
       count(DISTINCT session_id) as sessions,
       COALESCE(sum(cost_usd), 0) as cost,
       COALESCE(sum(input_tokens), 0) as input_tokens,
-      COALESCE(sum(output_tokens), 0) as output_tokens
+      COALESCE(sum(output_tokens), 0) as output_tokens,
+      COALESCE(sum(cache_read_tokens), 0) as cache_read_tokens
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       AND date(timestamp) >= date('now', '-' || ? || ' days')

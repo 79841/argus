@@ -42,6 +42,7 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
       if (!acc[row.date]) {
         acc[row.date] = {}
       }
+      acc[row.date][`${row.agent_type}_cache`] = row.cache_read_tokens
       acc[row.date][`${row.agent_type}_input`] = row.input_tokens
       acc[row.date][`${row.agent_type}_output`] = row.output_tokens
       return acc
@@ -83,11 +84,23 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                 ))}
                 {AGENT_KEYS.map((key) => (
                   <Bar
+                    key={`${key}_cache`}
+                    dataKey={`${key}_cache`}
+                    name={`${AGENTS[key].name} Cache Read`}
+                    fill={AGENTS[key].hex}
+                    stackId={`${key}_cache`}
+                    barSize={8}
+                    opacity={0.3}
+                  />
+                ))}
+                {AGENT_KEYS.map((key) => (
+                  <Bar
                     key={`${key}_input`}
                     dataKey={`${key}_input`}
                     name={`${AGENTS[key].name} Input`}
                     fill={AGENTS[key].hex}
                     stackId={key}
+                    barSize={20}
                     opacity={0.8}
                   />
                 ))}
@@ -98,6 +111,7 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                     name={`${AGENTS[key].name} Output`}
                     fill={AGENTS[key].hex}
                     stackId={key}
+                    barSize={20}
                     opacity={0.5}
                   />
                 ))}
@@ -112,6 +126,7 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
   const chartData = data
     .map((row) => ({
       date: row.date,
+      cache_read_tokens: row.cache_read_tokens,
       input_tokens: row.input_tokens,
       output_tokens: row.output_tokens,
     }))
@@ -147,10 +162,19 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                 />
               ))}
               <Bar
+                dataKey="cache_read_tokens"
+                name="Cache Read"
+                fill={color}
+                stackId="cache"
+                barSize={8}
+                opacity={0.3}
+              />
+              <Bar
                 dataKey="input_tokens"
                 name="Input Tokens"
                 fill={color}
                 stackId="tokens"
+                barSize={20}
                 opacity={0.8}
               />
               <Bar
@@ -158,6 +182,7 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                 name="Output Tokens"
                 fill={color}
                 stackId="tokens"
+                barSize={20}
                 opacity={0.5}
               />
             </BarChart>
