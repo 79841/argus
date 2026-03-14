@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { AgentType } from '@/lib/agents'
 import type { SessionRow } from '@/lib/queries'
 
@@ -107,7 +108,16 @@ export default function SessionsPage() {
                     {new Date(session.started_at).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
-                    {formatCost(session.cost)}
+                    <Tooltip>
+                      <TooltipTrigger>
+                        {formatCost(session.cost)}
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="text-xs">
+                        {session.agent_type === 'claude'
+                          ? 'API에서 직접 제공 (cost_usd)'
+                          : 'LiteLLM 가격 DB 기반 토큰 계산'}
+                      </TooltipContent>
+                    </Tooltip>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {formatTokens(session.input_tokens)}

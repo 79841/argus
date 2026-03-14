@@ -1,0 +1,13 @@
+import { NextResponse } from 'next/server'
+import { getDb } from '@/lib/db'
+import { syncPricingFromLiteLLM } from '@/lib/pricing-sync'
+
+export async function POST() {
+  try {
+    const db = getDb()
+    const count = await syncPricingFromLiteLLM(db)
+    return NextResponse.json({ synced: count })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
