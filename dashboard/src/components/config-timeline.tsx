@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ConfigChange } from '@/lib/config-tracker'
+import type { ConfigCompareResult } from '@/lib/queries'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAgentColor } from '@/lib/agents'
@@ -24,13 +25,81 @@ const DiffLine = ({ line }: { line: string }) => {
   return <div>{line}</div>
 }
 
+const formatPercent = (value: number): string => `${(value * 100).toFixed(1)}%`
+const formatCost = (value: number): string => `$${value.toFixed(4)}`
+
+const ChangeIndicator = ({ before, after, format }: { before: number; after: number; format: (v: number) => string }) => {
+  if (before === 0 && after === 0) return <span className="text-muted-foreground">-</span>
+  const diff = before === 0 ? 100 : ((after - before) / before) * 100
+  const isPositive = diff > 0
+  const isNeutral = Math.abs(diff) < 0.1
+
+  return (
+    <div className="flex items-center gap-1">
+      <span className="font-mono text-sm">{format(after)}</span>
+      {!isNeutral && (
+        <span className={cn('text-xs font-medium', isPositive ? 'text-red-500' : 'text-green-500')}>
+          {isPositive ? '+' : ''}{diff.toFixed(1)}%
+        </span>
+      )}
+    </div>
+  )
+}
+
+const ComparePanel = ({ date }: { date: string }) => {
+  const [data, setData] = useState<ConfigCompareResult | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/config-history/compare?date=${encodeURIComponent(date)}&days=7`)
+      .then((r) => r.json())
+      .then((json) => setData(json))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false))
+  }, [date])
+
+  if (loading) return <div className="py-4 text-center text-sm text-muted-foreground">Loading...</div>
+  if (!data) return null
+
+  const metrics = [
+    { label: 'Avg Cost / req', before: data.before.avg_cost, after: data.after.avg_cost, format: formatCost },
+    { label: 'Cache Rate', before: data.before.cache_rate, after: data.after.cache_rate, format: formatPercent },
+    { label: 'Tool Fail Rate', before: data.before.tool_fail_rate, after: data.after.tool_fail_rate, format: formatPercent },
+  ]
+
+  return (
+    <div className="mt-3 rounded-lg border bg-muted/30 p-3">
+      <div className="mb-2 text-xs font-semibold text-muted-foreground">Before vs After (7 days)</div>
+      <div className="grid grid-cols-3 gap-3">
+        {metrics.map((m) => (
+          <div key={m.label} className="space-y-1">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{m.label}</div>
+            <div className="flex justify-between items-baseline gap-2">
+              <div className="text-xs text-muted-foreground">
+                <span className="font-mono">{m.format(m.before)}</span>
+              </div>
+              <span className="text-muted-foreground text-[10px]">{'>'}</span>
+              <ChangeIndicator before={m.before} after={m.after} format={m.format} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
+        <span>Before: {data.before.request_count} reqs</span>
+        <span>After: {data.after.request_count} reqs</span>
+      </div>
+    </div>
+  )
+}
+
 export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
-        <p>설정 변경 이력이 없습니다.</p>
+        <p>No config change history found.</p>
       </div>
     )
   }
@@ -87,6 +156,8 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
                   {change.commit_message}
                 </div>
               </button>
+
+              {isSelected && <ComparePanel date={change.date} />}
             </div>
           )
         })}
@@ -121,12 +192,12 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
               </pre>
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                diff 데이터가 없습니다.
+                No diff data available.
               </div>
             )
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              좌측 타임라인에서 항목을 선택하면 diff가 표시됩니다.
+              Select an item from the timeline to view its diff.
             </div>
           )}
         </CardContent>

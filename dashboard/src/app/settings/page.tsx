@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe } from 'lucide-react'
+import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, FileText, Save, Pencil } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -372,6 +372,174 @@ const DataSection = () => (
   </div>
 )
 
+type ConfigFile = { path: string; exists: boolean }
+
+const simpleMarkdownToHtml = (md: string): string => {
+  return md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold mt-4 mb-1">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-lg font-semibold mt-5 mb-2">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-6 mb-2">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1 rounded text-sm">$1</code>')
+    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
+    .replace(/\n{2,}/g, '<br/><br/>')
+}
+
+const FileViewer = () => {
+  const [files, setFiles] = useState<ConfigFile[]>([])
+  const [selectedFile, setSelectedFile] = useState<string | null>(null)
+  const [content, setContent] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveResult, setSaveResult] = useState<string | null>(null)
+  const [fileLoading, setFileLoading] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((json) => setFiles(json.files ?? []))
+      .catch(() => setFiles([]))
+  }, [])
+
+  const loadFile = useCallback(async (filePath: string) => {
+    setFileLoading(true)
+    setSaveResult(null)
+    try {
+      const res = await fetch(`/api/config?path=${encodeURIComponent(filePath)}`)
+      const json = await res.json()
+      setContent(json.content ?? '')
+      setEditContent(json.content ?? '')
+      setSelectedFile(filePath)
+      setIsEditing(false)
+    } catch {
+      setContent('')
+      setEditContent('')
+    } finally {
+      setFileLoading(false)
+    }
+  }, [])
+
+  const handleSave = useCallback(async () => {
+    if (!selectedFile) return
+    setSaving(true)
+    setSaveResult(null)
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: selectedFile, content: editContent }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setContent(editContent)
+        setSaveResult('Saved')
+        setIsEditing(false)
+      } else {
+        setSaveResult(`Error: ${json.error}`)
+      }
+    } catch {
+      setSaveResult('Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }, [selectedFile, editContent])
+
+  const isMarkdown = selectedFile?.endsWith('.md') ?? false
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="size-4" />
+          File Viewer
+        </CardTitle>
+        <CardDescription>View and edit project config files.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-2 flex-wrap mb-4">
+          {files.map((f) => (
+            <button
+              key={f.path}
+              onClick={() => loadFile(f.path)}
+              disabled={!f.exists}
+              className={cn(
+                'rounded-md border px-3 py-1.5 text-xs font-mono transition-colors',
+                selectedFile === f.path
+                  ? 'border-primary bg-primary/10 text-foreground'
+                  : f.exists
+                    ? 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                    : 'border-border text-muted-foreground/40 cursor-not-allowed'
+              )}
+            >
+              {f.path}
+            </button>
+          ))}
+        </div>
+
+        {selectedFile && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium font-mono">{selectedFile}</span>
+              <div className="flex items-center gap-2">
+                {saveResult && (
+                  <span className={cn('text-xs', saveResult === 'Saved' ? 'text-green-600' : 'text-red-500')}>
+                    {saveResult}
+                  </span>
+                )}
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setIsEditing(false); setEditContent(content) }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSave} disabled={saving}>
+                      <Save className="size-3 mr-1" />
+                      {saving ? 'Saving...' : 'Save'}
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Pencil className="size-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {fileLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">Loading...</div>
+            ) : isEditing ? (
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full min-h-[400px] rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 resize-y focus:outline-none focus:ring-1 focus:ring-primary"
+                spellCheck={false}
+              />
+            ) : isMarkdown ? (
+              <div
+                className="rounded-md border bg-muted/30 p-4 text-sm leading-6 max-h-[500px] overflow-auto"
+                dangerouslySetInnerHTML={{ __html: simpleMarkdownToHtml(content) }}
+              />
+            ) : (
+              <pre className="rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 max-h-[500px] overflow-auto whitespace-pre-wrap">
+                {content}
+              </pre>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 const ConfigSection = () => {
   const [data, setData] = useState<ConfigChange[]>([])
   const [loading, setLoading] = useState(true)
@@ -393,6 +561,8 @@ const ConfigSection = () => {
 
   return (
     <div className="space-y-6">
+      <FileViewer />
+
       <div>
         <h2 className="text-lg font-semibold">Config History</h2>
         <p className="text-sm text-muted-foreground mt-1">
