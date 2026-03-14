@@ -127,7 +127,8 @@ const migrate = (db: Database.Database) => {
   // Clean up metric events that were incorrectly stored in agent_logs (PER-35)
   db.exec(`DELETE FROM agent_logs WHERE event_name NOT IN (
     'api_request', 'user_prompt', 'tool_result', 'tool_decision',
-    'session_start', 'api_error'
+    'session_start', 'api_error',
+    'lines_of_code', 'commit_count', 'pull_request_count', 'active_time'
   )`)
 
   // Clean up stale built-in tool entries and normalize detail_type values
