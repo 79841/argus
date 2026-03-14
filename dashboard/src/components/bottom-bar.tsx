@@ -11,6 +11,17 @@ type AgentStatus = {
   total_count: number
 }
 
+type AllTimeTotals = {
+  total_cost: number
+  total_tokens: number
+}
+
+const formatTokensShort = (value: number): string => {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+  return String(value)
+}
+
 const formatRelativeTime = (iso: string): string => {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -31,14 +42,39 @@ const getStatusDot = (iso: string | null): string => {
   return 'bg-gray-400'
 }
 
+const ACTIVE_POLL_MS = 30_000
+
 export const BottomBar = () => {
   const [agents, setAgents] = useState<AgentStatus[]>([])
+  const [totals, setTotals] = useState<AllTimeTotals>({ total_cost: 0, total_tokens: 0 })
+  const [activeCount, setActiveCount] = useState(0)
 
   useEffect(() => {
     fetch('/api/ingest-status')
       .then((r) => r.json())
       .then((data) => setAgents(data.agents ?? []))
       .catch(() => {})
+    fetch('/api/overview?agent_type=all')
+      .then((r) => r.json())
+      .then((data) => {
+        setTotals({
+          total_cost: data.all_time_cost ?? 0,
+          total_tokens: data.all_time_tokens ?? 0,
+        })
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const fetchActive = () => {
+      fetch('/api/sessions/active')
+        .then((r) => r.json())
+        .then((data) => setActiveCount((data.sessions ?? []).length))
+        .catch(() => {})
+    }
+    fetchActive()
+    const id = setInterval(fetchActive, ACTIVE_POLL_MS)
+    return () => clearInterval(id)
   }, [])
 
   const agentTypes: AgentType[] = ['claude', 'codex', 'gemini']
@@ -64,8 +100,8 @@ export const BottomBar = () => {
           )
         })}
       </div>
-      <div className="ml-auto">
-        DB: --
+      <div className="ml-auto flex items-center gap-3">
+        <span>Total: ${totals.total_cost.toFixed(2)} / {formatTokensShort(totals.total_tokens)} tokens</span>
       </div>
     </footer>
   )
