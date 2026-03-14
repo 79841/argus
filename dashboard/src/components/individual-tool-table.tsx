@@ -136,14 +136,13 @@ export const IndividualToolTable = ({ data }: IndividualToolTableProps) => {
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed text-sm">
                   <colgroup>
-                    <col className="w-[28%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[10%]" />
+                    <col className="w-[30%]" />
                     <col className="w-[10%]" />
                     <col className="w-[10%]" />
                     <col className="w-[12%]" />
                     <col className="w-[12%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[14%]" />
                   </colgroup>
                   <thead>
                     <tr className="border-b text-left text-xs text-muted-foreground">
@@ -153,7 +152,6 @@ export const IndividualToolTable = ({ data }: IndividualToolTableProps) => {
                       <th className="pb-2 pr-4 font-medium text-right">Calls</th>
                       <th className="pb-2 pr-4 font-medium text-right">Success</th>
                       <th className="pb-2 pr-4 font-medium text-right">Fail</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Avg Duration</th>
                       <th className="pb-2 font-medium text-right">Last Used</th>
                     </tr>
                   </thead>
@@ -195,9 +193,6 @@ export const IndividualToolTable = ({ data }: IndividualToolTableProps) => {
                             ) : (
                               <span className="text-muted-foreground">0</span>
                             )}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right text-muted-foreground whitespace-nowrap">
-                            {formatDuration(row.avg_duration_ms)}
                           </td>
                           <td className="py-2.5 text-right text-muted-foreground text-xs whitespace-nowrap">
                             {formatDate(row.last_used)}
