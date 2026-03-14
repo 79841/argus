@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Nav } from '@/components/nav'
+import { NavLayout } from '@/components/nav-layout'
 import { ThemeProvider } from '@/components/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { TopBarProvider } from '@/components/top-bar-context'
 import './globals.css'
 
 const geistSans = Geist({
@@ -30,10 +31,11 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider defaultTheme="system">
           <TooltipProvider>
-            <Nav />
-            <main className="ml-52 px-6 py-6">
-              {children}
-            </main>
+            <TopBarProvider>
+              <NavLayout>
+                {children}
+              </NavLayout>
+            </TopBarProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>
