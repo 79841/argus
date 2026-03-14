@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { AGENTS } from '@/lib/agents'
 import type { AgentType } from '@/lib/agents'
+import { cn } from '@/lib/utils'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 type AgentStatus = {
   agent_type: string
@@ -14,6 +16,17 @@ type AgentStatus = {
 type AllTimeTotals = {
   total_cost: number
   total_tokens: number
+}
+
+type AgentLimit = {
+  agent_type: string
+  daily_cost_limit: number
+  monthly_cost_limit: number
+}
+
+type AgentDailyCost = {
+  agent_type: string
+  daily_cost: number
 }
 
 const formatTokensShort = (value: number): string => {
@@ -48,6 +61,8 @@ export const BottomBar = () => {
   const [agents, setAgents] = useState<AgentStatus[]>([])
   const [totals, setTotals] = useState<AllTimeTotals>({ total_cost: 0, total_tokens: 0 })
   const [activeCount, setActiveCount] = useState(0)
+  const [limits, setLimits] = useState<AgentLimit[]>([])
+  const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
 
   useEffect(() => {
     fetch('/api/ingest-status')
@@ -62,6 +77,14 @@ export const BottomBar = () => {
           total_tokens: data.all_time_tokens ?? 0,
         })
       })
+      .catch(() => {})
+    fetch('/api/settings/limits')
+      .then((r) => r.json())
+      .then((data) => setLimits(data.limits ?? []))
+      .catch(() => {})
+    fetch('/api/daily-costs')
+      .then((r) => r.json())
+      .then((data) => setDailyCosts(data.costs ?? []))
       .catch(() => {})
   }, [])
 
@@ -78,6 +101,18 @@ export const BottomBar = () => {
   }, [])
 
   const agentTypes: AgentType[] = ['claude', 'codex', 'gemini']
+
+  // Build limit progress data
+  const limitBars = agentTypes
+    .map((type) => {
+      const limit = limits.find((l) => l.agent_type === type)
+      if (!limit || limit.daily_cost_limit <= 0) return null
+      const cost = dailyCosts.find((c) => c.agent_type === type)?.daily_cost ?? 0
+      const pct = Math.min((cost / limit.daily_cost_limit) * 100, 100)
+      const exceeded = cost >= limit.daily_cost_limit
+      return { type, pct, cost, limit: limit.daily_cost_limit, exceeded }
+    })
+    .filter(Boolean) as { type: AgentType; pct: number; cost: number; limit: number; exceeded: boolean }[]
 
   return (
     <footer className="flex h-8 shrink-0 items-center border-t bg-background px-4 text-xs text-muted-foreground">
@@ -111,6 +146,46 @@ export const BottomBar = () => {
           <span className="font-medium text-green-600 dark:text-green-400">
             {activeCount} active
           </span>
+        </div>
+      )}
+
+      {limitBars.length > 0 && (
+        <div className="ml-4 flex items-center gap-3">
+          <div className="h-3 w-px bg-border" />
+          {limitBars.map((bar) => {
+            const config = AGENTS[bar.type]
+            return (
+              <Tooltip key={bar.type}>
+                <TooltipTrigger className="flex items-center gap-1.5">
+                  <span style={{ color: config.hex }} className="text-[10px] font-medium">
+                    {config.name}
+                  </span>
+                  <div className="relative h-2 w-16 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={cn(
+                        'absolute inset-y-0 left-0 rounded-full transition-all',
+                        bar.exceeded ? 'bg-red-500' : 'bg-current'
+                      )}
+                      style={{
+                        width: `${bar.pct}%`,
+                        ...(!bar.exceeded ? { backgroundColor: config.hex } : {}),
+                      }}
+                    />
+                  </div>
+                  <span className={cn(
+                    'text-[10px] tabular-nums',
+                    bar.exceeded && 'text-red-500 font-medium'
+                  )}>
+                    {Math.round(bar.pct)}%
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {config.name}: ${bar.cost.toFixed(2)} / ${bar.limit.toFixed(2)} daily
+                  {bar.exceeded && ' (exceeded)'}
+                </TooltipContent>
+              </Tooltip>
+            )
+          })}
         </div>
       )}
 

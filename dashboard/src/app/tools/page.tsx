@@ -5,6 +5,7 @@ import type { ToolDetailRow, DailyToolRow, IndividualToolRow } from '@/lib/queri
 import { ToolDetailTable } from '@/components/tool-detail-table'
 import { DailyToolChart } from '@/components/daily-tool-chart'
 import { IndividualToolTable } from '@/components/individual-tool-table'
+import { RegisteredToolsCard } from '@/components/registered-tools-card'
 import { useTopBar } from '@/components/top-bar-context'
 
 export default function ToolsPage() {
@@ -43,6 +44,8 @@ export default function ToolsPage() {
           </p>
         </div>
       </div>
+
+      <RegisteredToolsCard />
 
       {loading ? (
         <div className="flex h-[400px] items-center justify-center text-muted-foreground">

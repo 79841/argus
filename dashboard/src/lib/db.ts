@@ -96,6 +96,12 @@ export const initSchema = (db: Database.Database) => {
     CREATE INDEX IF NOT EXISTS idx_tool_details_timestamp ON tool_details(timestamp);
     CREATE INDEX IF NOT EXISTS idx_tool_details_tool ON tool_details(tool_name, detail_name);
     CREATE INDEX IF NOT EXISTS idx_tool_details_session ON tool_details(session_id);
+
+    CREATE TABLE IF NOT EXISTS agent_limits (
+      agent_type TEXT PRIMARY KEY,
+      daily_cost_limit REAL NOT NULL DEFAULT 0,
+      monthly_cost_limit REAL NOT NULL DEFAULT 0
+    );
   `)
 
   migrate(db)
