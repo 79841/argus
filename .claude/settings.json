@@ -1,18 +1,5 @@
 {
   "env": {
     "OTEL_RESOURCE_ATTRIBUTES": "project.name=argus"
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Agent|Skill|mcp__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/tool-hook.sh"
-          }
-        ]
-      }
-    ]
   }
 }

@@ -43,16 +43,17 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
           <div>
             <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools 추적 (선택)</h3>
             <p className="text-sm text-muted-foreground mb-2">
-              에이전트, 스킬, MCP 도구 호출을 추적하려면 프로젝트의 <code className="bg-muted px-1 rounded">.claude/settings.json</code>에 PostToolUse hook을 등록합니다:
+              에이전트, 스킬, MCP 도구 호출을 상세 추적하려면 글로벌 설정(<code className="bg-muted px-1 rounded">~/.claude/settings.json</code>)에 추가합니다:
             </p>
             <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
-  "hooks": {
-    "PostToolUse": [{
-      "matcher": "Agent|Skill|mcp__.*",
-      "hooks": [{ "type": "command", "command": "bash scripts/tool-hook.sh" }]
-    }]
+  "env": {
+    "OTEL_LOG_TOOL_DETAILS": "1"
   }
 }`}</code></pre>
+            <p className="text-sm text-muted-foreground mt-2">
+              이 설정이 활성화되면 OTel 텔레메트리에 Agent의 subagent_type, Skill 이름, MCP 서버/도구 이름이 포함됩니다.
+              별도의 hook 설정 없이 자동으로 수집됩니다.
+            </p>
           </div>
 
           <div>

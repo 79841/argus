@@ -105,13 +105,37 @@ export async function POST(request: NextRequest) {
               attrsToJson(attrs)
             )
 
-            // Auto-extract MCP tool details from Claude/Codex/Gemini
-            if (agentType === 'claude' && eventName === 'tool_result' && toolName && toolName.startsWith('mcp__')) {
-              insertToolDetail.run(
-                timestamp, sessionId, `mcp:${extractMcpServer(toolName)}`, toolName, 'mcp',
-                durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
-                resolvedProject, agentType
-              )
+            // Auto-extract orchestration tool details from Claude Code
+            if (agentType === 'claude' && eventName === 'tool_result' && toolName) {
+              const toolParams = getAttr(attrs, 'tool_parameters')
+              let params: Record<string, string> = {}
+              if (toolParams) {
+                try { params = JSON.parse(toolParams) } catch {}
+              }
+
+              if (toolName.startsWith('mcp__')) {
+                const mcpServer = params.mcp_server_name || extractMcpServer(toolName)
+                insertToolDetail.run(
+                  timestamp, sessionId, `mcp:${mcpServer}`, toolName, 'mcp',
+                  durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
+                  resolvedProject, agentType
+                )
+              } else if (toolName === 'Skill' && params.skill_name) {
+                insertToolDetail.run(
+                  timestamp, sessionId, 'Skill', params.skill_name, 'skill',
+                  durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
+                  resolvedProject, agentType
+                )
+              } else if (toolName === 'Agent') {
+                const detailName = params.subagent_type || params.name || params.description || ''
+                if (detailName) {
+                  insertToolDetail.run(
+                    timestamp, sessionId, 'Agent', detailName, 'agent',
+                    durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
+                    resolvedProject, agentType
+                  )
+                }
+              }
             }
 
             if (agentType === 'codex' && eventName === 'tool_result' && toolName && (getAttr(attrs, 'mcp_server') || toolName.startsWith('mcp'))) {

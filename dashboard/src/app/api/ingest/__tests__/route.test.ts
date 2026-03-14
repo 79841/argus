@@ -320,6 +320,80 @@ describe('MCP tool_details extraction', () => {
   })
 })
 
+// --- B6b. Claude tool_parameters extraction ---
+
+describe('Claude tool_parameters extraction', () => {
+  it('extracts Skill name from tool_parameters', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'Skill'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 50),
+      mkAttr('tool_parameters', '{"skill_name":"bugfix"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('Skill')
+    expect(details[0].detail_name).toBe('bugfix')
+    expect(details[0].detail_type).toBe('skill')
+  })
+
+  it('extracts Agent subagent_type from tool_parameters', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'Agent'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 30000),
+      mkAttr('tool_parameters', '{"subagent_type":"plan-writer","description":"Plan implementation"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('Agent')
+    expect(details[0].detail_name).toBe('plan-writer')
+    expect(details[0].detail_type).toBe('agent')
+  })
+
+  it('uses MCP server name from tool_parameters when available', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'mcp__linear-server__save_issue'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 200),
+      mkAttr('tool_parameters', '{"mcp_server_name":"linear-server","mcp_tool_name":"save_issue"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('mcp:linear-server')
+  })
+
+  it('skips Agent without tool_parameters', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'Agent'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 1000),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(0)
+  })
+})
+
 // --- B7. Empty payload ---
 
 describe('empty payloads', () => {

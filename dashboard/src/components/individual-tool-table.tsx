@@ -73,14 +73,11 @@ export const IndividualToolTable = ({ data }: IndividualToolTableProps) => {
                 Claude Code
               </p>
               <p className="mb-1">
-                프로젝트 <code className="text-xs bg-muted px-1 py-0.5 rounded">.claude/settings.json</code>에
-                PostToolUse hook을 등록하면 에이전트/스킬/MCP 호출이 추적됩니다.
+                글로벌 설정(<code className="text-xs bg-muted px-1 py-0.5 rounded">~/.claude/settings.json</code>)에
+                다음을 추가하면 에이전트/스킬/MCP 호출이 자동 추적됩니다.
               </p>
-              <pre className="text-left text-xs bg-muted rounded-md p-3 overflow-x-auto">{`"hooks": {
-  "PostToolUse": [{
-    "matcher": "Agent|Skill|mcp__.*",
-    "hooks": [{ "type": "command", "command": "bash scripts/tool-hook.sh" }]
-  }]
+              <pre className="text-left text-xs bg-muted rounded-md p-3 overflow-x-auto">{`"env": {
+  "OTEL_LOG_TOOL_DETAILS": "1"
 }`}</pre>
             </div>
 
