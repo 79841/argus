@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Nav } from '@/components/nav'
 import { ThemeProvider } from '@/components/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { TopBarProvider } from '@/components/top-bar-context'
+import { TopBar } from '@/components/top-bar'
+import { BottomBar } from '@/components/bottom-bar'
+import { RightSidebar } from '@/components/right-sidebar'
 import './globals.css'
 
 const geistSans = Geist({
@@ -30,10 +34,19 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider defaultTheme="system">
           <TooltipProvider>
-            <Nav />
-            <main className="ml-52 px-6 py-6">
-              {children}
-            </main>
+            <TopBarProvider>
+              <Nav />
+              <div className="ml-52 flex h-screen flex-col">
+                <TopBar />
+                <div className="flex min-h-0 flex-1">
+                  <main className="flex-1 overflow-auto px-6 py-6">
+                    {children}
+                  </main>
+                  <RightSidebar />
+                </div>
+                <BottomBar />
+              </div>
+            </TopBarProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>
