@@ -27,6 +27,8 @@ export type OverviewStats = {
   total_cost: number
   total_input_tokens: number
   total_output_tokens: number
+  total_cache_read_tokens: number
+  cache_hit_rate: number
 }
 
 export const getOverviewStats = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<OverviewStats> => {
@@ -40,7 +42,13 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
       count(DISTINCT session_id) as total_sessions,
       COALESCE(sum(cost_usd), 0) as total_cost,
       COALESCE(sum(input_tokens), 0) as total_input_tokens,
-      COALESCE(sum(output_tokens), 0) as total_output_tokens
+      COALESCE(sum(output_tokens), 0) as total_output_tokens,
+      COALESCE(sum(cache_read_tokens), 0) as total_cache_read_tokens,
+      CASE
+        WHEN (sum(input_tokens) + sum(cache_read_tokens)) > 0
+        THEN CAST(sum(cache_read_tokens) AS REAL) / (sum(input_tokens) + sum(cache_read_tokens))
+        ELSE 0
+      END as cache_hit_rate
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       ${dateClause}
@@ -48,7 +56,7 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
       ${projectFilter(project)}
   `).get(...dateParams, ...agentParams(agentType), ...projectParams(project)) as OverviewStats | undefined
 
-  return row ?? { total_sessions: 0, total_cost: 0, total_input_tokens: 0, total_output_tokens: 0 }
+  return row ?? { total_sessions: 0, total_cost: 0, total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, cache_hit_rate: 0 }
 }
 
 export type DailyStats = {
@@ -102,7 +110,7 @@ export type SessionRow = {
   project_name: string
 }
 
-export const getSessions = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<SessionRow[]> => {
+export const getSessions = async (agentType: string, project: string = 'all', from?: string, to?: string, limit: number = 100): Promise<SessionRow[]> => {
   const db = getDb()
   const useDate = from && to
   const dateClause = useDate ? dateRangeFilter() : ''
@@ -129,8 +137,8 @@ export const getSessions = async (agentType: string, project: string = 'all', fr
       ${projectFilter(project)}
     GROUP BY session_id, agent_type
     ORDER BY started_at DESC
-    LIMIT 100
-  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as SessionRow[]
+    LIMIT ?
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project), limit) as SessionRow[]
 }
 
 export type ModelUsage = {

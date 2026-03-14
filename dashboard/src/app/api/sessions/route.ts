@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const project = sp.get('project') || 'all'
     const from = sp.get('from') || undefined
     const to = sp.get('to') || undefined
-    const data = await getSessions(agentType, project, from, to)
+    const limit = sp.get('limit') ? Number(sp.get('limit')) : 100
+    const data = await getSessions(agentType, project, from, to, limit)
     return NextResponse.json(data)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
