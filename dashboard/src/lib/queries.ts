@@ -455,6 +455,41 @@ export const getIndividualToolStats = async (days: number = 30, project: string 
   `).all(...dateParams, ...projectParams(project)) as IndividualToolRow[]
 }
 
+export type SessionDetailEvent = {
+  timestamp: string
+  event_name: string
+  prompt_id: string
+  model: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cost_usd: number
+  duration_ms: number
+  tool_name: string
+  tool_success: number | null
+}
+
+export const getSessionDetail = async (sessionId: string): Promise<SessionDetailEvent[]> => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      timestamp,
+      event_name,
+      prompt_id,
+      model,
+      input_tokens,
+      output_tokens,
+      cache_read_tokens,
+      cost_usd,
+      duration_ms,
+      tool_name,
+      tool_success
+    FROM agent_logs
+    WHERE session_id = ?
+    ORDER BY timestamp ASC
+  `).all(sessionId) as SessionDetailEvent[]
+}
+
 export const getProjects = async (): Promise<ProjectRow[]> => {
   const db = getDb()
   return db.prepare(`
