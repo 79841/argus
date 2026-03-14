@@ -133,7 +133,29 @@ export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold mb-2">2. 확인</h3>
+            <h3 className="text-sm font-semibold mb-2">2. 프로젝트 필터링 (선택)</h3>
+            <p className="text-sm text-muted-foreground mb-2">
+              프로젝트별 데이터를 구분하려면 환경변수를 추가합니다:
+            </p>
+            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"`}</code></pre>
+            <p className="text-sm text-muted-foreground mt-2">
+              또는 <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>에 추가할 수 있습니다:
+            </p>
+            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "telemetry": {
+    "enabled": true,
+    "target": "local",
+    "otlpEndpoint": "http://localhost:3000",
+    "otlpProtocol": "http",
+    "resourceAttributes": {
+      "project.name": "my-project"
+    }
+  }
+}`}</code></pre>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold mb-2">3. 확인</h3>
             <p className="text-sm text-muted-foreground">
               Gemini CLI를 실행하고 대시보드에서 데이터가 수집되는지 확인합니다.
               Overview 페이지에서 에이전트 필터를 &quot;Gemini CLI&quot;로 설정하면 됩니다.
