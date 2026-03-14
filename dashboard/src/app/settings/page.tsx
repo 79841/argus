@@ -190,96 +190,235 @@ const GeneralSection = () => {
   )
 }
 
-const AgentsSection = () => (
-  <div className="space-y-6">
-    <Card>
-      <CardHeader>
-        <CardTitle>Agent Setup Guide</CardTitle>
-        <CardDescription>
-          AI coding agent telemetry setup instructions.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="claude">
-          <TabsList>
-            <TabsTrigger value="claude">
-              <span className="h-2 w-2 rounded-full bg-orange-500" />
-              Claude Code
-            </TabsTrigger>
-            <TabsTrigger value="codex">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Codex
-            </TabsTrigger>
-            <TabsTrigger value="gemini">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              Gemini CLI
-            </TabsTrigger>
-          </TabsList>
+type AgentLimitState = {
+  agent_type: string
+  daily_cost_limit: string
+  monthly_cost_limit: string
+}
 
-          <TabsContent value="claude">
-            <div className="space-y-4 pt-4">
-              <div>
-                <h3 className="text-sm font-semibold mb-2">1. Environment Variables</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Add to your shell profile (~/.zshrc or ~/.bashrc):
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
+const LIMIT_AGENT_TYPES = [
+  { id: 'claude', label: 'Claude Code', color: 'bg-orange-500' },
+  { id: 'codex', label: 'Codex', color: 'bg-emerald-500' },
+  { id: 'gemini', label: 'Gemini CLI', color: 'bg-blue-500' },
+]
+
+const AgentsSection = () => {
+  const [limits, setLimits] = useState<AgentLimitState[]>(
+    LIMIT_AGENT_TYPES.map((a) => ({ agent_type: a.id, daily_cost_limit: '0', monthly_cost_limit: '0' }))
+  )
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/settings/limits')
+      .then((r) => r.json())
+      .then((data) => {
+        const existing = (data.limits ?? []) as { agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }[]
+        setLimits((prev) =>
+          prev.map((l) => {
+            const found = existing.find((e) => e.agent_type === l.agent_type)
+            if (found) {
+              return {
+                ...l,
+                daily_cost_limit: String(found.daily_cost_limit),
+                monthly_cost_limit: String(found.monthly_cost_limit),
+              }
+            }
+            return l
+          })
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleChange = (agentType: string, field: 'daily_cost_limit' | 'monthly_cost_limit', value: string) => {
+    setLimits((prev) =>
+      prev.map((l) => (l.agent_type === agentType ? { ...l, [field]: value } : l))
+    )
+    setSaved(false)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setSaved(false)
+    try {
+      await fetch('/api/settings/limits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          limits: limits.map((l) => ({
+            agent_type: l.agent_type,
+            daily_cost_limit: parseFloat(l.daily_cost_limit) || 0,
+            monthly_cost_limit: parseFloat(l.monthly_cost_limit) || 0,
+          })),
+        }),
+      })
+      setSaved(true)
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Cost Limits</CardTitle>
+          <CardDescription>
+            에이전트별 일일/월별 비용 한도를 설정합니다. Bottom Bar에서 잔여 비율을 확인할 수 있습니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4 font-medium w-[30%]">Agent</th>
+                  <th className="pb-2 pr-4 font-medium w-[35%]">Daily Limit ($)</th>
+                  <th className="pb-2 font-medium w-[35%]">Monthly Limit ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {LIMIT_AGENT_TYPES.map((agent) => {
+                  const limit = limits.find((l) => l.agent_type === agent.id)
+                  return (
+                    <tr key={agent.id} className="border-b border-border/50 last:border-0">
+                      <td className="py-3 pr-4">
+                        <span className="inline-flex items-center gap-2 text-sm font-medium">
+                          <span className={cn('h-2.5 w-2.5 rounded-full', agent.color)} />
+                          {agent.label}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={limit?.daily_cost_limit ?? '0'}
+                          onChange={(e) => handleChange(agent.id, 'daily_cost_limit', e.target.value)}
+                          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          placeholder="0.00"
+                        />
+                      </td>
+                      <td className="py-3">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={limit?.monthly_cost_limit ?? '0'}
+                          onChange={(e) => handleChange(agent.id, 'monthly_cost_limit', e.target.value)}
+                          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          placeholder="0.00"
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
+              <Save className="size-4" />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            {saved && (
+              <span className="text-sm text-green-600 dark:text-green-400">Saved</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Agent Setup Guide</CardTitle>
+          <CardDescription>
+            AI coding agent telemetry setup instructions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="claude">
+            <TabsList>
+              <TabsTrigger value="claude">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                Claude Code
+              </TabsTrigger>
+              <TabsTrigger value="codex">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Codex
+              </TabsTrigger>
+              <TabsTrigger value="gemini">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                Gemini CLI
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="claude">
+              <div className="space-y-4 pt-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">1. Environment Variables</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add to your shell profile (~/.zshrc or ~/.bashrc):
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Add to your project&apos;s <code className="bg-muted px-1 rounded">.claude/settings.json</code>:
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add to your project&apos;s <code className="bg-muted px-1 rounded">.claude/settings.json</code>:
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
   }
 }`}</code></pre>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools Tracking (optional)</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Add to <code className="bg-muted px-1 rounded">~/.claude/settings.json</code>:
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools Tracking (optional)</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add to <code className="bg-muted px-1 rounded">~/.claude/settings.json</code>:
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_LOG_TOOL_DETAILS": "1"
   }
 }`}</code></pre>
+                </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="codex">
-            <div className="space-y-4 pt-4">
-              <div>
-                <h3 className="text-sm font-semibold mb-2">1. OTel Configuration</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Add to <code className="bg-muted px-1 rounded">~/.codex/config.toml</code>:
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+            <TabsContent value="codex">
+              <div className="space-y-4 pt-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">1. OTel Configuration</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add to <code className="bg-muted px-1 rounded">~/.codex/config.toml</code>:
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
 exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }`}</code></pre>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">2. Project Info</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Codex automatically extracts the project name from the working directory. No additional project configuration is needed.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">2. Project Info</h3>
-                <p className="text-sm text-muted-foreground">
-                  Codex automatically extracts the project name from the working directory. No additional project configuration is needed.
-                </p>
-              </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="gemini">
-            <div className="space-y-4 pt-4">
-              <div>
-                <h3 className="text-sm font-semibold mb-2">1. Telemetry Configuration</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Add to <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>:
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+            <TabsContent value="gemini">
+              <div className="space-y-4 pt-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">1. Telemetry Configuration</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add to <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>:
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "telemetry": {
     "enabled": true,
     "target": "local",
@@ -287,27 +426,28 @@ exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol 
     "otlpProtocol": "http"
   }
 }`}</code></pre>
-                <p className="text-sm text-muted-foreground mt-2">Or via environment variables:</p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
+                  <p className="text-sm text-muted-foreground mt-2">Or via environment variables:</p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
 export GEMINI_TELEMETRY_TARGET=local
 export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Use <code className="bg-muted px-1 rounded">direnv</code> to set per-project attributes:
-                </p>
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Use <code className="bg-muted px-1 rounded">direnv</code> to set per-project attributes:
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
 direnv allow`}</code></pre>
+                </div>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  </div>
-)
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 const PricingSection = () => {
   const [syncing, setSyncing] = useState(false)
