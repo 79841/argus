@@ -12,12 +12,12 @@ import {
   Legend,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ProjectFilter } from '@/components/project-filter'
 import { AgentComparison } from '@/components/agent-comparison'
 import { calculateEfficiency, getScoreColor, getScoreBg } from '@/lib/efficiency'
 import type { EfficiencyResult } from '@/lib/efficiency'
 import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
+import { useTopBar } from '@/components/top-bar-context'
 
 const AGENT_KEYS = ['codex', 'claude', 'gemini'] as const
 
@@ -213,14 +213,14 @@ const ChangeIndicator = ({ value, invertColor = false }: ChangeIndicatorProps) =
 }
 
 export default function EfficiencyPage() {
-  const [project, setProject] = useState('all')
+  const { project, dateRange } = useTopBar()
   const [data, setData] = useState<EfficiencyRow[]>([])
   const [previousMap, setPreviousMap] = useState<Record<string, EfficiencyResult>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/efficiency?days=7&project=${project}`)
+    fetch(`/api/efficiency?project=${project}&from=${dateRange.from}&to=${dateRange.to}`)
       .then((res) => res.json())
       .then((json: ApiResponse) => {
         setData(json.data)
@@ -232,7 +232,7 @@ export default function EfficiencyPage() {
         setPreviousMap({})
         setLoading(false)
       })
-  }, [project])
+  }, [project, dateRange])
 
   if (loading) {
     return (
@@ -262,7 +262,6 @@ export default function EfficiencyPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Efficiency Analysis</h1>
-        <ProjectFilter value={project} onChange={setProject} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

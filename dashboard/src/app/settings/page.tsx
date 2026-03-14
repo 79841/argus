@@ -1,0 +1,379 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { useTheme } from '@/components/theme-provider'
+import { ConfigTimeline } from '@/components/config-timeline'
+import type { ConfigChange } from '@/lib/config-tracker'
+import { cn } from '@/lib/utils'
+
+type Theme = 'light' | 'dark' | 'system'
+
+type Category = 'general' | 'agents' | 'pricing' | 'data' | 'config'
+
+const CATEGORIES: { key: Category; label: string; icon: React.ElementType }[] = [
+  { key: 'general', label: 'General', icon: Palette },
+  { key: 'agents', label: 'Agents', icon: Bot },
+  { key: 'pricing', label: 'Pricing', icon: Cog },
+  { key: 'data', label: 'Data', icon: Database },
+  { key: 'config', label: 'Config', icon: RefreshCw },
+]
+
+const REFRESH_OPTIONS = [
+  { value: '30000', label: '30s' },
+  { value: '60000', label: '1m' },
+  { value: '300000', label: '5m' },
+  { value: '0', label: 'Off' },
+]
+
+const REFRESH_STORAGE_KEY = 'argus-refresh-interval'
+
+const GeneralSection = () => {
+  const { theme, setTheme } = useTheme()
+  const [refreshInterval, setRefreshInterval] = useState('0')
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(REFRESH_STORAGE_KEY)
+      if (stored) setRefreshInterval(stored)
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const handleRefreshChange = (value: string | null) => {
+    if (value === null) return
+    setRefreshInterval(value)
+    try {
+      localStorage.setItem(REFRESH_STORAGE_KEY, value)
+    } catch {
+      // ignore
+    }
+  }
+
+  const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>Choose your preferred color scheme.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {themeOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
+                  theme === opt.value
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <opt.icon className="size-4" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto Refresh</CardTitle>
+          <CardDescription>Set the polling interval for dashboard data.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select value={refreshInterval} onValueChange={handleRefreshChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {REFRESH_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+const AgentsSection = () => (
+  <div className="space-y-6">
+    <Card>
+      <CardHeader>
+        <CardTitle>Agent Setup Guide</CardTitle>
+        <CardDescription>
+          AI coding agent telemetry setup instructions.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="claude">
+          <TabsList>
+            <TabsTrigger value="claude">
+              <span className="h-2 w-2 rounded-full bg-orange-500" />
+              Claude Code
+            </TabsTrigger>
+            <TabsTrigger value="codex">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Codex
+            </TabsTrigger>
+            <TabsTrigger value="gemini">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              Gemini CLI
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="claude">
+            <div className="space-y-4 pt-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">1. Environment Variables</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add to your shell profile (~/.zshrc or ~/.bashrc):
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_LOGS_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add to your project&apos;s <code className="bg-muted px-1 rounded">.claude/settings.json</code>:
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "env": {
+    "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
+  }
+}`}</code></pre>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools Tracking (optional)</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add to <code className="bg-muted px-1 rounded">~/.claude/settings.json</code>:
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "env": {
+    "OTEL_LOG_TOOL_DETAILS": "1"
+  }
+}`}</code></pre>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="codex">
+            <div className="space-y-4 pt-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">1. OTel Configuration</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add to <code className="bg-muted px-1 rounded">~/.codex/config.toml</code>:
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }`}</code></pre>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">2. Project Info</h3>
+                <p className="text-sm text-muted-foreground">
+                  Codex automatically extracts the project name from the working directory. No additional project configuration is needed.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="gemini">
+            <div className="space-y-4 pt-4">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">1. Telemetry Configuration</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add to <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>:
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "telemetry": {
+    "enabled": true,
+    "target": "local",
+    "otlpEndpoint": "http://localhost:3000",
+    "otlpProtocol": "http"
+  }
+}`}</code></pre>
+                <p className="text-sm text-muted-foreground mt-2">Or via environment variables:</p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
+export GEMINI_TELEMETRY_TARGET=local
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
+export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Use <code className="bg-muted px-1 rounded">direnv</code> to set per-project attributes:
+                </p>
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
+direnv allow`}</code></pre>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  </div>
+)
+
+const PricingSection = () => {
+  const [syncing, setSyncing] = useState(false)
+  const [result, setResult] = useState<{ synced?: number; error?: string } | null>(null)
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/pricing-sync', { method: 'POST' })
+      const json = await res.json()
+      setResult(json)
+    } catch {
+      setResult({ error: 'Failed to connect' })
+    } finally {
+      setSyncing(false)
+    }
+  }, [])
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>LiteLLM Pricing Sync</CardTitle>
+          <CardDescription>
+            Sync token pricing data from LiteLLM&apos;s pricing database.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSync} disabled={syncing} variant="outline">
+              <RefreshCw className={cn('size-4', syncing && 'animate-spin')} />
+              {syncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
+            {result && (
+              <span className="text-sm text-muted-foreground">
+                {result.error
+                  ? `Error: ${result.error}`
+                  : `Synced ${result.synced} models`}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+const DataSection = () => (
+  <div className="space-y-6">
+    <Card>
+      <CardHeader>
+        <CardTitle>Data Management</CardTitle>
+        <CardDescription>Export and manage your monitoring data.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Coming soon &mdash; CSV/JSON export, data cleanup, and retention settings.
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+)
+
+const ConfigSection = () => {
+  const [data, setData] = useState<ConfigChange[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/config-history?days=30')
+        const json = await res.json()
+        setData(json)
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold">Config History</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Git-tracked config file changes across AI agents. Showing last 30 days.
+        </p>
+      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          <p>Loading...</p>
+        </div>
+      ) : (
+        <ConfigTimeline data={data} />
+      )}
+    </div>
+  )
+}
+
+const SECTION_MAP: Record<Category, React.FC> = {
+  general: GeneralSection,
+  agents: AgentsSection,
+  pricing: PricingSection,
+  data: DataSection,
+  config: ConfigSection,
+}
+
+export default function SettingsPage() {
+  const [active, setActive] = useState<Category>('general')
+  const ActiveSection = SECTION_MAP[active]
+
+  return (
+    <div className="flex h-full">
+      {/* Left sidebar */}
+      <nav className="w-48 shrink-0 border-r overflow-y-auto py-4 pr-2">
+        <h1 className="px-3 mb-4 text-lg font-bold tracking-tight">Settings</h1>
+        <ul className="space-y-0.5">
+          {CATEGORIES.map((cat) => (
+            <li key={cat.key}>
+              <button
+                onClick={() => setActive(cat.key)}
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                  active === cat.key
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                <cat.icon className="size-4" />
+                {cat.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Right content */}
+      <main className="flex-1 overflow-y-auto p-6">
+        <ActiveSection />
+      </main>
+    </div>
+  )
+}

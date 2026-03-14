@@ -1,17 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { AgentType } from '@/lib/agents'
 import type { ToolDetailRow, DailyToolRow, IndividualToolRow } from '@/lib/queries'
-import { AgentFilter } from '@/components/agent-filter'
-import { ProjectFilter } from '@/components/project-filter'
 import { ToolDetailTable } from '@/components/tool-detail-table'
 import { DailyToolChart } from '@/components/daily-tool-chart'
 import { IndividualToolTable } from '@/components/individual-tool-table'
+import { useTopBar } from '@/components/top-bar-context'
 
 export default function ToolsPage() {
-  const [agentType, setAgentType] = useState<AgentType>('all')
-  const [project, setProject] = useState('all')
+  const { agentType, project, dateRange } = useTopBar()
   const [tools, setTools] = useState<ToolDetailRow[]>([])
   const [daily, setDaily] = useState<DailyToolRow[]>([])
   const [individual, setIndividual] = useState<IndividualToolRow[]>([])
@@ -19,7 +16,7 @@ export default function ToolsPage() {
 
   useEffect(() => {
     setLoading(true)
-    const q = `agent_type=${agentType}&project=${project}&days=30&detail=true`
+    const q = `agent_type=${agentType}&project=${project}&detail=true&from=${dateRange.from}&to=${dateRange.to}`
     fetch(`/api/tools?${q}`)
       .then((r) => r.json())
       .then((data) => {
@@ -34,7 +31,7 @@ export default function ToolsPage() {
         setIndividual([])
         setLoading(false)
       })
-  }, [agentType, project])
+  }, [agentType, project, dateRange])
 
   return (
     <div className="space-y-6">
@@ -44,10 +41,6 @@ export default function ToolsPage() {
           <p className="text-muted-foreground text-sm mt-1">
             스킬, MCP, 에이전트 등 도구별 호출 횟수와 토큰 사용량
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ProjectFilter value={project} onChange={setProject} />
-          <AgentFilter value={agentType} onChange={setAgentType} />
         </div>
       </div>
 
