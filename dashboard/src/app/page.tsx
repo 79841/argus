@@ -34,6 +34,10 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    fetch('/api/pricing-sync', { method: 'POST' }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
     setLoading(true)
     const q = `agent_type=${agentType}&project=${project}`
     Promise.all([
@@ -106,6 +110,11 @@ export default function OverviewPage() {
               title="Total Cost"
               value={formatCost(stats?.total_cost ?? 0)}
               description="Estimated cost today"
+              tooltip={[
+                'Claude: API에서 cost_usd 직접 제공',
+                'Codex/Gemini: LiteLLM 가격 DB 기반 계산',
+                '  (input + output + cache + reasoning) × 단가',
+              ].join('\n')}
             />
             <StatsCard
               title="Input Tokens"
