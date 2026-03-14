@@ -1,9 +1,10 @@
 /**
  * OTLP HTTP standard endpoint: POST /v1/metrics
- * Receives Gemini CLI metrics and stores them in SQLite.
+ * Receives Gemini CLI and Claude Code metrics and stores them in SQLite.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { detectAgentType } from '@/lib/ingest-utils'
 
 type AnyValue = {
   stringValue?: string
@@ -85,6 +86,21 @@ const normalizeMetricAttrs = (attrs: Record<string, unknown> | KeyValue[] | unde
   }))
 }
 
+const parseMetricTimestamp = (dp: DataPoint): string => {
+  if (dp.startTime && Array.isArray(dp.startTime) && dp.startTime.length === 2) {
+    return new Date(dp.startTime[0] as number * 1000).toISOString()
+  }
+  if (typeof dp.startTime === 'string' && dp.startTime !== '0') {
+    try {
+      const ms = Number(BigInt(dp.startTime) / BigInt(1_000_000))
+      return new Date(ms).toISOString()
+    } catch {
+      return new Date().toISOString()
+    }
+  }
+  return new Date().toISOString()
+}
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const root = require('@opentelemetry/otlp-transformer/build/src/generated/root')
 const ExportMetricsServiceRequest = root.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
@@ -134,71 +150,103 @@ export async function POST(request: NextRequest) {
           for (const metric of sm.metrics ?? []) {
             const metricName = metric.name || ''
 
-            // Skip non-Gemini metrics
-            if (!metricName.startsWith('gemini_cli.')) continue
-
             const dataPoints = metric.sum?.dataPoints || metric.gauge?.dataPoints || []
 
-            for (const dp of dataPoints) {
-              const dpAttrs = normalizeMetricAttrs(dp.attributes)
-              const sessionId = getAttr(dpAttrs, 'session.id')
-              const model = getAttr(dpAttrs, 'model')
-              const value = dp.value ?? dp.asDouble ?? (dp.asInt ? Number(dp.asInt) : 0)
+            // Route by agent prefix
+            if (metricName.startsWith('gemini_cli.')) {
+              for (const dp of dataPoints) {
+                const dpAttrs = normalizeMetricAttrs(dp.attributes)
+                const sessionId = getAttr(dpAttrs, 'session.id')
+                const model = getAttr(dpAttrs, 'model')
+                const value = dp.value ?? dp.asDouble ?? (dp.asInt ? Number(dp.asInt) : 0)
 
-              // Only store tool_result and session_start from metrics (PER-35)
-              let eventName = ''
-              let durationMs = 0
-              let toolName = ''
+                let eventName = ''
+                let durationMs = 0
+                let toolName = ''
 
-              if (metricName === 'gemini_cli.tool.duration' || metricName === 'gemini_cli.tool_call.duration') {
-                eventName = 'tool_result'
-                durationMs = value
-                toolName = getAttr(dpAttrs, 'function_name') || getAttr(dpAttrs, 'tool_name')
-              } else if (metricName === 'gemini_cli.session.count' || metricName === 'gemini_cli.conversation.count') {
-                eventName = 'session_start'
-              } else {
-                continue
-              }
-
-              // Parse timestamp
-              let timestamp: string
-              if (dp.startTime && Array.isArray(dp.startTime) && dp.startTime.length === 2) {
-                timestamp = new Date(dp.startTime[0] as number * 1000).toISOString()
-              } else if (typeof dp.startTime === 'string' && dp.startTime !== '0') {
-                try {
-                  const ms = Number(BigInt(dp.startTime) / BigInt(1_000_000))
-                  timestamp = new Date(ms).toISOString()
-                } catch {
-                  timestamp = new Date().toISOString()
+                if (metricName === 'gemini_cli.tool.duration' || metricName === 'gemini_cli.tool_call.duration') {
+                  eventName = 'tool_result'
+                  durationMs = value
+                  toolName = getAttr(dpAttrs, 'function_name') || getAttr(dpAttrs, 'tool_name')
+                } else if (metricName === 'gemini_cli.session.count' || metricName === 'gemini_cli.conversation.count') {
+                  eventName = 'session_start'
+                } else {
+                  continue
                 }
-              } else {
-                timestamp = new Date().toISOString()
+
+                const timestamp = parseMetricTimestamp(dp)
+
+                insert.run(
+                  timestamp,
+                  'gemini',
+                  serviceName,
+                  eventName,
+                  sessionId,
+                  '',
+                  model,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  durationMs,
+                  'normal',
+                  toolName,
+                  null,
+                  'INFO',
+                  `${metricName}=${value}`,
+                  '',
+                  attrsToJson(resAttrs),
+                  attrsToJson(dpAttrs)
+                )
+                count++
+              }
+            } else if (metricName.startsWith('claude_code.')) {
+              const eventMap: Record<string, string> = {
+                'claude_code.lines_of_code.count': 'lines_of_code',
+                'claude_code.commit.count': 'commit_count',
+                'claude_code.pull_request.count': 'pull_request_count',
+                'claude_code.active_time.total': 'active_time',
               }
 
-              insert.run(
-                timestamp,
-                'gemini',
-                serviceName,
-                eventName,
-                sessionId,
-                '',
-                model,
-                0,
-                0,
-                0,
-                0,
-                0,
-                durationMs,
-                'normal',
-                toolName,
-                null,
-                'INFO',
-                `${metricName}=${value}`,
-                '',
-                attrsToJson(resAttrs),
-                attrsToJson(dpAttrs)
-              )
-              count++
+              const eventName = eventMap[metricName]
+              if (!eventName) continue
+
+              for (const dp of dataPoints) {
+                const dpAttrs = normalizeMetricAttrs(dp.attributes)
+                const sessionId = getAttr(dpAttrs, 'session.id')
+                const model = getAttr(dpAttrs, 'model')
+                const value = dp.value ?? dp.asDouble ?? (dp.asInt ? Number(dp.asInt) : 0)
+                const timestamp = parseMetricTimestamp(dp)
+                const agentType = serviceName ? detectAgentType(serviceName) : 'claude'
+
+                insert.run(
+                  timestamp,
+                  agentType,
+                  serviceName,
+                  eventName,
+                  sessionId,
+                  '',
+                  model,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  eventName === 'active_time' ? value : 0,
+                  'normal',
+                  '',
+                  null,
+                  'INFO',
+                  `${metricName}=${value}`,
+                  '',
+                  attrsToJson(resAttrs),
+                  attrsToJson(dpAttrs)
+                )
+                count++
+              }
+            } else {
+              continue
             }
           }
         }

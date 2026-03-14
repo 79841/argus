@@ -131,6 +131,156 @@ describe('Gemini metrics deduplication (PER-19)', () => {
   })
 })
 
+describe('Claude Code metrics (PER-22)', () => {
+  it('should store lines_of_code, commit_count, pull_request_count, active_time', async () => {
+    const metrics = [
+      { name: 'claude_code.lines_of_code.count', value: 150 },
+      { name: 'claude_code.commit.count', value: 3 },
+      { name: 'claude_code.pull_request.count', value: 1 },
+      { name: 'claude_code.active_time.total', value: 3600000 },
+    ]
+
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'claude-code' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: metrics.map((m) => ({
+            name: m.name,
+            sum: { dataPoints: [{ value: m.value, attributes: [
+              { key: 'session.id', value: { stringValue: 'cc-sess-1' } },
+              { key: 'model', value: { stringValue: 'claude-sonnet-4-6' } },
+            ] }] },
+          })),
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(4)
+
+    const logs = getLogs()
+    expect(logs).toHaveLength(4)
+
+    const eventNames = logs.map((l) => l.event_name).sort()
+    expect(eventNames).toEqual(['active_time', 'commit_count', 'lines_of_code', 'pull_request_count'])
+
+    expect(logs.every((l) => l.agent_type === 'claude')).toBe(true)
+  })
+
+  it('should skip unknown claude_code metrics', async () => {
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'claude-code' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: [{
+            name: 'claude_code.unknown_metric',
+            sum: { dataPoints: [{ value: 42, attributes: [
+              { key: 'session.id', value: { stringValue: 'cc-sess-1' } },
+            ] }] },
+          }],
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(0)
+    expect(getLogs()).toHaveLength(0)
+  })
+
+  it('should store active_time value in duration_ms', async () => {
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'claude-code' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: [{
+            name: 'claude_code.active_time.total',
+            sum: { dataPoints: [{ value: 7200000, attributes: [
+              { key: 'session.id', value: { stringValue: 'cc-sess-1' } },
+            ] }] },
+          }],
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(1)
+
+    const logs = getLogs()
+    expect(logs[0].duration_ms).toBe(7200000)
+    expect(logs[0].event_name).toBe('active_time')
+  })
+
+  it('should detect agent_type from service.name', async () => {
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'some-claude-service' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: [{
+            name: 'claude_code.lines_of_code.count',
+            sum: { dataPoints: [{ value: 10, attributes: [] }] },
+          }],
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(1)
+    expect(getLogs()[0].agent_type).toBe('claude')
+  })
+})
+
+describe('Codex metrics (PER-22)', () => {
+  it('should skip Codex metrics (no known spec)', async () => {
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'codex-cli' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: [{
+            name: 'codex.some_metric',
+            sum: { dataPoints: [{ value: 42, attributes: [
+              { key: 'session.id', value: { stringValue: 'codex-sess-1' } },
+            ] }] },
+          }],
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(0)
+    expect(getLogs()).toHaveLength(0)
+  })
+})
+
 describe('Gemini misc metrics filtering (PER-35)', () => {
   it('should skip token.usage, lines.changed, file.operation.count and other misc metrics', async () => {
     const miscMetrics = [
