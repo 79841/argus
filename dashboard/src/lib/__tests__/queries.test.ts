@@ -12,7 +12,7 @@ vi.mock('../db', async (importOriginal) => {
   }
 })
 
-const { getToolDetailStats, getSessions } = await import('../queries')
+const { getToolDetailStats, getSessions, getIngestStatus } = await import('../queries')
 
 beforeEach(() => {
   testDb = new Database(':memory:')
@@ -94,5 +94,38 @@ describe('getSessions — duration_ms wall-clock (PER-25)', () => {
     expect(sessions).toHaveLength(1)
     // Wall-clock: 10 seconds = 10000ms, NOT sum of API durations (13000ms)
     expect(sessions[0].duration_ms).toBe(10000)
+  })
+})
+
+describe('getIngestStatus (PER-35)', () => {
+  it('should return per-agent last received and today count', async () => {
+    const now = new Date().toISOString()
+    const insertLog = testDb.prepare(`
+      INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, prompt_id,
+        model, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
+        reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+
+    insertLog.run(now, 'claude', 'api_request', 'c-1', '', '', 100, 50, 0, 0, 0, 0.01, 0, '', null)
+    insertLog.run(now, 'claude', 'user_prompt', 'c-1', '', '', 0, 0, 0, 0, 0, 0, 0, '', null)
+    insertLog.run(now, 'codex', 'api_request', 'cx-1', '', '', 100, 50, 0, 0, 0, 0.01, 0, '', null)
+
+    const status = await getIngestStatus()
+    expect(status).toHaveLength(2)
+
+    const claude = status.find((s) => s.agent_type === 'claude')
+    expect(claude).toBeDefined()
+    expect(claude!.today_count).toBe(2)
+    expect(claude!.total_count).toBe(2)
+
+    const codex = status.find((s) => s.agent_type === 'codex')
+    expect(codex).toBeDefined()
+    expect(codex!.today_count).toBe(1)
+  })
+
+  it('should return empty array for empty DB', async () => {
+    const status = await getIngestStatus()
+    expect(status).toHaveLength(0)
   })
 })

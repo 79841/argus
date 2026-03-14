@@ -355,3 +355,24 @@ export const getProjects = async (): Promise<ProjectRow[]> => {
     ORDER BY total_cost DESC
   `).all() as ProjectRow[]
 }
+
+export type IngestStatusRow = {
+  agent_type: string
+  last_received: string
+  today_count: number
+  total_count: number
+}
+
+export const getIngestStatus = async (): Promise<IngestStatusRow[]> => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      agent_type,
+      max(timestamp) as last_received,
+      sum(CASE WHEN date(timestamp) = date('now') THEN 1 ELSE 0 END) as today_count,
+      count(*) as total_count
+    FROM agent_logs
+    GROUP BY agent_type
+    ORDER BY last_received DESC
+  `).all() as IngestStatusRow[]
+}

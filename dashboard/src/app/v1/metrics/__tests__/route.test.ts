@@ -130,3 +130,40 @@ describe('Gemini metrics deduplication (PER-19)', () => {
     expect(sessionStarts).toHaveLength(1)
   })
 })
+
+describe('Gemini misc metrics filtering (PER-35)', () => {
+  it('should skip token.usage, lines.changed, file.operation.count and other misc metrics', async () => {
+    const miscMetrics = [
+      'gemini_cli.token.usage',
+      'gemini_cli.lines.changed',
+      'gemini_cli.file.operation.count',
+      'gemini_cli.api.request.count',
+      'gemini_cli.keychain.availability.count',
+      'gemini_cli.token_storage.type.count',
+    ]
+
+    const payload = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: 'gemini-cli' } },
+          ],
+        },
+        scopeMetrics: [{
+          metrics: miscMetrics.map((name) => ({
+            name,
+            sum: { dataPoints: [{ value: 42, attributes: [
+              { key: 'session.id', value: { stringValue: 'g-sess-1' } },
+            ] }] },
+          })),
+        }],
+      }],
+    }
+
+    const res = await POST(mkRequest(payload) as never)
+    const json = await res.json()
+
+    expect(json.accepted).toBe(0)
+    expect(getLogs()).toHaveLength(0)
+  })
+})

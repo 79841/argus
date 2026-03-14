@@ -124,6 +124,12 @@ const migrate = (db: Database.Database) => {
     db.exec("UPDATE tool_details SET agent_type = 'gemini' WHERE detail_type = 'gemini-tool'")
   }
 
+  // Clean up metric events that were incorrectly stored in agent_logs (PER-35)
+  db.exec(`DELETE FROM agent_logs WHERE event_name NOT IN (
+    'api_request', 'user_prompt', 'tool_result', 'tool_decision',
+    'session_start', 'api_error'
+  )`)
+
   // Clean up stale built-in tool entries and normalize detail_type values
   db.exec("DELETE FROM tool_details WHERE detail_type IN ('codex-tool', 'gemini-tool', 'tool-search')")
   db.exec("UPDATE tool_details SET detail_type = 'agent' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name = 'Agent'")
