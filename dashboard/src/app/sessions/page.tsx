@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AgentFilter } from '@/components/agent-filter'
-import { ProjectFilter } from '@/components/project-filter'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import type { AgentType } from '@/lib/agents'
 import type { SessionRow } from '@/lib/queries'
+import { useTopBar } from '@/components/top-bar-context'
 
 const AGENT_BADGE_CLASSES: Record<string, string> = {
   codex: 'bg-emerald-500 text-white',
@@ -31,14 +29,14 @@ const formatDuration = (ms: number): string => {
 }
 
 export default function SessionsPage() {
-  const [agentType, setAgentType] = useState<AgentType>('all')
-  const [project, setProject] = useState('all')
+  const { agentType, project, dateRange } = useTopBar()
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/sessions?agent_type=${agentType}&project=${project}`)
+    const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
+    fetch(`/api/sessions?${q}`)
       .then((res) => res.json())
       .then((data) => {
         setSessions(data)
@@ -48,16 +46,12 @@ export default function SessionsPage() {
         setSessions([])
         setLoading(false)
       })
-  }, [agentType, project])
+  }, [agentType, project, dateRange])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sessions</h1>
-        <div className="flex items-center gap-3">
-          <ProjectFilter value={project} onChange={setProject} />
-          <AgentFilter value={agentType} onChange={setAgentType} />
-        </div>
       </div>
 
       {loading ? (

@@ -2,10 +2,11 @@
 
 import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
+import { DateRangePicker } from '@/components/date-range-picker'
 import { useTopBar } from '@/components/top-bar-context'
 
 export const TopBar = () => {
-  const { agentType, setAgentType, project, setProject } = useTopBar()
+  const { agentType, setAgentType, project, setProject, dateRange, setDateRange } = useTopBar()
 
   return (
     <header className="flex h-10 shrink-0 items-center border-b bg-background px-4 gap-4">
@@ -15,8 +16,8 @@ export const TopBar = () => {
       <div className="flex items-center">
         <ProjectFilter value={project} onChange={setProject} />
       </div>
-      <div className="ml-auto flex items-center text-xs text-muted-foreground">
-        Last 7 days
+      <div className="ml-auto flex items-center">
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
       </div>
     </header>
   )

@@ -3,9 +3,12 @@ import { getOverviewStats } from '@/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
-    const agentType = request.nextUrl.searchParams.get('agent_type') || 'all'
-    const project = request.nextUrl.searchParams.get('project') || 'all'
-    const data = await getOverviewStats(agentType, project)
+    const sp = request.nextUrl.searchParams
+    const agentType = sp.get('agent_type') || 'all'
+    const project = sp.get('project') || 'all'
+    const from = sp.get('from') || undefined
+    const to = sp.get('to') || undefined
+    const data = await getOverviewStats(agentType, project, from, to)
     return NextResponse.json(data)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

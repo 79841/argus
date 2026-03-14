@@ -19,6 +19,9 @@ const projectFilter = (project: string) =>
 const projectParams = (project: string) =>
   project !== 'all' ? [project] : []
 
+const dateRangeFilter = () =>
+  `AND date(timestamp) >= date(?) AND date(timestamp) <= date(?)`
+
 export type OverviewStats = {
   total_sessions: number
   total_cost: number
@@ -26,8 +29,12 @@ export type OverviewStats = {
   total_output_tokens: number
 }
 
-export const getOverviewStats = async (agentType: string, project: string = 'all'): Promise<OverviewStats> => {
+export const getOverviewStats = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<OverviewStats> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) = date('now')"
+  const dateParams = useDate ? [from, to] : []
+
   const row = db.prepare(`
     SELECT
       count(DISTINCT session_id) as total_sessions,
@@ -36,10 +43,10 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
       COALESCE(sum(output_tokens), 0) as total_output_tokens
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
-      AND date(timestamp) = date('now')
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
-  `).get(...agentParams(agentType), ...projectParams(project)) as OverviewStats | undefined
+  `).get(...dateParams, ...agentParams(agentType), ...projectParams(project)) as OverviewStats | undefined
 
   return row ?? { total_sessions: 0, total_cost: 0, total_input_tokens: 0, total_output_tokens: 0 }
 }
@@ -54,10 +61,13 @@ export type DailyStats = {
   agent_type: string
 }
 
-export const getDailyStats = async (agentType: string, days: number = 30, project: string = 'all'): Promise<DailyStats[]> => {
+export const getDailyStats = async (agentType: string, days: number = 30, project: string = 'all', from?: string, to?: string): Promise<DailyStats[]> => {
   const db = getDb()
   const agentSelect = agentType === 'all' ? 'agent_type' : `'${agentType}' as agent_type`
   const agentGroupBy = agentType === 'all' ? ', agent_type' : ''
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
 
   return db.prepare(`
     SELECT
@@ -70,12 +80,12 @@ export const getDailyStats = async (agentType: string, days: number = 30, projec
       COALESCE(sum(cache_read_tokens), 0) as cache_read_tokens
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
-      AND date(timestamp) >= date('now', '-' || ? || ' days')
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY date${agentGroupBy}
     ORDER BY date ASC
-  `).all(days, ...agentParams(agentType), ...projectParams(project)) as DailyStats[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as DailyStats[]
 }
 
 export type SessionRow = {
@@ -92,8 +102,12 @@ export type SessionRow = {
   project_name: string
 }
 
-export const getSessions = async (agentType: string, project: string = 'all'): Promise<SessionRow[]> => {
+export const getSessions = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<SessionRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : ''
+  const dateParams = useDate ? [from, to] : []
+
   return db.prepare(`
     SELECT
       session_id,
@@ -110,12 +124,13 @@ export const getSessions = async (agentType: string, project: string = 'all'): P
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       AND session_id != ''
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY session_id, agent_type
     ORDER BY started_at DESC
     LIMIT 100
-  `).all(...agentParams(agentType), ...projectParams(project)) as SessionRow[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as SessionRow[]
 }
 
 export type ModelUsage = {
@@ -125,8 +140,12 @@ export type ModelUsage = {
   cost: number
 }
 
-export const getModelUsage = async (agentType: string, project: string = 'all'): Promise<ModelUsage[]> => {
+export const getModelUsage = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<ModelUsage[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : ''
+  const dateParams = useDate ? [from, to] : []
+
   return db.prepare(`
     SELECT
       model,
@@ -136,11 +155,12 @@ export const getModelUsage = async (agentType: string, project: string = 'all'):
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       AND model != ''
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY model, agent_type
     ORDER BY request_count DESC
-  `).all(...agentParams(agentType), ...projectParams(project)) as ModelUsage[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as ModelUsage[]
 }
 
 export type EfficiencyRow = {
@@ -155,8 +175,12 @@ export type EfficiencyRow = {
   total_duration_ms: number
 }
 
-export const getEfficiencyStats = async (days: number = 7, project: string = 'all'): Promise<EfficiencyRow[]> => {
+export const getEfficiencyStats = async (days: number = 7, project: string = 'all', from?: string, to?: string): Promise<EfficiencyRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
+
   return db.prepare(`
     SELECT
       agent_type,
@@ -174,11 +198,11 @@ export const getEfficiencyStats = async (days: number = 7, project: string = 'al
       COALESCE(sum(duration_ms), 0) as total_duration_ms
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
-      AND date(timestamp) >= date('now', '-' || ? || ' days')
+      ${dateClause}
       ${projectFilter(project)}
     GROUP BY agent_type, date
     ORDER BY date ASC
-  `).all(days, ...projectParams(project)) as EfficiencyRow[]
+  `).all(...dateParams, ...projectParams(project)) as EfficiencyRow[]
 }
 
 export type EfficiencyComparisonRow = {
@@ -191,11 +215,43 @@ export type EfficiencyComparisonRow = {
   total_duration_ms: number
 }
 
-export const getEfficiencyComparison = async (days: number = 7, project: string = 'all'): Promise<{
+export const getEfficiencyComparison = async (days: number = 7, project: string = 'all', from?: string, to?: string): Promise<{
   current: EfficiencyComparisonRow[]
   previous: EfficiencyComparisonRow[]
 }> => {
   const db = getDb()
+
+  if (from && to) {
+    const fromDate = new Date(from)
+    const toDate = new Date(to)
+    const rangeDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    const prevTo = new Date(fromDate)
+    prevTo.setDate(prevTo.getDate() - 1)
+    const prevFrom = new Date(prevTo)
+    prevFrom.setDate(prevFrom.getDate() - rangeDays + 1)
+    const prevFromISO = prevFrom.toISOString().slice(0, 10)
+    const prevToISO = prevTo.toISOString().slice(0, 10)
+
+    const query = `
+      SELECT
+        agent_type,
+        COALESCE(sum(input_tokens), 0) as total_input,
+        COALESCE(sum(output_tokens), 0) as total_output,
+        count(*) as total_requests,
+        COALESCE(sum(cache_read_tokens), 0) as total_cache_read,
+        COALESCE(sum(cost_usd), 0) as cost,
+        COALESCE(sum(duration_ms), 0) as total_duration_ms
+      FROM agent_logs
+      WHERE ${API_REQUEST_FILTER}
+        ${dateRangeFilter()}
+        ${projectFilter(project)}
+      GROUP BY agent_type
+    `
+    const current = db.prepare(query).all(from, to, ...projectParams(project)) as EfficiencyComparisonRow[]
+    const previous = db.prepare(query).all(prevFromISO, prevToISO, ...projectParams(project)) as EfficiencyComparisonRow[]
+    return { current, previous }
+  }
+
   const query = `
     SELECT
       agent_type,
@@ -231,8 +287,12 @@ export type ToolUsageRow = {
   avg_duration_ms: number
 }
 
-export const getToolUsageStats = async (agentType: string, days: number = 7, project: string = 'all'): Promise<ToolUsageRow[]> => {
+export const getToolUsageStats = async (agentType: string, days: number = 7, project: string = 'all', from?: string, to?: string): Promise<ToolUsageRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
+
   return db.prepare(`
     SELECT
       tool_name,
@@ -242,13 +302,13 @@ export const getToolUsageStats = async (agentType: string, days: number = 7, pro
       COALESCE(avg(duration_ms), 0) as avg_duration_ms
     FROM agent_logs
     WHERE event_name = 'tool_result'
-      AND date(timestamp) >= date('now', '-' || ? || ' days')
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY tool_name
     ORDER BY invocation_count DESC
     LIMIT 30
-  `).all(days, ...agentParams(agentType), ...projectParams(project)) as ToolUsageRow[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as ToolUsageRow[]
 }
 
 export type DailyToolRow = {
@@ -257,8 +317,12 @@ export type DailyToolRow = {
   count: number
 }
 
-export const getDailyToolStats = async (agentType: string, days: number = 7, project: string = 'all'): Promise<DailyToolRow[]> => {
+export const getDailyToolStats = async (agentType: string, days: number = 7, project: string = 'all', from?: string, to?: string): Promise<DailyToolRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
+
   return db.prepare(`
     SELECT
       date(timestamp) as date,
@@ -266,12 +330,12 @@ export const getDailyToolStats = async (agentType: string, days: number = 7, pro
       count(*) as count
     FROM agent_logs
     WHERE event_name = 'tool_result'
-      AND date(timestamp) >= date('now', '-' || ? || ' days')
+      ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY date(timestamp), tool_name
     ORDER BY date ASC, count DESC
-  `).all(days, ...agentParams(agentType), ...projectParams(project)) as DailyToolRow[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as DailyToolRow[]
 }
 
 export type ToolDetailRow = {
@@ -287,8 +351,12 @@ export type ToolDetailRow = {
   total_cost: number
 }
 
-export const getToolDetailStats = async (agentType: string, days: number = 7, project: string = 'all'): Promise<ToolDetailRow[]> => {
+export const getToolDetailStats = async (agentType: string, days: number = 7, project: string = 'all', from?: string, to?: string): Promise<ToolDetailRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
+
   return db.prepare(`
     WITH tool_prompts AS (
       SELECT
@@ -302,7 +370,7 @@ export const getToolDetailStats = async (agentType: string, days: number = 7, pr
       FROM agent_logs
       WHERE event_name = 'tool_result'
         AND tool_name != ''
-        AND date(timestamp) >= date('now', '-' || ? || ' days')
+        ${dateClause}
         ${agentFilter(agentType)}
         ${projectFilter(project)}
       GROUP BY tool_name, prompt_id
@@ -314,7 +382,7 @@ export const getToolDetailStats = async (agentType: string, days: number = 7, pr
         COALESCE(sum(cost_usd), 0) as cost
       FROM agent_logs
       WHERE event_name = 'api_request'
-        AND date(timestamp) >= date('now', '-' || ? || ' days')
+        ${dateClause}
         ${agentFilter(agentType)}
         ${projectFilter(project)}
       GROUP BY prompt_id
@@ -339,8 +407,8 @@ export const getToolDetailStats = async (agentType: string, days: number = 7, pr
     GROUP BY tp.tool_name
     ORDER BY invocation_count DESC
   `).all(
-    days, ...agentParams(agentType), ...projectParams(project),
-    days, ...agentParams(agentType), ...projectParams(project)
+    ...dateParams, ...agentParams(agentType), ...projectParams(project),
+    ...dateParams, ...agentParams(agentType), ...projectParams(project)
   ) as ToolDetailRow[]
 }
 
@@ -356,8 +424,14 @@ export type IndividualToolRow = {
   last_used: string
 }
 
-export const getIndividualToolStats = async (days: number = 30, project: string = 'all'): Promise<IndividualToolRow[]> => {
+export const getIndividualToolStats = async (days: number = 30, project: string = 'all', from?: string, to?: string): Promise<IndividualToolRow[]> => {
   const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate
+    ? `AND date(timestamp) >= date(?) AND date(timestamp) <= date(?)`
+    : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
+  const dateParams = useDate ? [from, to] : [days]
+
   return db.prepare(`
     SELECT
       tool_name,
@@ -373,12 +447,12 @@ export const getIndividualToolStats = async (days: number = 30, project: string 
       COALESCE(avg(duration_ms), 0) as avg_duration_ms,
       max(timestamp) as last_used
     FROM tool_details
-    WHERE date(timestamp) >= date('now', '-' || ? || ' days')
-      AND detail_name != ''
+    WHERE detail_name != ''
+      ${dateClause}
       ${projectFilter(project)}
     GROUP BY tool_name, CASE WHEN detail_type = 'mcp' THEN replace(tool_name, 'mcp:', '') ELSE detail_name END, agent_type
     ORDER BY invocation_count DESC
-  `).all(days, ...projectParams(project)) as IndividualToolRow[]
+  `).all(...dateParams, ...projectParams(project)) as IndividualToolRow[]
 }
 
 export const getProjects = async (): Promise<ProjectRow[]> => {
