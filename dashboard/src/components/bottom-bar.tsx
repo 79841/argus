@@ -100,6 +100,20 @@ export const BottomBar = () => {
           )
         })}
       </div>
+
+      {activeCount > 0 && (
+        <div className="ml-4 flex items-center gap-1.5">
+          <div className="h-3 w-px bg-border" />
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+          </span>
+          <span className="font-medium text-green-600 dark:text-green-400">
+            {activeCount} active
+          </span>
+        </div>
+      )}
+
       <div className="ml-auto flex items-center gap-3">
         <span>Total: ${totals.total_cost.toFixed(2)} / {formatTokensShort(totals.total_tokens)} tokens</span>
       </div>

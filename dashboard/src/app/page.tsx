@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAutoRefresh } from '@/hooks/use-auto-refresh'
 import type { OverviewStats, ModelUsage, DailyStats, ToolUsageRow, SessionRow, AllTimeStats } from '@/lib/queries'
 import type { ConfigChange } from '@/lib/config-tracker'
 import type { ConfigChangeMarker } from '@/components/cost-chart'
@@ -101,8 +102,8 @@ export default function OverviewPage() {
     fetch('/api/pricing-sync', { method: 'POST' }).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
+  const fetchData = useCallback((showLoading = true) => {
+    if (showLoading) setLoading(true)
     const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
     Promise.all([
       fetch(`/api/overview?${q}`).then((r) => r.json()),
@@ -148,6 +149,12 @@ export default function OverviewPage() {
         setLoading(false)
       })
   }, [agentType, project, dateRange])
+
+  useEffect(() => {
+    fetchData(true)
+  }, [fetchData])
+
+  useAutoRefresh(useCallback(() => fetchData(false), [fetchData]))
 
   const costChartData = useMemo((): Record<string, unknown>[] => {
     if (agentType === 'all') {
