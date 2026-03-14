@@ -5,7 +5,7 @@ import { getDb } from './db'
  * Filters on event_name = 'api_request' for token/cost metrics.
  */
 
-const API_REQUEST_FILTER = "event_name IN ('api_request', '')"
+const API_REQUEST_FILTER = "event_name = 'api_request'"
 
 const agentFilter = (agentType: string) =>
   agentType !== 'all' ? `AND agent_type = ?` : ''
@@ -96,13 +96,13 @@ export const getSessions = async (agentType: string, project: string = 'all'): P
     SELECT
       session_id,
       agent_type,
-      model,
+      (SELECT m.model FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '' GROUP BY m.model ORDER BY count(*) DESC LIMIT 1) as model,
       min(timestamp) as started_at,
       COALESCE(sum(cost_usd), 0) as cost,
       COALESCE(sum(input_tokens), 0) as input_tokens,
       COALESCE(sum(output_tokens), 0) as output_tokens,
       COALESCE(sum(cache_read_tokens), 0) as cache_read_tokens,
-      COALESCE(sum(duration_ms), 0) as duration_ms,
+      CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as duration_ms,
       count(*) as request_count,
       project_name
     FROM agent_logs
@@ -295,7 +295,7 @@ export const getToolDetailStats = async (agentType: string, days: number = 7, pr
       COALESCE(sum(pt.tokens), 0) as total_tokens,
       COALESCE(sum(pt.cost), 0) as total_cost
     FROM tool_prompts tp
-    LEFT JOIN prompt_tokens pt ON tp.prompt_id = pt.prompt_id
+    LEFT JOIN prompt_tokens pt ON tp.prompt_id = pt.prompt_id AND tp.prompt_id != ''
     GROUP BY tp.tool_name
     ORDER BY invocation_count DESC
   `).all(

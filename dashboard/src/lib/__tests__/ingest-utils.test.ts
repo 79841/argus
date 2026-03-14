@@ -399,4 +399,20 @@ describe('calculateCost', () => {
     const db = createTestDb()
     expect(calculateCost(db, '', 1000, 500, 0)).toBe(0)
   })
+
+  it('includes reasoning tokens at output rate (PER-21)', () => {
+    const db = createTestDb()
+    // gpt-4.1: input=2.0, output=8.0
+    // 1M reasoning tokens at output rate = $8.0
+    const cost = calculateCost(db, 'gpt-4.1', 0, 0, 0, 1_000_000)
+    expect(cost).toBe(8.0)
+  })
+
+  it('handles reasoning tokens for Gemini thinking', () => {
+    const db = createTestDb()
+    // gemini-2.5-pro: output=10.0
+    // 1M reasoning tokens at output rate = $10.0
+    const cost = calculateCost(db, 'gemini-2.5-pro', 0, 0, 0, 1_000_000)
+    expect(cost).toBe(10.0)
+  })
 })

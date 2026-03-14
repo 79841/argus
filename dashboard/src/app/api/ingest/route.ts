@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
             let costUsd = getNumAttr(attrs, 'cost_usd')
             if (costUsd === 0 && agentType !== 'claude' && inputTokens > 0) {
-              costUsd = calculateCost(db, model, inputTokens, outputTokens, cacheReadTokens)
+              costUsd = calculateCost(db, model, inputTokens, outputTokens, cacheReadTokens, reasoningTokens)
             }
 
             // Extract project from Codex tool arguments workdir
@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
                   toolName, null, 'INFO', decision, resolvedProject,
                   attrsToJson(resAttrs), attrsToJson(attrs)
                 )
-                count++
               }
             }
 

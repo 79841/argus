@@ -118,7 +118,8 @@ export const calculateCost = (
   model: string,
   inputTokens: number,
   outputTokens: number,
-  cacheReadTokens: number
+  cacheReadTokens: number,
+  reasoningTokens: number = 0
 ): number => {
   if (!model) return 0
   const normalized = normalizeModelId(model)
@@ -133,7 +134,8 @@ export const calculateCost = (
   return (
     (inputTokens * pricing.input_per_mtok +
       outputTokens * pricing.output_per_mtok +
-      cacheReadTokens * pricing.cache_read_per_mtok) / 1_000_000
+      cacheReadTokens * pricing.cache_read_per_mtok +
+      reasoningTokens * pricing.output_per_mtok) / 1_000_000
   )
 }
 

@@ -173,18 +173,18 @@ export async function POST(request: NextRequest) {
               let toolName = ''
               let costUsd = 0
 
-              if (metricName === 'gemini_cli.api.duration' || metricName === 'gemini_cli.api.request.duration') {
-                eventName = 'api_request'
-                durationMs = value
-              } else if (metricName === 'gemini_cli.api.input_tokens' || metricName === 'gemini_cli.token.input.count') {
-                eventName = 'api_request'
-                inputTokens = value
-              } else if (metricName === 'gemini_cli.api.output_tokens' || metricName === 'gemini_cli.token.output.count') {
-                eventName = 'api_request'
-                outputTokens = value
-              } else if (metricName === 'gemini_cli.api.cache_read_tokens' || metricName === 'gemini_cli.token.cache_read.count') {
-                eventName = 'api_request'
-                cacheReadTokens = value
+              // Skip token/duration metrics — they duplicate data from /v1/logs (PER-19)
+              if (
+                metricName === 'gemini_cli.api.duration' ||
+                metricName === 'gemini_cli.api.request.duration' ||
+                metricName === 'gemini_cli.api.input_tokens' ||
+                metricName === 'gemini_cli.token.input.count' ||
+                metricName === 'gemini_cli.api.output_tokens' ||
+                metricName === 'gemini_cli.token.output.count' ||
+                metricName === 'gemini_cli.api.cache_read_tokens' ||
+                metricName === 'gemini_cli.token.cache_read.count'
+              ) {
+                continue
               } else if (metricName === 'gemini_cli.tool.duration' || metricName === 'gemini_cli.tool_call.duration') {
                 eventName = 'tool_result'
                 durationMs = value

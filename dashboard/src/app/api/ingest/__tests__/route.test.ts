@@ -252,7 +252,8 @@ describe('Gemini tool_decision synthesis', () => {
 
     const res = await POST(mkRequest(payload) as never)
     const json = await res.json()
-    expect(json.accepted).toBe(2)
+    // accepted counts only primary records, not synthetic tool_decision (PER-28)
+    expect(json.accepted).toBe(1)
 
     const logs = getLogs()
     expect(logs).toHaveLength(2)
