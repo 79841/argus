@@ -113,10 +113,12 @@ export async function POST(request: NextRequest) {
                 try { params = JSON.parse(toolParams) } catch {}
               }
 
-              if (toolName.startsWith('mcp__')) {
+              if (toolName.startsWith('mcp__') || (toolName === 'mcp_tool' && params.mcp_server_name)) {
                 const mcpServer = params.mcp_server_name || extractMcpServer(toolName)
+                const mcpTool = params.mcp_tool_name || toolName
+                const detailName = toolName.startsWith('mcp__') ? toolName : `mcp__${mcpServer}__${mcpTool}`
                 insertToolDetail.run(
-                  timestamp, sessionId, `mcp:${mcpServer}`, toolName, 'mcp',
+                  timestamp, sessionId, `mcp:${mcpServer}`, detailName, 'mcp',
                   durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
                   resolvedProject, agentType
                 )

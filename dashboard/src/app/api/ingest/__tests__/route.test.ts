@@ -392,6 +392,25 @@ describe('Claude tool_parameters extraction', () => {
     const details = getToolDetails()
     expect(details).toHaveLength(0)
   })
+
+  it('extracts MCP details from mcp_tool via tool_parameters', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'mcp_tool'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 1500),
+      mkAttr('tool_parameters', '{"mcp_server_name":"linear-server","mcp_tool_name":"create_document"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('mcp:linear-server')
+    expect(details[0].detail_name).toBe('mcp__linear-server__create_document')
+    expect(details[0].detail_type).toBe('mcp')
+  })
 })
 
 // --- B7. Empty payload ---
