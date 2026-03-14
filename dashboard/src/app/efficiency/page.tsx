@@ -16,7 +16,7 @@ import { ProjectFilter } from '@/components/project-filter'
 import { AgentComparison } from '@/components/agent-comparison'
 import { calculateEfficiency, getScoreColor, getScoreBg } from '@/lib/efficiency'
 import type { EfficiencyResult } from '@/lib/efficiency'
-import type { EfficiencyRow } from '@/lib/queries'
+import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 
 const AGENT_KEYS = ['codex', 'claude', 'gemini'] as const
@@ -25,6 +25,13 @@ type AgentEfficiency = {
   agent_type: string
   name: string
   efficiency: EfficiencyResult
+  changes: {
+    score: number | null
+    tokenEfficiency: number | null
+    avgDurationMs: number | null
+    cacheEfficiency: number | null
+    costEfficiency: number | null
+  }
 }
 
 type CacheChartRow = {
@@ -40,6 +47,14 @@ type ComparisonRow = {
   requests: number
 }
 
+type ApiResponse = {
+  data: EfficiencyRow[]
+  comparison: {
+    current: EfficiencyComparisonRow[]
+    previous: EfficiencyComparisonRow[]
+  }
+}
+
 const formatDate = (label: unknown) => {
   const d = new Date(String(label))
   return `${d.getMonth() + 1}/${d.getDate()}`
@@ -47,18 +62,50 @@ const formatDate = (label: unknown) => {
 
 const formatPercent = (value: unknown) => `${(Number(value) * 100).toFixed(0)}%`
 
+const formatDuration = (ms: number): string => {
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  return `${(ms / 1000).toFixed(1)}s`
+}
+
+const formatChangePercent = (value: number | null): string => {
+  if (value === null) return '-'
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${value.toFixed(1)}%`
+}
+
+const getChangeColor = (value: number | null, invertColor: boolean = false): string => {
+  if (value === null) return 'text-muted-foreground'
+  if (value > 0) return invertColor ? 'text-red-600' : 'text-green-600'
+  if (value < 0) return invertColor ? 'text-green-600' : 'text-red-600'
+  return 'text-muted-foreground'
+}
+
+const getChangeArrow = (value: number | null): string => {
+  if (value === null) return ''
+  if (value > 0) return '\u2191'
+  if (value < 0) return '\u2193'
+  return ''
+}
+
+const calcPercentChange = (current: number, previous: number): number | null => {
+  if (previous === 0) return current > 0 ? 100 : null
+  return ((current - previous) / previous) * 100
+}
+
 const aggregateByAgent = (data: EfficiencyRow[]) => {
-  const map: Record<string, { cacheRead: number; input: number; requests: number; cost: number }> = {}
+  const map: Record<string, { cacheRead: number; input: number; output: number; requests: number; cost: number; durationMs: number }> = {}
 
   for (const row of data) {
     if (!map[row.agent_type]) {
-      map[row.agent_type] = { cacheRead: 0, input: 0, requests: 0, cost: 0 }
+      map[row.agent_type] = { cacheRead: 0, input: 0, output: 0, requests: 0, cost: 0, durationMs: 0 }
     }
     const agg = map[row.agent_type]
     agg.cacheRead += Number(row.total_cache_read)
     agg.input += Number(row.total_input)
+    agg.output += Number(row.total_output)
     agg.requests += Number(row.total_requests)
     agg.cost += Number(row.cost)
+    agg.durationMs += Number(row.total_duration_ms)
   }
 
   return map
@@ -94,36 +141,95 @@ const buildComparisonData = (agentMap: Record<string, { cost: number; requests: 
     }))
 }
 
-const buildEfficiencyCards = (agentMap: Record<string, { cacheRead: number; input: number; requests: number; cost: number }>): AgentEfficiency[] => {
+const buildPreviousMap = (rows: EfficiencyComparisonRow[]): Record<string, EfficiencyResult> => {
+  const map: Record<string, EfficiencyResult> = {}
+  for (const row of rows) {
+    map[row.agent_type] = calculateEfficiency({
+      cacheReadTokens: Number(row.total_cache_read),
+      inputTokens: Number(row.total_input),
+      outputTokens: Number(row.total_output),
+      requestCount: Number(row.total_requests),
+      costUsd: Number(row.cost),
+      totalDurationMs: Number(row.total_duration_ms),
+    })
+  }
+  return map
+}
+
+const buildEfficiencyCards = (
+  agentMap: Record<string, { cacheRead: number; input: number; output: number; requests: number; cost: number; durationMs: number }>,
+  previousMap: Record<string, EfficiencyResult>,
+): AgentEfficiency[] => {
   return AGENT_KEYS
     .filter((key) => agentMap[key])
-    .map((key) => ({
-      agent_type: key,
-      name: AGENTS[key].name,
-      efficiency: calculateEfficiency({
+    .map((key) => {
+      const efficiency = calculateEfficiency({
         cacheReadTokens: agentMap[key].cacheRead,
         inputTokens: agentMap[key].input,
+        outputTokens: agentMap[key].output,
         requestCount: agentMap[key].requests,
         costUsd: agentMap[key].cost,
-      }),
-    }))
+        totalDurationMs: agentMap[key].durationMs,
+      })
+
+      const prev = previousMap[key]
+      const changes = prev
+        ? {
+            score: calcPercentChange(efficiency.score, prev.score),
+            tokenEfficiency: calcPercentChange(efficiency.tokenEfficiency, prev.tokenEfficiency),
+            avgDurationMs: calcPercentChange(efficiency.avgDurationMs, prev.avgDurationMs),
+            cacheEfficiency: calcPercentChange(efficiency.cacheEfficiency, prev.cacheEfficiency),
+            costEfficiency: calcPercentChange(efficiency.costEfficiency, prev.costEfficiency),
+          }
+        : {
+            score: null,
+            tokenEfficiency: null,
+            avgDurationMs: null,
+            cacheEfficiency: null,
+            costEfficiency: null,
+          }
+
+      return {
+        agent_type: key,
+        name: AGENTS[key].name,
+        efficiency,
+        changes,
+      }
+    })
+}
+
+type ChangeIndicatorProps = {
+  value: number | null
+  invertColor?: boolean
+}
+
+const ChangeIndicator = ({ value, invertColor = false }: ChangeIndicatorProps) => {
+  if (value === null) return null
+  return (
+    <span className={`ml-1 text-xs ${getChangeColor(value, invertColor)}`}>
+      {getChangeArrow(value)} {formatChangePercent(value)}
+    </span>
+  )
 }
 
 export default function EfficiencyPage() {
   const [project, setProject] = useState('all')
   const [data, setData] = useState<EfficiencyRow[]>([])
+  const [previousMap, setPreviousMap] = useState<Record<string, EfficiencyResult>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
     fetch(`/api/efficiency?days=7&project=${project}`)
       .then((res) => res.json())
-      .then((json) => {
-        setData(json)
+      .then((json: ApiResponse) => {
+        setData(json.data)
+        setPreviousMap(buildPreviousMap(json.comparison.previous))
         setLoading(false)
       })
       .catch(() => {
         setData([])
+        setPreviousMap({})
         setLoading(false)
       })
   }, [project])
@@ -148,7 +254,7 @@ export default function EfficiencyPage() {
   }
 
   const agentMap = aggregateByAgent(data)
-  const efficiencyCards = buildEfficiencyCards(agentMap)
+  const efficiencyCards = buildEfficiencyCards(agentMap, previousMap)
   const cacheChartData = buildCacheChartData(data)
   const comparisonData = buildComparisonData(agentMap)
 
@@ -173,18 +279,35 @@ export default function EfficiencyPage() {
                   {agent.efficiency.score}
                 </span>
                 <span className="text-sm text-muted-foreground">/ 100</span>
+                <ChangeIndicator value={agent.changes.score} />
               </div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cache Efficiency</span>
                   <span className="font-medium">
                     {(agent.efficiency.cacheEfficiency * 100).toFixed(1)}%
+                    <ChangeIndicator value={agent.changes.cacheEfficiency} />
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cost Efficiency</span>
                   <span className="font-medium">
                     {(agent.efficiency.costEfficiency * 100).toFixed(1)}%
+                    <ChangeIndicator value={agent.changes.costEfficiency} />
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Token Efficiency</span>
+                  <span className="font-medium">
+                    {(agent.efficiency.tokenEfficiency * 100).toFixed(1)}%
+                    <ChangeIndicator value={agent.changes.tokenEfficiency} />
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Avg Response Time</span>
+                  <span className="font-medium">
+                    {formatDuration(agent.efficiency.avgDurationMs)}
+                    <ChangeIndicator value={agent.changes.avgDurationMs} invertColor />
                   </span>
                 </div>
               </div>

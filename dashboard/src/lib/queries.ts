@@ -150,6 +150,7 @@ export type EfficiencyRow = {
   total_cache_read: number
   cache_hit_rate: number
   cost: number
+  total_duration_ms: number
 }
 
 export const getEfficiencyStats = async (days: number = 7, project: string = 'all'): Promise<EfficiencyRow[]> => {
@@ -167,7 +168,8 @@ export const getEfficiencyStats = async (days: number = 7, project: string = 'al
         THEN CAST(sum(cache_read_tokens) AS REAL) / (sum(input_tokens) + sum(cache_read_tokens))
         ELSE 0
       END as cache_hit_rate,
-      COALESCE(sum(cost_usd), 0) as cost
+      COALESCE(sum(cost_usd), 0) as cost,
+      COALESCE(sum(duration_ms), 0) as total_duration_ms
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       AND date(timestamp) >= date('now', '-' || ? || ' days')
@@ -175,6 +177,42 @@ export const getEfficiencyStats = async (days: number = 7, project: string = 'al
     GROUP BY agent_type, date
     ORDER BY date ASC
   `).all(days, ...projectParams(project)) as EfficiencyRow[]
+}
+
+export type EfficiencyComparisonRow = {
+  agent_type: string
+  total_input: number
+  total_output: number
+  total_requests: number
+  total_cache_read: number
+  cost: number
+  total_duration_ms: number
+}
+
+export const getEfficiencyComparison = async (days: number = 7, project: string = 'all'): Promise<{
+  current: EfficiencyComparisonRow[]
+  previous: EfficiencyComparisonRow[]
+}> => {
+  const db = getDb()
+  const query = `
+    SELECT
+      agent_type,
+      COALESCE(sum(input_tokens), 0) as total_input,
+      COALESCE(sum(output_tokens), 0) as total_output,
+      count(*) as total_requests,
+      COALESCE(sum(cache_read_tokens), 0) as total_cache_read,
+      COALESCE(sum(cost_usd), 0) as cost,
+      COALESCE(sum(duration_ms), 0) as total_duration_ms
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND date(timestamp) >= date('now', '-' || ? || ' days')
+      AND date(timestamp) < date('now', '-' || ? || ' days')
+      ${projectFilter(project)}
+    GROUP BY agent_type
+  `
+  const current = db.prepare(query).all(days, 0, ...projectParams(project)) as EfficiencyComparisonRow[]
+  const previous = db.prepare(query).all(days * 2, days, ...projectParams(project)) as EfficiencyComparisonRow[]
+  return { current, previous }
 }
 
 export type ProjectRow = {
