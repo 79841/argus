@@ -1,26 +1,30 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot } from 'lucide-react'
+import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { useTheme } from '@/components/theme-provider'
 import { ConfigTimeline } from '@/components/config-timeline'
+import { useLocale } from '@/lib/i18n'
+import type { Locale } from '@/lib/i18n'
 import type { ConfigChange } from '@/lib/config-tracker'
 import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark' | 'system'
+type AgentTheme = 'default' | 'claude' | 'codex' | 'gemini'
 
 type Category = 'general' | 'agents' | 'pricing' | 'data' | 'config'
 
-const CATEGORIES: { key: Category; label: string; icon: React.ElementType }[] = [
-  { key: 'general', label: 'General', icon: Palette },
-  { key: 'agents', label: 'Agents', icon: Bot },
-  { key: 'pricing', label: 'Pricing', icon: Cog },
-  { key: 'data', label: 'Data', icon: Database },
-  { key: 'config', label: 'Config', icon: RefreshCw },
+const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
+
+const AGENT_THEMES: { value: AgentTheme; label: string; color: string }[] = [
+  { value: 'default', label: 'Default', color: '#8b5cf6' },
+  { value: 'claude', label: 'Claude', color: '#f97316' },
+  { value: 'codex', label: 'Codex', color: '#10b981' },
+  { value: 'gemini', label: 'Gemini', color: '#3b82f6' },
 ]
 
 const REFRESH_OPTIONS = [
@@ -34,12 +38,16 @@ const REFRESH_STORAGE_KEY = 'argus-refresh-interval'
 
 const GeneralSection = () => {
   const { theme, setTheme } = useTheme()
+  const { locale, setLocale, t } = useLocale()
   const [refreshInterval, setRefreshInterval] = useState('0')
+  const [agentTheme, setAgentTheme] = useState<AgentTheme>('default')
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(REFRESH_STORAGE_KEY)
       if (stored) setRefreshInterval(stored)
+      const storedAgent = localStorage.getItem(AGENT_THEME_STORAGE_KEY) as AgentTheme | null
+      if (storedAgent) setAgentTheme(storedAgent)
     } catch {
       // ignore
     }
@@ -55,18 +63,28 @@ const GeneralSection = () => {
     }
   }
 
-  const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: Monitor },
+  const handleAgentThemeChange = (value: AgentTheme) => {
+    setAgentTheme(value)
+    try {
+      localStorage.setItem(AGENT_THEME_STORAGE_KEY, value)
+      document.documentElement.setAttribute('data-agent-theme', value)
+    } catch {
+      // ignore
+    }
+  }
+
+  const themeOptions: { value: Theme; labelKey: string; icon: React.ElementType }[] = [
+    { value: 'light', labelKey: 'settings.theme.light', icon: Sun },
+    { value: 'dark', labelKey: 'settings.theme.dark', icon: Moon },
+    { value: 'system', labelKey: 'settings.theme.system', icon: Monitor },
   ]
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Theme</CardTitle>
-          <CardDescription>Choose your preferred color scheme.</CardDescription>
+          <CardTitle>{t('settings.theme')}</CardTitle>
+          <CardDescription>{t('settings.theme.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -82,6 +100,65 @@ const GeneralSection = () => {
                 )}
               >
                 <opt.icon className="size-4" />
+                {t(opt.labelKey)}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.agentTheme')}</CardTitle>
+          <CardDescription>{t('settings.agentTheme.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-3">
+            {AGENT_THEMES.map((at) => (
+              <button
+                key={at.value}
+                onClick={() => handleAgentThemeChange(at.value)}
+                className={cn(
+                  'flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition-colors',
+                  agentTheme === at.value
+                    ? 'border-2 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+                style={agentTheme === at.value ? { borderColor: at.color } : undefined}
+              >
+                <span
+                  className="size-8 rounded-full"
+                  style={{ backgroundColor: at.color }}
+                />
+                {at.label}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.language')}</CardTitle>
+          <CardDescription>{t('settings.language.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {([
+              { value: 'ko' as Locale, label: '한국어' },
+              { value: 'en' as Locale, label: 'English' },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setLocale(opt.value)}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
+                  locale === opt.value
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <Globe className="size-4" />
                 {opt.label}
               </button>
             ))}
@@ -91,8 +168,8 @@ const GeneralSection = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Auto Refresh</CardTitle>
-          <CardDescription>Set the polling interval for dashboard data.</CardDescription>
+          <CardTitle>{t('settings.autoRefresh')}</CardTitle>
+          <CardDescription>{t('settings.autoRefresh.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Select value={refreshInterval} onValueChange={handleRefreshChange}>
@@ -343,15 +420,24 @@ const SECTION_MAP: Record<Category, React.FC> = {
 
 export default function SettingsPage() {
   const [active, setActive] = useState<Category>('general')
+  const { t } = useLocale()
   const ActiveSection = SECTION_MAP[active]
+
+  const categories: { key: Category; labelKey: string; icon: React.ElementType }[] = [
+    { key: 'general', labelKey: 'settings.general', icon: Palette },
+    { key: 'agents', labelKey: 'settings.agents', icon: Bot },
+    { key: 'pricing', labelKey: 'settings.pricing', icon: Cog },
+    { key: 'data', labelKey: 'settings.data', icon: Database },
+    { key: 'config', labelKey: 'settings.config', icon: RefreshCw },
+  ]
 
   return (
     <div className="flex h-full">
       {/* Left sidebar */}
       <nav className="w-48 shrink-0 border-r overflow-y-auto py-4 pr-2">
-        <h1 className="px-3 mb-4 text-lg font-bold tracking-tight">Settings</h1>
+        <h1 className="px-3 mb-4 text-lg font-bold tracking-tight">{t('settings.title')}</h1>
         <ul className="space-y-0.5">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <li key={cat.key}>
               <button
                 onClick={() => setActive(cat.key)}
@@ -363,7 +449,7 @@ export default function SettingsPage() {
                 )}
               >
                 <cat.icon className="size-4" />
-                {cat.label}
+                {t(cat.labelKey)}
               </button>
             </li>
           ))}

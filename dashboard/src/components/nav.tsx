@@ -16,19 +16,20 @@ import {
   FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLocale } from '@/lib/i18n'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 import type { LucideIcon } from 'lucide-react'
 
 type NavPage = {
   href: string
-  label: string
+  labelKey: string
   icon: LucideIcon
 }
 
 type NavCategory = {
   key: string
-  label: string
+  labelKey: string
   icon: LucideIcon
   pages: NavPage[]
 }
@@ -36,27 +37,27 @@ type NavCategory = {
 const NAV_CATEGORIES: NavCategory[] = [
   {
     key: 'monitoring',
-    label: 'Monitoring',
+    labelKey: 'nav.monitoring',
     icon: BarChart3,
     pages: [
-      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/sessions', label: 'Sessions', icon: MessageSquare },
-      { href: '/cost', label: 'Cost', icon: DollarSign },
+      { href: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+      { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
+      { href: '/cost', labelKey: 'nav.cost', icon: DollarSign },
     ],
   },
   {
     key: 'analysis',
-    label: 'Analysis',
+    labelKey: 'nav.analysis',
     icon: FlaskConical,
     pages: [
-      { href: '/tools', label: 'Tools', icon: Wrench },
+      { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
     ],
   },
 ]
 
 const SETTINGS_ITEM: NavPage = {
   href: '/settings',
-  label: 'Settings',
+  labelKey: 'nav.settings',
   icon: Settings,
 }
 
@@ -68,11 +69,13 @@ const CategoryPopover = ({
   anchorRef,
   onClose,
   pathname,
+  translate,
 }: {
   category: NavCategory
   anchorRef: React.RefObject<HTMLButtonElement | null>
   onClose: () => void
   pathname: string
+  translate: (key: string) => string
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null)
 
@@ -107,7 +110,7 @@ const CategoryPopover = ({
       style={{ top: pos.top, left: pos.left }}
     >
       <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-        {category.label}
+        {translate(category.labelKey)}
       </div>
       {category.pages.map((page) => (
         <Link
@@ -122,7 +125,7 @@ const CategoryPopover = ({
           )}
         >
           <page.icon className="size-4" />
-          {page.label}
+          {translate(page.labelKey)}
         </Link>
       ))}
     </div>
@@ -131,6 +134,7 @@ const CategoryPopover = ({
 
 export const Nav = () => {
   const pathname = usePathname()
+  const { t } = useLocale()
   const [collapsed, setCollapsed] = useState(false)
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({})
   const [popoverCategory, setPopoverCategory] = useState<string | null>(null)
@@ -263,7 +267,7 @@ export const Nav = () => {
                     <category.icon className="size-5" />
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    {category.label}
+                    {t(category.labelKey)}
                   </TooltipContent>
                 </Tooltip>
                 {popoverCategory === category.key && (
@@ -272,6 +276,7 @@ export const Nav = () => {
                     anchorRef={categoryRefs.current[category.key]}
                     onClose={closePopover}
                     pathname={pathname}
+                    translate={t}
                   />
                 )}
               </>
@@ -283,7 +288,7 @@ export const Nav = () => {
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <category.icon className="size-4" />
-                  <span className="flex-1 text-left">{category.label}</span>
+                  <span className="flex-1 text-left">{t(category.labelKey)}</span>
                   <ChevronDown
                     className={cn(
                       'size-3.5 transition-transform duration-200',
@@ -305,7 +310,7 @@ export const Nav = () => {
                         )}
                       >
                         <page.icon className="size-4" />
-                        {page.label}
+                        {t(page.labelKey)}
                       </Link>
                     ))}
                   </div>
@@ -339,7 +344,7 @@ export const Nav = () => {
             >
               <Settings className="size-5" />
             </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
+            <TooltipContent side="right">{t(SETTINGS_ITEM.labelKey)}</TooltipContent>
           </Tooltip>
         ) : (
           <Link
@@ -352,7 +357,7 @@ export const Nav = () => {
             )}
           >
             <Settings className="size-4" />
-            Settings
+            {t(SETTINGS_ITEM.labelKey)}
           </Link>
         )}
 
@@ -365,7 +370,7 @@ export const Nav = () => {
             >
               <ChevronRight className="size-5" />
             </TooltipTrigger>
-            <TooltipContent side="right">Expand</TooltipContent>
+            <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
           </Tooltip>
         ) : (
           <button
@@ -373,7 +378,7 @@ export const Nav = () => {
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <ChevronLeft className="size-4" />
-            Collapse
+            {t('nav.collapse')}
           </button>
         )}
       </div>

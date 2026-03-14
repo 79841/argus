@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { OverviewStats, ModelUsage, DailyStats, ToolUsageRow, SessionRow } from '@/lib/queries'
+import { useAutoRefresh } from '@/hooks/use-auto-refresh'
+import type { OverviewStats, ModelUsage, DailyStats, ToolUsageRow, SessionRow, AllTimeStats } from '@/lib/queries'
 import type { ConfigChange } from '@/lib/config-tracker'
 import type { ConfigChangeMarker } from '@/components/cost-chart'
 import { useTopBar } from '@/components/top-bar-context'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UsageHeatmap } from '@/components/usage-heatmap'
 import {
   LineChart,
   Line,
@@ -88,6 +90,7 @@ export default function OverviewPage() {
   const router = useRouter()
   const { agentType, project, dateRange } = useTopBar()
   const [stats, setStats] = useState<OverviewStats | null>(null)
+  const [allTime, setAllTime] = useState<AllTimeStats>({ total_cost: 0, total_tokens: 0 })
   const [models, setModels] = useState<ModelUsage[]>([])
   const [daily, setDaily] = useState<DailyStats[]>([])
   const [tools, setTools] = useState<ToolUsageRow[]>([])
@@ -99,8 +102,8 @@ export default function OverviewPage() {
     fetch('/api/pricing-sync', { method: 'POST' }).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
+  const fetchData = useCallback((showLoading = true) => {
+    if (showLoading) setLoading(true)
     const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
     Promise.all([
       fetch(`/api/overview?${q}`).then((r) => r.json()),
@@ -111,7 +114,9 @@ export default function OverviewPage() {
       fetch(`/api/sessions?${q}&limit=10`).then((r) => r.json()),
     ])
       .then(([statsData, modelsData, dailyData, configData, toolsData, sessionsData]) => {
-        setStats(statsData as OverviewStats)
+        const { all_time_cost, all_time_tokens, ...rest } = statsData as OverviewStats & { all_time_cost: number; all_time_tokens: number }
+        setStats(rest as OverviewStats)
+        setAllTime({ total_cost: all_time_cost ?? 0, total_tokens: all_time_tokens ?? 0 })
         setModels(modelsData as ModelUsage[])
         setDaily(dailyData as DailyStats[])
         setTools((toolsData as { tools: ToolUsageRow[] }).tools ?? [])
@@ -135,6 +140,7 @@ export default function OverviewPage() {
       })
       .catch(() => {
         setStats(null)
+        setAllTime({ total_cost: 0, total_tokens: 0 })
         setModels([])
         setDaily([])
         setTools([])
@@ -143,6 +149,12 @@ export default function OverviewPage() {
         setLoading(false)
       })
   }, [agentType, project, dateRange])
+
+  useEffect(() => {
+    fetchData(true)
+  }, [fetchData])
+
+  useAutoRefresh(useCallback(() => fetchData(false), [fetchData]))
 
   const costChartData = useMemo((): Record<string, unknown>[] => {
     if (agentType === 'all') {
@@ -250,6 +262,7 @@ export default function OverviewPage() {
             </CardHeader>
             <CardContent className="px-3 pb-3">
               <div className="text-xl font-bold">{formatCost(stats?.total_cost ?? 0)}</div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">All time: {formatCost(allTime.total_cost)}</p>
             </CardContent>
           </Card>
 
@@ -263,6 +276,7 @@ export default function OverviewPage() {
                 <div>In: {formatTokens(stats?.total_input_tokens ?? 0)}</div>
                 <div>Out: {formatTokens(stats?.total_output_tokens ?? 0)}</div>
                 <div>Cache: {formatTokens(stats?.total_cache_read_tokens ?? 0)}</div>
+                <div className="mt-0.5 border-t border-border/50 pt-0.5">All time: {formatTokens(allTime.total_tokens)}</div>
               </div>
             </CardContent>
           </Card>
@@ -522,6 +536,11 @@ export default function OverviewPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Row 4: Usage Heatmap */}
+      <div className="shrink-0">
+        <UsageHeatmap data={daily} agentType={agentType} />
       </div>
     </div>
   )

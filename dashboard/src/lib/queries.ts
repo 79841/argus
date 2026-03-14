@@ -59,6 +59,26 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
   return row ?? { total_sessions: 0, total_cost: 0, total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, cache_hit_rate: 0 }
 }
 
+export type AllTimeStats = {
+  total_cost: number
+  total_tokens: number
+}
+
+export const getAllTimeStats = async (agentType: string, project: string = 'all'): Promise<AllTimeStats> => {
+  const db = getDb()
+  const row = db.prepare(`
+    SELECT
+      COALESCE(sum(cost_usd), 0) as total_cost,
+      COALESCE(sum(input_tokens + output_tokens + cache_read_tokens), 0) as total_tokens
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      ${agentFilter(agentType)}
+      ${projectFilter(project)}
+  `).get(...agentParams(agentType), ...projectParams(project)) as AllTimeStats | undefined
+
+  return row ?? { total_cost: 0, total_tokens: 0 }
+}
+
 export type DailyStats = {
   date: string
   sessions: number
@@ -511,6 +531,34 @@ export const getProjects = async (): Promise<ProjectRow[]> => {
     GROUP BY project_name
     ORDER BY total_cost DESC
   `).all() as ProjectRow[]
+}
+
+export type ActiveSession = {
+  session_id: string
+  agent_type: string
+  model: string
+  last_event: string
+  cost: number
+  event_count: number
+}
+
+export const getActiveSessions = async (): Promise<ActiveSession[]> => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      session_id,
+      agent_type,
+      (SELECT m.model FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '' GROUP BY m.model ORDER BY count(*) DESC LIMIT 1) as model,
+      max(timestamp) as last_event,
+      COALESCE(sum(cost_usd), 0) as cost,
+      count(*) as event_count
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND timestamp > datetime('now', '-5 minutes')
+      AND session_id != ''
+    GROUP BY session_id, agent_type
+    ORDER BY last_event DESC
+  `).all() as ActiveSession[]
 }
 
 export type IngestStatusRow = {
