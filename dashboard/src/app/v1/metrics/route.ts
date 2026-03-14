@@ -85,25 +85,6 @@ const normalizeMetricAttrs = (attrs: Record<string, unknown> | KeyValue[] | unde
   }))
 }
 
-const calculateCost = (
-  db: ReturnType<typeof getDb>,
-  model: string,
-  inputTokens: number,
-  outputTokens: number,
-  cacheReadTokens: number
-): number => {
-  if (!model) return 0
-  const pricing = db.prepare(
-    'SELECT input_per_mtok, output_per_mtok, cache_read_per_mtok FROM pricing_model WHERE model_id = ? ORDER BY effective_date DESC LIMIT 1'
-  ).get(model) as { input_per_mtok: number; output_per_mtok: number; cache_read_per_mtok: number } | undefined
-  if (!pricing) return 0
-  return (
-    (inputTokens * pricing.input_per_mtok +
-      outputTokens * pricing.output_per_mtok +
-      cacheReadTokens * pricing.cache_read_per_mtok) / 1_000_000
-  )
-}
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const root = require('@opentelemetry/otlp-transformer/build/src/generated/root')
 const ExportMetricsServiceRequest = root.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
@@ -164,43 +145,19 @@ export async function POST(request: NextRequest) {
               const model = getAttr(dpAttrs, 'model')
               const value = dp.value ?? dp.asDouble ?? (dp.asInt ? Number(dp.asInt) : 0)
 
-              // Map metric names to event types
+              // Only store tool_result and session_start from metrics (PER-35)
               let eventName = ''
-              let inputTokens = 0
-              let outputTokens = 0
-              let cacheReadTokens = 0
               let durationMs = 0
               let toolName = ''
-              let costUsd = 0
 
-              // Skip token/duration metrics — they duplicate data from /v1/logs (PER-19)
-              if (
-                metricName === 'gemini_cli.api.duration' ||
-                metricName === 'gemini_cli.api.request.duration' ||
-                metricName === 'gemini_cli.api.input_tokens' ||
-                metricName === 'gemini_cli.token.input.count' ||
-                metricName === 'gemini_cli.api.output_tokens' ||
-                metricName === 'gemini_cli.token.output.count' ||
-                metricName === 'gemini_cli.api.cache_read_tokens' ||
-                metricName === 'gemini_cli.token.cache_read.count'
-              ) {
-                continue
-              } else if (metricName === 'gemini_cli.tool.duration' || metricName === 'gemini_cli.tool_call.duration') {
+              if (metricName === 'gemini_cli.tool.duration' || metricName === 'gemini_cli.tool_call.duration') {
                 eventName = 'tool_result'
                 durationMs = value
                 toolName = getAttr(dpAttrs, 'function_name') || getAttr(dpAttrs, 'tool_name')
               } else if (metricName === 'gemini_cli.session.count' || metricName === 'gemini_cli.conversation.count') {
                 eventName = 'session_start'
               } else {
-                // Store all other gemini metrics as raw events
-                eventName = metricName.slice(11) // remove 'gemini_cli.' prefix
-              }
-
-              if (!eventName) continue
-
-              // Calculate cost if we have tokens
-              if (inputTokens > 0 || outputTokens > 0) {
-                costUsd = calculateCost(db, model, inputTokens, outputTokens, cacheReadTokens)
+                continue
               }
 
               // Parse timestamp
@@ -226,11 +183,11 @@ export async function POST(request: NextRequest) {
                 sessionId,
                 '',
                 model,
-                inputTokens,
-                outputTokens,
-                cacheReadTokens,
                 0,
-                costUsd,
+                0,
+                0,
+                0,
+                0,
                 durationMs,
                 'normal',
                 toolName,

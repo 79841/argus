@@ -13,6 +13,7 @@ import { TokenChart } from '@/components/token-chart'
 import type { ConfigChange } from '@/lib/config-tracker'
 import { ToolUsageChart } from '@/components/tool-usage-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { IngestStatus } from '@/components/ingest-status'
 
 const formatTokens = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -77,7 +78,10 @@ export default function OverviewPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+          <IngestStatus />
+        </div>
         <div className="flex items-center gap-3">
           <ProjectFilter value={project} onChange={setProject} />
           <AgentFilter value={agentType} onChange={setAgentType} />
