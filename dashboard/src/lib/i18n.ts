@@ -16,6 +16,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.rules': '규칙',
     'nav.insights': '인사이트',
     'nav.settings': '설정',
+    'nav.projects': '프로젝트',
     'nav.collapse': '접기',
     'nav.expand': '펼치기',
 
@@ -149,6 +150,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.rules': 'Rules',
     'nav.insights': 'Insights',
     'nav.settings': 'Settings',
+    'nav.projects': 'Projects',
     'nav.collapse': 'Collapse',
     'nav.expand': 'Expand',
 

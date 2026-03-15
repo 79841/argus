@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getProjects, getProjectCosts } from '@/lib/queries'
+import { getProjects, getProjectCosts, getProjectComparison } from '@/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,6 +7,12 @@ export async function GET(request: NextRequest) {
     const agentType = sp.get('agent_type')
     const from = sp.get('from') || undefined
     const to = sp.get('to') || undefined
+    const view = sp.get('view')
+
+    if (view === 'comparison') {
+      const data = await getProjectComparison()
+      return NextResponse.json(data)
+    }
 
     if (agentType !== null || from || to) {
       const data = await getProjectCosts(agentType ?? 'all', from, to)

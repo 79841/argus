@@ -20,6 +20,9 @@ import {
   getIndividualToolStats,
   getProjects,
   getProjectCosts,
+  getProjectDetailStats,
+  getProjectDailyCosts,
+  getProjectComparison,
   getIngestStatus,
   getAgentDailyCosts,
   getConfigCompareStats,
@@ -47,6 +50,17 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
   if (name.startsWith('sessions/') && name !== 'sessions/active') {
     const id = decodeURIComponent(name.slice('sessions/'.length))
     return getSessionDetail(id)
+  }
+
+  // projects/{name} 패턴 처리
+  if (name.startsWith('projects/') && name !== 'projects/comparison') {
+    const projectName = decodeURIComponent(name.slice('projects/'.length))
+    const [stats, daily] = await Promise.all([
+      getProjectDetailStats(projectName),
+      getProjectDailyCosts(30),
+    ])
+    const projectDaily = daily.filter((d) => d.project_name === projectName)
+    return { stats, daily: projectDaily }
   }
 
   switch (name) {
@@ -147,6 +161,9 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
       }
       return getProjects()
     }
+
+    case 'projects/comparison':
+      return getProjectComparison()
 
     case 'insights': {
       const days = num(params?.days, 7)
