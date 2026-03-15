@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
 import { DateRangePicker } from '@/components/date-range-picker'
@@ -28,9 +29,13 @@ const formatModel = (model: string): string => {
 
 const formatCost = (value: number): string => `$${value.toFixed(2)}`
 
+const FILTER_PATHS = new Set(['/', '/sessions', '/cost', '/trends', '/tools'])
+
 export const TopBar = () => {
+  const pathname = usePathname()
   const { agentType, setAgentType, project, setProject, dateRange, setDateRange } = useTopBar()
   const [activeSessions, setActiveSessions] = useState<ActiveSessionInfo[]>([])
+  const showFilters = FILTER_PATHS.has(pathname)
 
   const fetchActive = useCallback(() => {
     fetch('/api/sessions/active')
@@ -47,16 +52,20 @@ export const TopBar = () => {
 
   return (
     <header className="flex h-10 shrink-0 items-center border-b bg-background px-4 gap-4">
-      <div className="flex items-center gap-2">
-        <AgentFilter value={agentType} onChange={setAgentType} />
-      </div>
-      <div className="flex items-center">
-        <ProjectFilter value={project} onChange={setProject} />
-      </div>
+      {showFilters && (
+        <>
+          <div className="flex items-center gap-2">
+            <AgentFilter value={agentType} onChange={setAgentType} />
+          </div>
+          <div className="flex items-center">
+            <ProjectFilter value={project} onChange={setProject} />
+          </div>
+        </>
+      )}
 
       {activeSessions.length > 0 && (
         <div className="flex items-center gap-3">
-          <div className="h-4 w-px bg-border" />
+          {showFilters && <div className="h-4 w-px bg-border" />}
           {activeSessions.slice(0, 3).map((s) => {
             const config = AGENTS[s.agent_type as AgentType]
             return (
@@ -87,9 +96,11 @@ export const TopBar = () => {
         </div>
       )}
 
-      <div className="ml-auto flex items-center">
-        <DateRangePicker value={dateRange} onChange={setDateRange} />
-      </div>
+      {showFilters && (
+        <div className="ml-auto flex items-center">
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+        </div>
+      )}
     </header>
   )
 }
