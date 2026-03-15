@@ -103,6 +103,14 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.reltime.hour': '시간 전',
     'sessions.reltime.day': '일 전',
 
+    // Session detail page
+    'sessions.detail.back': '← 세션 목록',
+    'sessions.detail.openDetail': '상세 페이지 열기',
+    'sessions.detail.costChart': '프롬프트별 비용 분포',
+    'sessions.detail.noProject': '프로젝트 없음',
+    'sessions.detail.promptNum': '프롬프트 #',
+    'sessions.detail.toolCalls': '도구 호출',
+
     // Tools page
     'tools.subtitle': '도구 사용 패턴 분석',
     'tools.date.7': '7일',
@@ -227,6 +235,14 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.reltime.min': 'm ago',
     'sessions.reltime.hour': 'h ago',
     'sessions.reltime.day': 'd ago',
+
+    // Session detail page
+    'sessions.detail.back': '← Sessions',
+    'sessions.detail.openDetail': 'Open detail page',
+    'sessions.detail.costChart': 'Cost by Prompt',
+    'sessions.detail.noProject': 'No project',
+    'sessions.detail.promptNum': 'Prompt #',
+    'sessions.detail.toolCalls': 'tool calls',
 
     // Tools page
     'tools.subtitle': 'Tool usage pattern analysis',
