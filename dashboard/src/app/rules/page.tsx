@@ -178,6 +178,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
   const lines = content.split('\n')
   const elements: React.ReactNode[] = []
   let i = 0
+  let ek = 0
 
   while (i < lines.length) {
     const line = lines[i]
@@ -192,7 +193,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
         i++
       }
       elements.push(
-        <div key={i} className="my-2">
+        <div key={ek++} className="my-2">
           {lang && (
             <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-t border border-b-0 font-mono">
               {lang}
@@ -209,7 +210,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
     // 수평선
     if (line.match(/^---+$/) || line.match(/^\*\*\*+$/) || line.match(/^___+$/)) {
-      elements.push(<hr key={i} className="border-t my-3" />)
+      elements.push(<hr key={ek++} className="border-t my-3" />)
       i++
       continue
     }
@@ -229,7 +230,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
           .filter((c) => c.length > 0)
 
       elements.push(
-        <div key={i} className="my-2 overflow-x-auto">
+        <div key={ek++} className="my-2 overflow-x-auto">
           <table className="text-xs border-collapse w-full">
             <thead>
               <tr>
@@ -259,25 +260,25 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
     if (line.startsWith('# ')) {
       elements.push(
-        <h1 key={i} className="text-2xl font-bold mt-4 mb-2">
+        <h1 key={ek++} className="text-2xl font-bold mt-4 mb-2">
           {applyInlineMarkdown(line.slice(2), `h1-${i}`)}
         </h1>
       )
     } else if (line.startsWith('## ')) {
       elements.push(
-        <h2 key={i} className="text-xl font-semibold mt-3 mb-1">
+        <h2 key={ek++} className="text-xl font-semibold mt-3 mb-1">
           {applyInlineMarkdown(line.slice(3), `h2-${i}`)}
         </h2>
       )
     } else if (line.startsWith('### ')) {
       elements.push(
-        <h3 key={i} className="text-base font-semibold mt-2 mb-1">
+        <h3 key={ek++} className="text-base font-semibold mt-2 mb-1">
           {applyInlineMarkdown(line.slice(4), `h3-${i}`)}
         </h3>
       )
     } else if (line.startsWith('#### ')) {
       elements.push(
-        <h4 key={i} className="text-sm font-semibold mt-2 mb-1">
+        <h4 key={ek++} className="text-sm font-semibold mt-2 mb-1">
           {applyInlineMarkdown(line.slice(5), `h4-${i}`)}
         </h4>
       )
@@ -287,7 +288,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
       const text = line.replace(/^\s*(- |\* |\d+\. )/, '')
       const isOrdered = /^\s*\d+\. /.test(line)
       elements.push(
-        <div key={i} className="flex gap-1.5 text-sm leading-relaxed" style={{ paddingLeft: `${indent * 0.5 + 1}rem` }}>
+        <div key={ek++} className="flex gap-1.5 text-sm leading-relaxed" style={{ paddingLeft: `${indent * 0.5 + 1}rem` }}>
           <span className="shrink-0 text-muted-foreground mt-0.5">{isOrdered ? line.match(/\d+/)?.[0] + '.' : '•'}</span>
           <span>{applyInlineMarkdown(text, `li-${i}`)}</span>
         </div>
@@ -295,17 +296,17 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
     } else if (line.startsWith('> ')) {
       elements.push(
         <blockquote
-          key={i}
+          key={ek++}
           className="border-l-2 border-muted-foreground pl-3 text-sm text-muted-foreground italic my-1"
         >
           {applyInlineMarkdown(line.slice(2), `bq-${i}`)}
         </blockquote>
       )
     } else if (line === '') {
-      elements.push(<div key={i} className="h-2" />)
+      elements.push(<div key={ek++} className="h-2" />)
     } else {
       elements.push(
-        <p key={i} className="text-sm leading-relaxed">
+        <p key={ek++} className="text-sm leading-relaxed">
           {applyInlineMarkdown(line, `p-${i}`)}
         </p>
       )

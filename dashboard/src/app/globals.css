@@ -206,18 +206,28 @@
 }
 
 /* ─── Agent Theme Overrides ──────────────────────────────────────────────── */
+/* 에이전트 테마 선택 시 primary를 에이전트 색상으로 오버라이드 */
 
 [data-agent-theme="claude"] {
   --agent-primary: var(--agent-claude);
   --agent-accent: var(--agent-claude-muted);
+  --primary: var(--agent-claude);
+  --sidebar-primary: var(--agent-claude);
+  --ring: var(--agent-claude);
 }
 [data-agent-theme="codex"] {
   --agent-primary: var(--agent-codex);
   --agent-accent: var(--agent-codex-muted);
+  --primary: var(--agent-codex);
+  --sidebar-primary: var(--agent-codex);
+  --ring: var(--agent-codex);
 }
 [data-agent-theme="gemini"] {
   --agent-primary: var(--agent-gemini);
   --agent-accent: var(--agent-gemini-muted);
+  --primary: var(--agent-gemini);
+  --sidebar-primary: var(--agent-gemini);
+  --ring: var(--agent-gemini);
 }
 
 /* ─── Base Styles ────────────────────────────────────────────────────────── */
