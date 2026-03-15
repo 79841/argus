@@ -598,91 +598,90 @@ const FileViewer = () => {
   const isMarkdown = selectedFile?.endsWith('.md') ?? false
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="size-4" />
-          File Viewer
-        </CardTitle>
-        <CardDescription>View and edit project config files.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-2 flex-wrap mb-4">
-          {files.map((f) => (
-            <button
-              key={f.path}
-              onClick={() => loadFile(f.path)}
-              disabled={!f.exists}
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-xs font-mono transition-colors',
-                selectedFile === f.path
-                  ? 'border-primary bg-primary/10 text-foreground'
-                  : f.exists
-                    ? 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                    : 'border-border text-muted-foreground/40 cursor-not-allowed'
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex items-center gap-2 mb-3 shrink-0">
+        <FileText className="size-4 text-muted-foreground" />
+        <h3 className="text-sm font-semibold">File Viewer</h3>
+        <span className="text-xs text-muted-foreground">View and edit project config files.</span>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto shrink-0 pb-2">
+        {files.map((f) => (
+          <button
+            key={f.path}
+            onClick={() => loadFile(f.path)}
+            disabled={!f.exists}
+            className={cn(
+              'shrink-0 rounded-md border px-3 py-1.5 text-xs font-mono transition-colors',
+              selectedFile === f.path
+                ? 'border-primary bg-primary/10 text-foreground'
+                : f.exists
+                  ? 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                  : 'border-border text-muted-foreground/40 cursor-not-allowed'
+            )}
+          >
+            {f.path}
+          </button>
+        ))}
+      </div>
+
+      {selectedFile && (
+        <div className="flex flex-col flex-1 min-h-0 mt-2">
+          <div className="flex items-center justify-between shrink-0 mb-2">
+            <span className="text-sm font-medium font-mono">{selectedFile}</span>
+            <div className="flex items-center gap-2">
+              {saveResult && (
+                <span className={cn('text-xs', saveResult === 'Saved' ? 'text-green-600' : 'text-red-500')}>
+                  {saveResult}
+                </span>
               )}
-            >
-              {f.path}
-            </button>
-          ))}
-        </div>
-
-        {selectedFile && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium font-mono">{selectedFile}</span>
-              <div className="flex items-center gap-2">
-                {saveResult && (
-                  <span className={cn('text-xs', saveResult === 'Saved' ? 'text-green-600' : 'text-red-500')}>
-                    {saveResult}
-                  </span>
-                )}
-                {isEditing ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => { setIsEditing(false); setEditContent(content) }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleSave} disabled={saving}>
-                      <Save className="size-3 mr-1" />
-                      {saving ? 'Saving...' : 'Save'}
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                    <Pencil className="size-3 mr-1" />
-                    Edit
+              {isEditing ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setIsEditing(false); setEditContent(content) }}
+                  >
+                    Cancel
                   </Button>
-                )}
-              </div>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    <Save className="size-3 mr-1" />
+                    {saving ? 'Saving...' : 'Save'}
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Pencil className="size-3 mr-1" />
+                  Edit
+                </Button>
+              )}
             </div>
+          </div>
 
+          <div className="flex-1 min-h-0">
             {fileLoading ? (
               <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">Loading...</div>
             ) : isEditing ? (
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full min-h-[400px] rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 resize-y focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-full rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
                 spellCheck={false}
               />
             ) : isMarkdown ? (
               <div
-                className="rounded-md border bg-muted/30 p-4 text-sm leading-6 max-h-[500px] overflow-auto"
+                className="rounded-md border bg-muted/30 p-4 text-sm leading-6 h-full overflow-y-auto"
                 dangerouslySetInnerHTML={{ __html: simpleMarkdownToHtml(content) }}
               />
             ) : (
-              <pre className="rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 max-h-[500px] overflow-auto whitespace-pre-wrap">
+              <pre className="rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 h-full overflow-y-auto whitespace-pre-wrap">
                 {content}
               </pre>
             )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -706,22 +705,28 @@ const ConfigSection = () => {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <FileViewer />
-
-      <div>
-        <h2 className="text-lg font-semibold">Config History</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Git-tracked config file changes across AI agents. Showing last 30 days.
-        </p>
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex-1 min-h-0">
+        <FileViewer />
       </div>
-      {loading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">
-          <p>Loading...</p>
+
+      <div className="shrink-0 mt-6">
+        <div>
+          <h2 className="text-lg font-semibold">Config History</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Git-tracked config file changes across AI agents. Showing last 30 days.
+          </p>
         </div>
-      ) : (
-        <ConfigTimeline data={data} />
-      )}
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-muted-foreground">
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <ConfigTimeline data={data} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -773,8 +778,13 @@ export default function SettingsPage() {
       </nav>
 
       {/* Right content */}
-      <main className="flex-1 overflow-y-auto p-6">
-        <ActiveSection />
+      <main className={cn(
+        'flex-1 p-6',
+        active === 'config' ? 'flex flex-col min-h-0 overflow-hidden' : 'overflow-y-auto'
+      )}>
+        <div className={active === 'config' ? 'flex flex-col flex-1 min-h-0' : undefined}>
+          <ActiveSection />
+        </div>
       </main>
     </div>
   )
