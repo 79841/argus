@@ -10,6 +10,7 @@ import {
   Wrench,
   FileText,
   Lightbulb,
+  FolderKanban,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
   { href: '/usage', labelKey: 'nav.usage', icon: BarChart3 },
   { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
+  { href: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
   { href: '/rules', labelKey: 'nav.rules', icon: FileText },
   { href: '/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ]
