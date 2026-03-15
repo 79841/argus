@@ -26,7 +26,9 @@ import {
   getHighCostSessions,
   getModelCostEfficiency,
   getBudgetStatus,
+  getSuggestionMetrics,
 } from '../src/lib/queries'
+import { generateSuggestions } from '../src/lib/suggestions'
 import { getDb } from '../src/lib/db'
 import { scanRegisteredTools } from '../src/lib/registered-tools'
 import { getConfigHistory } from '../src/lib/config-tracker'
@@ -157,6 +159,13 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
         getBudgetStatus(),
       ])
       return { highCostSessions, modelEfficiency, budgetStatus }
+    }
+
+    case 'suggestions': {
+      const days = num(params?.days, 7)
+      const metrics = await getSuggestionMetrics(days)
+      const suggestions = generateSuggestions(metrics)
+      return { suggestions, metrics }
     }
 
     case 'ingest-status':
