@@ -11,9 +11,10 @@ const translations: Record<Locale, Record<string, string>> = {
     // Nav categories
     'nav.monitoring': '모니터링',
     'nav.analysis': '분석',
-    'nav.dashboard': '대시보드',
+    'nav.overview': '오버뷰',
     'nav.sessions': '세션',
     'nav.cost': '비용',
+    'nav.trends': '추이',
     'nav.tools': '도구',
     'nav.settings': '설정',
     'nav.collapse': '접기',
@@ -44,9 +45,10 @@ const translations: Record<Locale, Record<string, string>> = {
     // Nav categories
     'nav.monitoring': 'Monitoring',
     'nav.analysis': 'Analysis',
-    'nav.dashboard': 'Dashboard',
+    'nav.overview': 'Overview',
     'nav.sessions': 'Sessions',
     'nav.cost': 'Cost',
+    'nav.trends': 'Trends',
     'nav.tools': 'Tools',
     'nav.settings': 'Settings',
     'nav.collapse': 'Collapse',

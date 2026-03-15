@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   DollarSign,
+  TrendingUp,
   Wrench,
   Settings,
   ChevronLeft,
@@ -40,9 +41,10 @@ const NAV_CATEGORIES: NavCategory[] = [
     labelKey: 'nav.monitoring',
     icon: BarChart3,
     pages: [
-      { href: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+      { href: '/', labelKey: 'nav.overview', icon: LayoutDashboard },
       { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
       { href: '/cost', labelKey: 'nav.cost', icon: DollarSign },
+      { href: '/trends', labelKey: 'nav.trends', icon: TrendingUp },
     ],
   },
   {
