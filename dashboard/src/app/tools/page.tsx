@@ -30,6 +30,7 @@ import {
 import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { AgentType } from '@/lib/agents'
+import { dataClient } from '@/lib/data-client'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -371,18 +372,18 @@ export default function ToolsPage() {
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    const q = `agent_type=${agentType}&days=${days}&detail=true`
-    const simpleQ = `agent_type=${agentType}&days=${days}`
 
     Promise.all([
-      fetch(`/api/tools?${q}`).then((r) => r.json()),
-      fetch(`/api/tools?${simpleQ}`).then((r) => r.json()),
+      dataClient.query('tools', { agent_type: agentType, days: Number(days), detail: true }),
+      dataClient.query('tools', { agent_type: agentType, days: Number(days) }),
     ])
       .then(([detail, simple]) => {
-        const detailTools: ToolDetailRow[] = detail.tools ?? []
-        const dailyData: DailyToolRow[] = detail.daily ?? []
-        const individualData: IndividualToolRow[] = detail.individual ?? []
-        const simpleTools: ToolUsageRow[] = simple.tools ?? []
+        const d = detail as Record<string, unknown[]>
+        const s = simple as Record<string, unknown[]>
+        const detailTools: ToolDetailRow[] = (d.tools ?? []) as ToolDetailRow[]
+        const dailyData: DailyToolRow[] = (d.daily ?? []) as DailyToolRow[]
+        const individualData: IndividualToolRow[] = (d.individual ?? []) as IndividualToolRow[]
+        const simpleTools: ToolUsageRow[] = (s.tools ?? []) as ToolUsageRow[]
 
         setTools(detailTools)
         setDaily(dailyData)

@@ -17,6 +17,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
+import { dataClient } from '@/lib/data-client'
 
 type Scope = 'project' | 'user'
 type Agent = 'claude' | 'codex' | 'gemini'
@@ -443,8 +444,7 @@ export default function RulesPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/config')
-        const data = await res.json()
+        const data = await dataClient.query('config') as { files?: FileEntry[] }
         setFiles(data.files ?? [])
       } catch {
         setFiles([])
@@ -461,8 +461,7 @@ export default function RulesPage() {
     setContentLoading(true)
     setSaveSuccess(false)
     try {
-      const res = await fetch(`/api/config?path=${encodeURIComponent(file.path)}`)
-      const data = await res.json()
+      const data = await dataClient.query('config', { path: file.path }) as { content?: string }
       const content = data.content ?? ''
       setFileContent(content)
       setEditContent(content)
@@ -479,11 +478,7 @@ export default function RulesPage() {
     setSaving(true)
     setSaveSuccess(false)
     try {
-      await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: selectedFile.path, content: editContent }),
-      })
+      await dataClient.mutate('config', { path: selectedFile.path, content: editContent })
       setFileContent(editContent)
       setSaveSuccess(true)
       setViewMode('preview')
