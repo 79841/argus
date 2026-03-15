@@ -9,6 +9,7 @@ import { DateRangePicker } from '@/components/date-range-picker'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
+import { useLocale } from '@/lib/i18n'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {
@@ -62,14 +63,14 @@ const formatTime = (ts: string): string => {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-const formatRelativeTime = (ts: string): string => {
+const formatRelativeTime = (ts: string, tFn: (key: string) => string): string => {
   const now = Date.now()
   const then = new Date(ts).getTime()
   const diff = Math.floor((now - then) / 1000)
-  if (diff < 60) return `${diff}초 전`
-  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
-  return `${Math.floor(diff / 86400)}일 전`
+  if (diff < 60) return `${diff}${tFn('sessions.reltime.sec')}`
+  if (diff < 3600) return `${Math.floor(diff / 60)}${tFn('sessions.reltime.min')}`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}${tFn('sessions.reltime.hour')}`
+  return `${Math.floor(diff / 86400)}${tFn('sessions.reltime.day')}`
 }
 
 const computeCacheRate = (s: SessionRow): number => {
@@ -192,6 +193,7 @@ const computeSummary = (events: SessionDetailEvent[], session: SessionRow): Sess
 }
 
 export default function SessionsPage() {
+  const { t } = useLocale()
   const [agentType, setAgentType] = useState<AgentType>('all')
   const [project, setProject] = useState<string>('all')
   const [dateRange, setDateRange] = useState<DateRange>({ from: daysAgoISO(7), to: todayISO() })
@@ -268,7 +270,7 @@ export default function SessionsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="세션 ID, 프로젝트, 모델 검색..."
+            placeholder={t('sessions.search.placeholder')}
             className="w-full rounded-md border bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -277,9 +279,9 @@ export default function SessionsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="latest">최신순</SelectItem>
-            <SelectItem value="cost">비용순</SelectItem>
-            <SelectItem value="tokens">토큰순</SelectItem>
+            <SelectItem value="latest">{t('sessions.sort.latest')}</SelectItem>
+            <SelectItem value="cost">{t('sessions.sort.cost')}</SelectItem>
+            <SelectItem value="tokens">{t('sessions.sort.tokens')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -290,21 +292,21 @@ export default function SessionsPage() {
         <div className="flex w-[35%] flex-col border-r">
           <div className="flex items-center justify-between border-b px-4 py-2">
             <span className="text-xs text-muted-foreground">
-              {loading ? '로딩 중...' : `${sortedSessions.length}개 세션`}
+              {loading ? t('sessions.loading') : `${sortedSessions.length}${t('sessions.count')}`}
             </span>
             <span className="text-xs font-medium tabular-nums text-muted-foreground">
-              총 {formatCost(totalCost)}
+              {t('sessions.total')}{formatCost(totalCost)}
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
-                로딩 중...
+                {t('sessions.loading')}
               </div>
             ) : sortedSessions.length === 0 ? (
               <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
-                세션 없음
+                {t('sessions.empty')}
               </div>
             ) : (
               sortedSessions.map((s) => {
@@ -344,10 +346,10 @@ export default function SessionsPage() {
                       {cacheRate > 0 && (
                         <>
                           <span className="text-border">·</span>
-                          <span className="text-emerald-600 dark:text-emerald-400">캐시 {cacheRate}%</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{t('sessions.cache')}{cacheRate}%</span>
                         </>
                       )}
-                      <span className="ml-auto shrink-0">{formatRelativeTime(s.started_at)}</span>
+                      <span className="ml-auto shrink-0">{formatRelativeTime(s.started_at, t)}</span>
                     </div>
                   </button>
                 )
@@ -375,11 +377,11 @@ export default function SessionsPage() {
                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span className="text-sm">세션을 선택하면 상세 정보가 표시됩니다</span>
+              <span className="text-sm">{t('sessions.detail.placeholder')}</span>
             </div>
           ) : detailLoading ? (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              세션 상세 로딩 중...
+              {t('sessions.detail.loading')}
             </div>
           ) : selectedSession ? (
             <SessionDetail session={selectedSession} events={detailEvents} />
@@ -396,6 +398,7 @@ type SessionDetailProps = {
 }
 
 const SessionDetail = ({ session, events }: SessionDetailProps) => {
+  const { t } = useLocale()
   const summary = computeSummary(events, session)
   const promptGroups = groupByPrompt(events)
 
@@ -421,39 +424,39 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
       {/* Summary Grid */}
       <div className="grid grid-cols-3 gap-3 rounded-lg border p-4 text-sm sm:grid-cols-6">
         <div>
-          <div className="text-xs text-muted-foreground">비용</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.cost')}</div>
           <div className="font-semibold tabular-nums">{formatCost(summary.totalCost)}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">입력</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.input')}</div>
           <div className="font-semibold tabular-nums">{formatTokens(summary.inputTokens)}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">출력</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.output')}</div>
           <div className="font-semibold tabular-nums">{formatTokens(summary.outputTokens)}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">캐시</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.cache')}</div>
           <div className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
             {formatTokens(summary.cacheReadTokens)}
             {summary.cacheRate > 0 && <span className="ml-1 text-xs font-normal">({summary.cacheRate}%)</span>}
           </div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">소요시간</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.duration')}</div>
           <div className="font-semibold tabular-nums">{formatDuration(summary.wallTime)}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">요청/도구</div>
+          <div className="text-xs text-muted-foreground">{t('sessions.detail.reqTools')}</div>
           <div className="font-semibold tabular-nums">{summary.requestCount} / {summary.toolCallCount}</div>
         </div>
       </div>
 
       {/* Event Timeline */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold">이벤트 타임라인</h3>
+        <h3 className="mb-3 text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
         {promptGroups.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">이벤트 없음</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">{t('sessions.detail.noEvents')}</div>
         ) : (
           <div className="space-y-2">
             {promptGroups.map((group, idx) => (
@@ -472,6 +475,7 @@ type PromptGroupCardProps = {
 }
 
 const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
+  const { t } = useLocale()
   const [expanded, setExpanded] = useState(index === 0)
 
   return (
@@ -484,7 +488,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
         <span className="font-mono text-xs text-muted-foreground">#{index + 1}</span>
         <span className="text-xs text-muted-foreground">{formatTime(group.startTime)}</span>
         <span className="text-xs text-muted-foreground">
-          ({group.events.length} 이벤트)
+          ({group.events.length}{t('sessions.promptGroup.events')})
         </span>
         <span className="ml-auto shrink-0 text-xs font-medium tabular-nums">
           {formatCost(group.cost)}

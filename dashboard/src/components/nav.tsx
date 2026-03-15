@@ -80,16 +80,37 @@ export const Nav = () => {
       <div
         className={cn(
           'flex h-14 items-center pt-10',
-          collapsed ? 'justify-center px-2' : 'px-4'
+          collapsed ? 'justify-center px-2' : 'justify-between px-4'
         )}
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        <Link
-          href="/"
-          className="text-lg font-bold tracking-tight"
-          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-        >
-          {collapsed ? 'A' : 'Argus'}
-        </Link>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger
+              onClick={toggleCollapsed}
+              className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="size-5" />
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <>
+            <Link
+              href="/"
+              className="text-lg font-bold tracking-tight"
+            >
+              Argus
+            </Link>
+            <button
+              onClick={toggleCollapsed}
+              className="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Navigation */}
@@ -135,7 +156,7 @@ export const Nav = () => {
         )}
       </nav>
 
-      {/* Bottom section: Settings + Toggle */}
+      {/* Bottom section: Settings */}
       <div
         className="border-t px-2 py-2 space-y-1"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
@@ -174,26 +195,6 @@ export const Nav = () => {
           </Link>
         )}
 
-        {/* Collapse toggle */}
-        {collapsed ? (
-          <Tooltip>
-            <TooltipTrigger
-              onClick={toggleCollapsed}
-              className="flex w-full items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <ChevronRight className="size-5" />
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
-          </Tooltip>
-        ) : (
-          <button
-            onClick={toggleCollapsed}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-            {t('nav.collapse')}
-          </button>
-        )}
       </div>
     </aside>
   )

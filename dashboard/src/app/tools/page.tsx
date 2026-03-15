@@ -23,6 +23,7 @@ import {
   Legend,
   Treemap,
 } from 'recharts'
+import { useLocale } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,11 +49,11 @@ const AGENT_OPTIONS = [
   { value: 'gemini', label: 'Gemini' },
 ]
 
-const DATE_OPTIONS = [
-  { value: '7', label: '7일' },
-  { value: '14', label: '14일' },
-  { value: '30', label: '30일' },
-  { value: '90', label: '90일' },
+const DATE_OPTION_KEYS = [
+  { value: '7', labelKey: 'tools.date.7' },
+  { value: '14', labelKey: 'tools.date.14' },
+  { value: '30', labelKey: 'tools.date.30' },
+  { value: '90', labelKey: 'tools.date.90' },
 ]
 
 const TOP_COLORS = [
@@ -103,11 +104,12 @@ const formatPercent = (n: number): string => `${(n * 100).toFixed(1)}%`
 // ─── KPI Cards ────────────────────────────────────────────────────────────────
 
 const KpiCards = ({ kpi, loading }: { kpi: ToolsKpi | null; loading: boolean }) => {
+  const { t } = useLocale()
   const items = [
-    { label: '총 호출수', value: kpi ? formatNumber(kpi.total_calls) : '—' },
-    { label: '성공률', value: kpi ? formatPercent(kpi.success_rate) : '—' },
-    { label: '평균 소요시간', value: kpi ? formatDuration(kpi.avg_duration_ms) : '—' },
-    { label: '고유 도구 수', value: kpi ? formatNumber(kpi.unique_tools) : '—' },
+    { label: t('tools.kpi.totalCalls'), value: kpi ? formatNumber(kpi.total_calls) : '—' },
+    { label: t('tools.kpi.successRate'), value: kpi ? formatPercent(kpi.success_rate) : '—' },
+    { label: t('tools.kpi.avgDuration'), value: kpi ? formatDuration(kpi.avg_duration_ms) : '—' },
+    { label: t('tools.kpi.uniqueTools'), value: kpi ? formatNumber(kpi.unique_tools) : '—' },
   ]
 
   return (
@@ -131,6 +133,7 @@ const KpiCards = ({ kpi, loading }: { kpi: ToolsKpi | null; loading: boolean }) 
 // ─── Top Tools Bar Chart ──────────────────────────────────────────────────────
 
 const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
+  const { t } = useLocale()
   const chartData = data.slice(0, 15).map((r) => ({
     name: r.tool_name,
     count: r.invocation_count,
@@ -143,7 +146,7 @@ const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">상위 도구 (Top 15)</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.chart.topTools')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
@@ -157,7 +160,7 @@ const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">상위 도구 (Top 15)</CardTitle>
+        <CardTitle className="text-sm font-medium">{t('tools.chart.topTools')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[360px]">
@@ -255,6 +258,7 @@ const CategoryTooltip = ({ active, payload }: { active?: boolean; payload?: Tree
 }
 
 const CategoryTreemap = ({ data }: { data: ToolDetailRow[] }) => {
+  const { t } = useLocale()
   const categoryCounts: Record<string, number> = {}
   for (const r of data) {
     categoryCounts[r.category] = (categoryCounts[r.category] ?? 0) + r.invocation_count
@@ -271,7 +275,7 @@ const CategoryTreemap = ({ data }: { data: ToolDetailRow[] }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">카테고리별 분포</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.chart.categoryDist')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">No data</div>
@@ -283,7 +287,7 @@ const CategoryTreemap = ({ data }: { data: ToolDetailRow[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">카테고리별 분포</CardTitle>
+        <CardTitle className="text-sm font-medium">{t('tools.chart.categoryDist')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[280px]">
@@ -301,6 +305,7 @@ const CategoryTreemap = ({ data }: { data: ToolDetailRow[] }) => {
 // ─── Daily Stacked Area Chart ─────────────────────────────────────────────────
 
 const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
+  const { t } = useLocale()
   const toolSet = new Set<string>()
   const byDate: Record<string, Record<string, number>> = {}
 
@@ -335,7 +340,7 @@ const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">일별 도구 사용 추이</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTrend')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">No data</div>
@@ -347,7 +352,7 @@ const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">일별 도구 사용 추이</CardTitle>
+        <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTrend')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[280px]">
@@ -372,6 +377,7 @@ const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
 // ─── Fail Rate Trend ──────────────────────────────────────────────────────────
 
 const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
+  const { t } = useLocale()
   const byDate: Record<string, { count: number }> = {}
 
   for (const r of data) {
@@ -390,7 +396,7 @@ const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">일별 총 호출 추이</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTotal')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-[240px] items-center justify-center text-muted-foreground text-sm">No data</div>
@@ -402,7 +408,7 @@ const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">일별 총 호출 추이</CardTitle>
+        <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTotal')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[240px]">
@@ -412,7 +418,7 @@ const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
               <XAxis dataKey="date" fontSize={11} />
               <YAxis fontSize={11} />
               <Tooltip />
-              <Line type="monotone" dataKey="total" stroke="#8b5cf6" strokeWidth={2} dot={false} name="총 호출" />
+              <Line type="monotone" dataKey="total" stroke="#8b5cf6" strokeWidth={2} dot={false} name={t('tools.chart.totalCalls')} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -430,44 +436,48 @@ type FilterBarProps = {
   onDaysChange: (v: string) => void
 }
 
-const FilterBar = ({ agentType, days, onAgentChange, onDaysChange }: FilterBarProps) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-      {AGENT_OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onAgentChange(opt.value)}
-          className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
-            agentType === opt.value
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
+const FilterBar = ({ agentType, days, onAgentChange, onDaysChange }: FilterBarProps) => {
+  const { t } = useLocale()
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+        {AGENT_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onAgentChange(opt.value)}
+            className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+              agentType === opt.value
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+        {DATE_OPTION_KEYS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onDaysChange(opt.value)}
+            className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+              days === opt.value
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t(opt.labelKey)}
+          </button>
+        ))}
+      </div>
     </div>
-    <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-      {DATE_OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onDaysChange(opt.value)}
-          className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
-            days === opt.value
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  </div>
-)
+  )
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ToolsPage() {
+  const { t } = useLocale()
   const [agentType, setAgentType] = useState('all')
   const [days, setDays] = useState('7')
 
@@ -531,7 +541,7 @@ export default function ToolsPage() {
     <div className="flex flex-col gap-4 p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Tools</h1>
-        <p className="text-muted-foreground text-sm mt-1">도구 사용 패턴 분석</p>
+        <p className="text-muted-foreground text-sm mt-1">{t('tools.subtitle')}</p>
       </div>
 
       <FilterBar
