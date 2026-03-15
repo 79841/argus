@@ -51,6 +51,9 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
     devDependencies:
+      '@electron/rebuild':
+        specifier: ^4.0.3
+        version: 4.0.3
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.2.1

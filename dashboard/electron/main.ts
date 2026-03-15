@@ -48,15 +48,27 @@ const startNextServer = async (): Promise<void> => {
   if (inUse) return
 
   const cwd = isDev ? process.cwd() : path.join(process.resourcesPath, 'app')
-  const cmd = isDev ? 'npm' : 'node'
+  const nextBin = path.join(cwd, 'node_modules', 'next', 'dist', 'bin', 'next')
+  const cmd = isDev ? 'npm' : process.execPath
   const args = isDev
     ? ['run', 'dev', '--', '--port', String(PORT)]
-    : [path.join(cwd, 'node_modules', 'next', 'dist', 'bin', 'next'), 'start', '--port', String(PORT)]
+    : [nextBin, 'start', '--port', String(PORT)]
+
+  const env: Record<string, string> = {
+    ...process.env as Record<string, string>,
+    PORT: String(PORT),
+    HOSTNAME: '127.0.0.1',
+  }
+
+  if (!isDev) {
+    env.ELECTRON_RUN_AS_NODE = '1'
+    env.ARGUS_DB_PATH = path.join(app.getPath('userData'), 'argus.db')
+  }
 
   nextProcess = spawn(cmd, args, {
     cwd,
     stdio: 'pipe',
-    env: { ...process.env, PORT: String(PORT) },
+    env: env as NodeJS.ProcessEnv,
   })
 
   nextProcess.stdout?.on('data', (data: Buffer) => {
