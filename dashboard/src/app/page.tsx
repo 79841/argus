@@ -53,16 +53,17 @@ const TOOL_COLORS = [
   '#06b6d4', '#84cc16', '#a855f7', '#f43f5e', '#22d3ee',
 ]
 
-const formatDuration = (ms: number): string => {
-  if (ms < 60_000) return `${Math.round(ms / 1000)}s`
-  const min = Math.floor(ms / 60_000)
-  const sec = Math.round((ms % 60_000) / 1000)
-  return `${min}m ${sec}s`
-}
-
-const formatSessionTime = (iso: string): string => {
-  const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+const formatRelativeTime = (iso: string): string => {
+  const now = Date.now()
+  const diff = now - new Date(iso).getTime()
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 export default function OverviewPage() {
@@ -275,10 +276,8 @@ export default function OverviewPage() {
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="pb-2 font-medium">Agent</th>
                     <th className="pb-2 font-medium">Model</th>
-                    <th className="pb-2 font-medium">Time</th>
                     <th className="pb-2 text-right font-medium">Cost</th>
-                    <th className="pb-2 text-right font-medium">Tokens</th>
-                    <th className="pb-2 text-right font-medium">Duration</th>
+                    <th className="pb-2 text-right font-medium">Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -296,10 +295,8 @@ export default function OverviewPage() {
                         {AGENTS[s.agent_type as keyof typeof AGENTS]?.name ?? s.agent_type}
                       </td>
                       <td className="py-1.5 max-w-[120px] truncate">{s.model || '-'}</td>
-                      <td className="py-1.5 text-muted-foreground">{formatSessionTime(s.started_at)}</td>
                       <td className="py-1.5 text-right">{formatCost(s.cost)}</td>
-                      <td className="py-1.5 text-right">{formatTokens(s.input_tokens + s.output_tokens)}</td>
-                      <td className="py-1.5 text-right text-muted-foreground">{formatDuration(s.duration_ms)}</td>
+                      <td className="py-1.5 text-right text-muted-foreground">{formatRelativeTime(s.started_at)}</td>
                     </tr>
                   ))}
                 </tbody>

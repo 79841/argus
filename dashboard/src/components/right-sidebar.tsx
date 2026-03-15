@@ -23,26 +23,39 @@ export const RightSidebar = () => {
     })
   }, [])
 
+  if (collapsed) {
+    return (
+      <aside className="relative shrink-0 border-l bg-background w-8">
+        <button
+          type="button"
+          onClick={toggle}
+          className="flex h-8 w-8 items-center justify-center text-sm text-muted-foreground hover:text-foreground"
+          aria-label="Open sidebar"
+        >
+          &laquo;
+        </button>
+      </aside>
+    )
+  }
+
   return (
-    <aside
-      className={cn(
-        'relative shrink-0 border-l bg-background transition-[width] duration-200',
-        collapsed ? 'w-0 overflow-hidden' : 'w-64'
-      )}
-    >
-      <button
-        type="button"
-        onClick={toggle}
-        className="absolute -left-6 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border bg-background text-xs text-muted-foreground hover:text-foreground"
-        aria-label={collapsed ? 'Open sidebar' : 'Close sidebar'}
-      >
-        {collapsed ? '\u2039' : '\u203A'}
-      </button>
-      {!collapsed && (
-        <div className="p-4 text-sm text-muted-foreground">
-          Coming soon
-        </div>
-      )}
+    <aside className="relative shrink-0 border-l bg-background w-64">
+      <div className="flex h-8 items-center justify-end border-b px-2">
+        <button
+          type="button"
+          onClick={toggle}
+          className={cn(
+            'flex h-6 w-6 items-center justify-center rounded-md',
+            'text-sm text-muted-foreground hover:text-foreground hover:bg-muted'
+          )}
+          aria-label="Close sidebar"
+        >
+          &raquo;
+        </button>
+      </div>
+      <div className="p-4 text-sm text-muted-foreground">
+        Coming soon
+      </div>
     </aside>
   )
 }
