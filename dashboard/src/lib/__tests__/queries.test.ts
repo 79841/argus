@@ -52,8 +52,8 @@ describe('getToolDetailStats — prompt_id JOIN (PER-20)', () => {
   })
 })
 
-describe('getSessions — model column (PER-24)', () => {
-  it('should return the most-used model when session uses multiple models', async () => {
+describe('getSessions — multi-model support (PER-60)', () => {
+  it('should return all distinct models as comma-separated string when session uses multiple models', async () => {
     const now = new Date().toISOString()
     const insertLog = testDb.prepare(`
       INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, prompt_id,
@@ -70,8 +70,10 @@ describe('getSessions — model column (PER-24)', () => {
 
     const sessions = await getSessions('claude')
     expect(sessions).toHaveLength(1)
-    // Should deterministically pick the most-used model
-    expect(sessions[0].model).toBe('claude-sonnet-4-6')
+    const models = sessions[0].model.split(',')
+    expect(models).toHaveLength(2)
+    expect(models).toContain('claude-sonnet-4-6')
+    expect(models).toContain('claude-opus-4-6')
   })
 })
 

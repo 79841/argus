@@ -35,6 +35,18 @@ const formatDuration = (ms: number): string => {
   return `${ms}ms`
 }
 
+const shortenModel = (model: string): string => {
+  return model
+    .replace(/^claude-/, '')
+    .replace(/^models\//, '')
+    .replace(/-\d{8}$/, '')
+}
+
+const parseModels = (model: string): string[] => {
+  if (!model) return ['unknown']
+  return model.split(',').map((m) => m.trim()).filter(Boolean)
+}
+
 const formatTime = (ts: string): string => {
   const d = new Date(ts)
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -221,7 +233,13 @@ export default function SessionsPage() {
                 >
                   <div className="flex items-center gap-2">
                     <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${AGENT_DOT_CLASSES[s.agent_type] ?? 'bg-violet-500'}`} />
-                    <span className="truncate text-sm font-medium">{s.model || 'unknown'}</span>
+                    <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                      {parseModels(s.model).map((m) => (
+                        <Badge key={m} variant="secondary" className="text-xs font-medium">
+                          {shortenModel(m)}
+                        </Badge>
+                      ))}
+                    </div>
                     <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums">
                       {formatCost(s.cost)}
                     </span>
@@ -281,7 +299,13 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
           <Badge className={AGENT_BADGE_CLASSES[summary.agentType] ?? 'bg-violet-500 text-white'}>
             {summary.agentType}
           </Badge>
-          <span className="text-sm text-muted-foreground">{summary.model}</span>
+          <div className="flex flex-wrap gap-1">
+            {parseModels(summary.model).map((m) => (
+              <Badge key={m} variant="outline" className="text-xs">
+                {shortenModel(m)}
+              </Badge>
+            ))}
+          </div>
           <span className="ml-auto font-mono text-xs text-muted-foreground">
             {session.session_id.slice(0, 12)}
           </span>
