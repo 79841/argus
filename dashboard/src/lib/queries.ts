@@ -762,3 +762,139 @@ export const getConfigCompareStats = async (date: string, days: number = 7): Pro
     } : emptyPeriod,
   }
 }
+
+// ─── Cost Insights (PER-31) ──────────────────────────────────────────────────
+
+export type HighCostSession = {
+  session_id: string
+  agent_type: string
+  model: string
+  total_cost: number
+  request_count: number
+  tool_call_count: number
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  duration_ms: number
+  project_name: string
+  started_at: string
+  causes: string[]
+}
+
+type RawHighCostRow = Omit<HighCostSession, 'causes'>
+
+const EXPENSIVE_MODELS = ['claude-opus-4-6', 'claude-opus-4-20250514', 'o3', 'gpt-5.4']
+
+const tagCauses = (row: RawHighCostRow): string[] => {
+  const causes: string[] = []
+  if (EXPENSIVE_MODELS.some(m => row.model.includes(m))) causes.push('expensive_model')
+  if (row.tool_call_count >= 15) causes.push('many_tool_calls')
+  if (row.request_count >= 10) causes.push('many_requests')
+  if (row.cache_read_tokens === 0 && row.input_tokens > 10000) causes.push('no_cache')
+  return causes
+}
+
+export const getHighCostSessions = async (days: number = 7, limit: number = 10, dbOverride?: import('better-sqlite3').Database): Promise<HighCostSession[]> => {
+  const db = dbOverride ?? getDb()
+  const rows = db.prepare(`
+    SELECT
+      a.session_id,
+      a.agent_type,
+      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = a.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
+      COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN a.cost_usd ELSE 0 END), 0) as total_cost,
+      COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN 1 ELSE 0 END), 0) as request_count,
+      COALESCE(sum(CASE WHEN a.event_name = 'tool_result' THEN 1 ELSE 0 END), 0) as tool_call_count,
+      COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN a.input_tokens ELSE 0 END), 0) as input_tokens,
+      COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN a.output_tokens ELSE 0 END), 0) as output_tokens,
+      COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN a.cache_read_tokens ELSE 0 END), 0) as cache_read_tokens,
+      CAST((julianday(max(a.timestamp)) - julianday(min(a.timestamp))) * 86400000 AS INTEGER) as duration_ms,
+      a.project_name,
+      min(a.timestamp) as started_at
+    FROM agent_logs a
+    WHERE a.session_id != ''
+      AND a.timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY a.session_id, a.agent_type
+    HAVING total_cost > 0
+    ORDER BY total_cost DESC
+    LIMIT ?
+  `).all(days, limit) as RawHighCostRow[]
+
+  return rows.map(row => ({
+    ...row,
+    model: row.model || '',
+    causes: tagCauses(row),
+  }))
+}
+
+export type ModelCostEfficiency = {
+  model: string
+  agent_type: string
+  request_count: number
+  total_cost: number
+  avg_cost_per_request: number
+  avg_input_tokens: number
+  avg_output_tokens: number
+  avg_duration_ms: number
+  cost_per_1k_tokens: number
+}
+
+export const getModelCostEfficiency = async (days: number = 7, dbOverride?: import('better-sqlite3').Database): Promise<ModelCostEfficiency[]> => {
+  const db = dbOverride ?? getDb()
+  return db.prepare(`
+    SELECT
+      model,
+      agent_type,
+      count(*) as request_count,
+      COALESCE(sum(cost_usd), 0) as total_cost,
+      COALESCE(avg(cost_usd), 0) as avg_cost_per_request,
+      COALESCE(avg(input_tokens), 0) as avg_input_tokens,
+      COALESCE(avg(output_tokens), 0) as avg_output_tokens,
+      COALESCE(avg(duration_ms), 0) as avg_duration_ms,
+      CASE
+        WHEN avg(input_tokens + output_tokens) > 0
+        THEN (avg(cost_usd) / avg(input_tokens + output_tokens)) * 1000
+        ELSE 0
+      END as cost_per_1k_tokens
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND model != ''
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY model, agent_type
+    ORDER BY total_cost DESC
+  `).all(days) as ModelCostEfficiency[]
+}
+
+export type BudgetStatus = {
+  agent_type: string
+  daily_cost_limit: number
+  monthly_cost_limit: number
+  daily_spent: number
+  daily_usage_pct: number
+}
+
+export const getBudgetStatus = async (dbOverride?: import('better-sqlite3').Database): Promise<BudgetStatus[]> => {
+  const db = dbOverride ?? getDb()
+
+  const agents = ['claude', 'codex', 'gemini']
+  const limits = db.prepare('SELECT agent_type, daily_cost_limit, monthly_cost_limit FROM agent_limits').all() as Array<{ agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }>
+  const dailyCosts = db.prepare(`
+    SELECT agent_type, COALESCE(sum(cost_usd), 0) as daily_spent
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER} AND date(timestamp) = date('now')
+    GROUP BY agent_type
+  `).all() as Array<{ agent_type: string; daily_spent: number }>
+
+  return agents.map(agent => {
+    const limit = limits.find(l => l.agent_type === agent)
+    const cost = dailyCosts.find(c => c.agent_type === agent)
+    const dailyLimit = limit?.daily_cost_limit ?? 0
+    const dailySpent = cost?.daily_spent ?? 0
+    return {
+      agent_type: agent,
+      daily_cost_limit: dailyLimit,
+      monthly_cost_limit: limit?.monthly_cost_limit ?? 0,
+      daily_spent: dailySpent,
+      daily_usage_pct: dailyLimit > 0 ? (dailySpent / dailyLimit) * 100 : 0,
+    }
+  })
+}
