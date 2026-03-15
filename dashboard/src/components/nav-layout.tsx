@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { Nav } from '@/components/nav'
-import { TopBar } from '@/components/top-bar'
 import { BottomBar } from '@/components/bottom-bar'
-import { RightSidebar } from '@/components/right-sidebar'
 import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'argus-nav-collapsed'
 
 export const NavLayout = ({ children }: { children: React.ReactNode }) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
 
   useEffect(() => {
     try {
@@ -36,16 +34,12 @@ export const NavLayout = ({ children }: { children: React.ReactNode }) => {
       <div
         className={cn(
           'flex h-screen flex-col transition-[margin-left] duration-200',
-          collapsed ? 'ml-14' : 'ml-52'
+          collapsed ? 'ml-14' : 'ml-48'
         )}
       >
-        <TopBar />
-        <div className="flex min-h-0 flex-1">
-          <main className="flex-1 overflow-auto px-6 py-6">
-            {children}
-          </main>
-          <RightSidebar />
-        </div>
+        <main className="flex-1 overflow-auto px-6 py-6">
+          {children}
+        </main>
         <BottomBar />
       </div>
     </>

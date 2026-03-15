@@ -1,23 +1,21 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, FileText, Save, Pencil } from 'lucide-react'
+import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, Save } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { useTheme } from '@/components/theme-provider'
-import { ConfigTimeline } from '@/components/config-timeline'
 import { useLocale } from '@/lib/i18n'
 import type { Locale } from '@/lib/i18n'
-import type { ConfigChange } from '@/lib/config-tracker'
 import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark' | 'system'
 type AgentTheme = 'claude' | 'codex' | 'gemini'
 
-type Category = 'general' | 'agents' | 'pricing' | 'data' | 'config'
+type Category = 'general' | 'agents' | 'pricing' | 'setup' | 'data'
 
 const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
 
@@ -344,116 +342,15 @@ const AgentsSection = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Agent Setup Guide</CardTitle>
+          <CardTitle>Collection Status</CardTitle>
           <CardDescription>
-            AI coding agent telemetry setup instructions.
+            에이전트별 마지막 데이터 수신 시간과 오늘 수집 건수를 확인합니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="claude">
-            <TabsList>
-              <TabsTrigger value="claude">
-                <span className="h-2 w-2 rounded-full bg-orange-500" />
-                Claude Code
-              </TabsTrigger>
-              <TabsTrigger value="codex">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Codex
-              </TabsTrigger>
-              <TabsTrigger value="gemini">
-                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                Gemini CLI
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="claude">
-              <div className="space-y-4 pt-4">
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">1. Environment Variables</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Add to your shell profile (~/.zshrc or ~/.bashrc):
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
-export OTEL_LOGS_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Add to your project&apos;s <code className="bg-muted px-1 rounded">.claude/settings.json</code>:
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
-  "env": {
-    "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
-  }
-}`}</code></pre>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools Tracking (optional)</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Add to <code className="bg-muted px-1 rounded">~/.claude/settings.json</code>:
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
-  "env": {
-    "OTEL_LOG_TOOL_DETAILS": "1"
-  }
-}`}</code></pre>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="codex">
-              <div className="space-y-4 pt-4">
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">1. OTel Configuration</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Add to <code className="bg-muted px-1 rounded">~/.codex/config.toml</code>:
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
-exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }`}</code></pre>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">2. Project Info</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Codex automatically extracts the project name from the working directory. No additional project configuration is needed.
-                  </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="gemini">
-              <div className="space-y-4 pt-4">
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">1. Telemetry Configuration</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Add to <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>:
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
-  "telemetry": {
-    "enabled": true,
-    "target": "local",
-    "otlpEndpoint": "http://localhost:3000",
-    "otlpProtocol": "http"
-  }
-}`}</code></pre>
-                  <p className="text-sm text-muted-foreground mt-2">Or via environment variables:</p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
-export GEMINI_TELEMETRY_TARGET=local
-export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
-export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">2. Project Filtering (optional)</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Use <code className="bg-muted px-1 rounded">direnv</code> to set per-project attributes:
-                  </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
-direnv allow`}</code></pre>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <p className="text-sm text-muted-foreground">
+            Coming soon &mdash; 수집 상태 모니터링.
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -507,241 +404,219 @@ const PricingSection = () => {
   )
 }
 
+const SetupSection = () => (
+  <div className="space-y-6">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-orange-500" />
+          Claude Code
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold mb-2">1. 환경변수 설정</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            셸 프로필 (~/.zshrc 또는 ~/.bashrc)에 다음을 추가합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_LOGS_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">2. 프로젝트 필터링 (선택)</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            프로젝트별 데이터를 구분하려면 프로젝트의 <code className="bg-muted px-1 rounded">.claude/settings.json</code>에 추가합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "env": {
+    "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
+  }
+}`}</code></pre>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">3. Orchestration Tools 추적 (선택)</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            에이전트, 스킬, MCP 도구 호출을 상세 추적하려면 글로벌 설정(<code className="bg-muted px-1 rounded">~/.claude/settings.json</code>)에 추가합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "env": {
+    "OTEL_LOG_TOOL_DETAILS": "1"
+  }
+}`}</code></pre>
+          <p className="text-sm text-muted-foreground mt-2">
+            이 설정이 활성화되면 OTel 텔레메트리에 Agent의 subagent_type, Skill 이름, MCP 서버/도구 이름이 포함됩니다.
+          </p>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">4. 확인</h3>
+          <p className="text-sm text-muted-foreground">
+            Claude Code를 실행하고 대시보드에서 데이터가 수집되는지 확인합니다.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-emerald-500" />
+          Codex
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold mb-2">1. OTel 설정</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            <code className="bg-muted px-1 rounded">~/.codex/config.toml</code>에 다음을 추가합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }`}</code></pre>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">2. 프로젝트 정보</h3>
+          <p className="text-sm text-muted-foreground">
+            Codex는 도구 실행 시 작업 디렉토리(workdir)에서 프로젝트 이름을 자동으로 추출합니다.
+            별도의 프로젝트 설정이 필요하지 않습니다.
+          </p>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">3. 확인</h3>
+          <p className="text-sm text-muted-foreground">
+            Codex를 실행하고 대시보드에서 데이터가 수집되는지 확인합니다.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-blue-500" />
+          Gemini CLI
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold mb-2">1. 텔레메트리 설정</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            <code className="bg-muted px-1 rounded">~/.gemini/settings.json</code>에 다음을 추가합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+  "telemetry": {
+    "enabled": true,
+    "target": "local",
+    "otlpEndpoint": "http://localhost:3000",
+    "otlpProtocol": "http"
+  }
+}`}</code></pre>
+          <p className="text-sm text-muted-foreground mt-2">또는 환경변수로 설정할 수 있습니다:</p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
+export GEMINI_TELEMETRY_TARGET=local
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
+export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">2. 프로젝트 필터링 (선택)</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            프로젝트별 데이터를 구분하려면 <code className="bg-muted px-1 rounded">direnv</code>를 사용합니다:
+          </p>
+          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
+direnv allow`}</code></pre>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">3. 확인</h3>
+          <p className="text-sm text-muted-foreground">
+            Gemini CLI를 실행하고 대시보드에서 데이터가 수집되는지 확인합니다.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>대시보드 실행</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`cd dashboard
+pnpm install
+pnpm dev`}</code></pre>
+        <p className="text-sm text-muted-foreground">
+          <code className="bg-muted px-1 rounded">http://localhost:3000</code>에서 대시보드에 접속할 수 있습니다.
+          에이전트의 OTLP 엔드포인트도 동일한 주소를 사용합니다.
+        </p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>수집되는 이벤트</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Claude Code, Codex, Gemini CLI 모두 동일한 이벤트 유형으로 정규화되어 저장됩니다.
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li><code className="bg-muted px-1 rounded">api_request</code> — API 요청 (모델, 토큰, 비용)</li>
+            <li><code className="bg-muted px-1 rounded">user_prompt</code> — 사용자 프롬프트</li>
+            <li><code className="bg-muted px-1 rounded">tool_result</code> — 도구 실행 결과</li>
+            <li><code className="bg-muted px-1 rounded">tool_decision</code> — 도구 승인/거부</li>
+            <li><code className="bg-muted px-1 rounded">api_error</code> — API 오류</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+)
+
 const DataSection = () => (
   <div className="space-y-6">
     <Card>
       <CardHeader>
-        <CardTitle>Data Management</CardTitle>
-        <CardDescription>Export and manage your monitoring data.</CardDescription>
+        <CardTitle>Export</CardTitle>
+        <CardDescription>모니터링 데이터를 CSV 또는 JSON으로 내보냅니다.</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          Coming soon &mdash; CSV/JSON export, data cleanup, and retention settings.
+          Coming soon &mdash; CSV/JSON export.
+        </p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Data Cleanup</CardTitle>
+        <CardDescription>기간별/에이전트별 데이터를 삭제합니다.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Coming soon &mdash; 데이터 정리 기능.
+        </p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>DB Statistics</CardTitle>
+        <CardDescription>데이터베이스 파일 크기 및 테이블별 레코드 수를 확인합니다.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Coming soon &mdash; DB 통계.
         </p>
       </CardContent>
     </Card>
   </div>
 )
 
-type ConfigFile = { path: string; exists: boolean }
-
-const simpleMarkdownToHtml = (md: string): string => {
-  return md
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold mt-4 mb-1">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-lg font-semibold mt-5 mb-2">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-6 mb-2">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1 rounded text-sm">$1</code>')
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
-    .replace(/\n{2,}/g, '<br/><br/>')
-}
-
-const FileViewer = () => {
-  const [files, setFiles] = useState<ConfigFile[]>([])
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
-  const [content, setContent] = useState('')
-  const [editContent, setEditContent] = useState('')
-  const [isEditing, setIsEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveResult, setSaveResult] = useState<string | null>(null)
-  const [fileLoading, setFileLoading] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((json) => setFiles(json.files ?? []))
-      .catch(() => setFiles([]))
-  }, [])
-
-  const loadFile = useCallback(async (filePath: string) => {
-    setFileLoading(true)
-    setSaveResult(null)
-    try {
-      const res = await fetch(`/api/config?path=${encodeURIComponent(filePath)}`)
-      const json = await res.json()
-      setContent(json.content ?? '')
-      setEditContent(json.content ?? '')
-      setSelectedFile(filePath)
-      setIsEditing(false)
-    } catch {
-      setContent('')
-      setEditContent('')
-    } finally {
-      setFileLoading(false)
-    }
-  }, [])
-
-  const handleSave = useCallback(async () => {
-    if (!selectedFile) return
-    setSaving(true)
-    setSaveResult(null)
-    try {
-      const res = await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: selectedFile, content: editContent }),
-      })
-      const json = await res.json()
-      if (json.success) {
-        setContent(editContent)
-        setSaveResult('Saved')
-        setIsEditing(false)
-      } else {
-        setSaveResult(`Error: ${json.error}`)
-      }
-    } catch {
-      setSaveResult('Failed to save')
-    } finally {
-      setSaving(false)
-    }
-  }, [selectedFile, editContent])
-
-  const isMarkdown = selectedFile?.endsWith('.md') ?? false
-
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-2 mb-3 shrink-0">
-        <FileText className="size-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">File Viewer</h3>
-        <span className="text-xs text-muted-foreground">View and edit project config files.</span>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto shrink-0 pb-2">
-        {files.map((f) => (
-          <button
-            key={f.path}
-            onClick={() => loadFile(f.path)}
-            disabled={!f.exists}
-            className={cn(
-              'shrink-0 rounded-md border px-3 py-1.5 text-xs font-mono transition-colors',
-              selectedFile === f.path
-                ? 'border-primary bg-primary/10 text-foreground'
-                : f.exists
-                  ? 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                  : 'border-border text-muted-foreground/40 cursor-not-allowed'
-            )}
-          >
-            {f.path}
-          </button>
-        ))}
-      </div>
-
-      {selectedFile && (
-        <div className="flex flex-col flex-1 min-h-0 mt-2">
-          <div className="flex items-center justify-between shrink-0 mb-2">
-            <span className="text-sm font-medium font-mono">{selectedFile}</span>
-            <div className="flex items-center gap-2">
-              {saveResult && (
-                <span className={cn('text-xs', saveResult === 'Saved' ? 'text-green-600' : 'text-red-500')}>
-                  {saveResult}
-                </span>
-              )}
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => { setIsEditing(false); setEditContent(content) }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>
-                    <Save className="size-3 mr-1" />
-                    {saving ? 'Saving...' : 'Save'}
-                  </Button>
-                </>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  <Pencil className="size-3 mr-1" />
-                  Edit
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 min-h-0">
-            {fileLoading ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">Loading...</div>
-            ) : isEditing ? (
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-full rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                spellCheck={false}
-              />
-            ) : isMarkdown ? (
-              <div
-                className="rounded-md border bg-muted/30 p-4 text-sm leading-6 h-full overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: simpleMarkdownToHtml(content) }}
-              />
-            ) : (
-              <pre className="rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5 h-full overflow-y-auto whitespace-pre-wrap">
-                {content}
-              </pre>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const ConfigSection = () => {
-  const [data, setData] = useState<ConfigChange[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/config-history?days=30')
-        const json = await res.json()
-        setData(json)
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
-
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex-1 min-h-0">
-        <FileViewer />
-      </div>
-
-      <div className="shrink-0 mt-6">
-        <div>
-          <h2 className="text-lg font-semibold">Config History</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Git-tracked config file changes across AI agents. Showing last 30 days.
-          </p>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <p>Loading...</p>
-          </div>
-        ) : (
-          <div className="mt-4">
-            <ConfigTimeline data={data} />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 const SECTION_MAP: Record<Category, React.FC> = {
   general: GeneralSection,
   agents: AgentsSection,
   pricing: PricingSection,
+  setup: SetupSection,
   data: DataSection,
-  config: ConfigSection,
 }
 
 export default function SettingsPage() {
@@ -753,8 +628,8 @@ export default function SettingsPage() {
     { key: 'general', labelKey: 'settings.general', icon: Palette },
     { key: 'agents', labelKey: 'settings.agents', icon: Bot },
     { key: 'pricing', labelKey: 'settings.pricing', icon: Cog },
+    { key: 'setup', labelKey: 'settings.setup', icon: Globe },
     { key: 'data', labelKey: 'settings.data', icon: Database },
-    { key: 'config', labelKey: 'settings.config', icon: RefreshCw },
   ]
 
   return (
@@ -783,13 +658,8 @@ export default function SettingsPage() {
       </nav>
 
       {/* Right content */}
-      <main className={cn(
-        'flex-1 p-6',
-        active === 'config' ? 'flex flex-col min-h-0 overflow-hidden' : 'overflow-y-auto'
-      )}>
-        <div className={active === 'config' ? 'flex flex-col flex-1 min-h-0' : undefined}>
-          <ActiveSection />
-        </div>
+      <main className="flex-1 p-6 overflow-y-auto">
+        <ActiveSection />
       </main>
     </div>
   )
