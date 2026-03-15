@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, FileText, Save, Pencil } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
@@ -265,7 +266,10 @@ const AgentsSection = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Cost Limits</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Cost Limits
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Coming soon</Badge>
+          </CardTitle>
           <CardDescription>
             에이전트별 일일/월별 비용 한도를 설정합니다. Bottom Bar에서 잔여 비율을 확인할 수 있습니다.
           </CardDescription>
@@ -296,9 +300,10 @@ const AgentsSection = () => {
                           type="number"
                           min="0"
                           step="0.01"
+                          disabled
                           value={limit?.daily_cost_limit ?? '0'}
                           onChange={(e) => handleChange(agent.id, 'daily_cost_limit', e.target.value)}
-                          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
                           placeholder="0.00"
                         />
                       </td>
@@ -307,9 +312,10 @@ const AgentsSection = () => {
                           type="number"
                           min="0"
                           step="0.01"
+                          disabled
                           value={limit?.monthly_cost_limit ?? '0'}
                           onChange={(e) => handleChange(agent.id, 'monthly_cost_limit', e.target.value)}
-                          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
                           placeholder="0.00"
                         />
                       </td>
@@ -320,7 +326,7 @@ const AgentsSection = () => {
             </table>
           </div>
           <div className="flex items-center gap-3">
-            <Button onClick={handleSave} disabled={saving} variant="outline" size="sm">
+            <Button onClick={handleSave} disabled variant="outline" size="sm">
               <Save className="size-4" />
               {saving ? 'Saving...' : 'Save'}
             </Button>
