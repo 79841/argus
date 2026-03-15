@@ -15,14 +15,13 @@ import type { ConfigChange } from '@/lib/config-tracker'
 import { cn } from '@/lib/utils'
 
 type Theme = 'light' | 'dark' | 'system'
-type AgentTheme = 'default' | 'claude' | 'codex' | 'gemini'
+type AgentTheme = 'claude' | 'codex' | 'gemini'
 
 type Category = 'general' | 'agents' | 'pricing' | 'data' | 'config'
 
 const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
 
 const AGENT_THEMES: { value: AgentTheme; label: string; color: string }[] = [
-  { value: 'default', label: 'Default', color: '#8b5cf6' },
   { value: 'claude', label: 'Claude', color: '#f97316' },
   { value: 'codex', label: 'Codex', color: '#10b981' },
   { value: 'gemini', label: 'Gemini', color: '#3b82f6' },
@@ -41,14 +40,20 @@ const GeneralSection = () => {
   const { theme, setTheme } = useTheme()
   const { locale, setLocale, t } = useLocale()
   const [refreshInterval, setRefreshInterval] = useState('0')
-  const [agentTheme, setAgentTheme] = useState<AgentTheme>('default')
+  const [agentTheme, setAgentTheme] = useState<AgentTheme>('claude')
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(REFRESH_STORAGE_KEY)
       if (stored) setRefreshInterval(stored)
-      const storedAgent = localStorage.getItem(AGENT_THEME_STORAGE_KEY) as AgentTheme | null
-      if (storedAgent) setAgentTheme(storedAgent)
+      const storedAgent = localStorage.getItem(AGENT_THEME_STORAGE_KEY)
+      if (storedAgent && storedAgent !== 'default') {
+        setAgentTheme(storedAgent as AgentTheme)
+      } else if (storedAgent === 'default') {
+        setAgentTheme('claude')
+        localStorage.setItem(AGENT_THEME_STORAGE_KEY, 'claude')
+        document.documentElement.setAttribute('data-agent-theme', 'claude')
+      }
     } catch {
       // ignore
     }
@@ -114,7 +119,7 @@ const GeneralSection = () => {
           <CardDescription>{t('settings.agentTheme.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {AGENT_THEMES.map((at) => (
               <button
                 key={at.value}
