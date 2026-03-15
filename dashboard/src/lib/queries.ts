@@ -565,8 +565,8 @@ export type SessionDetailEvent = {
   tool_success: number | null
 }
 
-export const getSessionDetail = async (sessionId: string): Promise<SessionDetailEvent[]> => {
-  const db = getDb()
+export const getSessionDetail = async (sessionId: string, dbOverride?: import('better-sqlite3').Database): Promise<SessionDetailEvent[]> => {
+  const db = dbOverride ?? getDb()
   return db.prepare(`
     SELECT
       timestamp,
@@ -584,6 +584,45 @@ export const getSessionDetail = async (sessionId: string): Promise<SessionDetail
     WHERE session_id = ?
     ORDER BY timestamp ASC
   `).all(sessionId) as SessionDetailEvent[]
+}
+
+export type SessionSummary = {
+  session_id: string
+  agent_type: string
+  model: string
+  total_cost: number
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  duration_ms: number
+  request_count: number
+  tool_count: number
+  project_name: string
+  started_at: string
+}
+
+export const getSessionSummary = async (sessionId: string, dbOverride?: import('better-sqlite3').Database): Promise<SessionSummary | null> => {
+  const db = dbOverride ?? getDb()
+  const row = db.prepare(`
+    SELECT
+      session_id,
+      agent_type,
+      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
+      COALESCE(sum(CASE WHEN event_name = 'api_request' THEN cost_usd ELSE 0 END), 0) as total_cost,
+      COALESCE(sum(CASE WHEN event_name = 'api_request' THEN input_tokens ELSE 0 END), 0) as input_tokens,
+      COALESCE(sum(CASE WHEN event_name = 'api_request' THEN output_tokens ELSE 0 END), 0) as output_tokens,
+      COALESCE(sum(CASE WHEN event_name = 'api_request' THEN cache_read_tokens ELSE 0 END), 0) as cache_read_tokens,
+      CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as duration_ms,
+      COALESCE(sum(CASE WHEN event_name = 'api_request' THEN 1 ELSE 0 END), 0) as request_count,
+      COALESCE(sum(CASE WHEN event_name = 'tool_result' THEN 1 ELSE 0 END), 0) as tool_count,
+      project_name,
+      min(timestamp) as started_at
+    FROM agent_logs
+    WHERE session_id = ?
+    GROUP BY session_id, agent_type
+  `).get(sessionId) as SessionSummary | undefined
+
+  return row ?? null
 }
 
 export const getProjects = async (): Promise<ProjectRow[]> => {

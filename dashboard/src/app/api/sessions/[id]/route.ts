@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionDetail } from '@/lib/queries'
+import { getSessionDetail, getSessionSummary } from '@/lib/queries'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -10,6 +10,17 @@ export async function GET(
     if (!id) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
     }
+
+    const summary = request.nextUrl.searchParams.get('summary') === 'true'
+
+    if (summary) {
+      const [sessionSummary, events] = await Promise.all([
+        getSessionSummary(id),
+        getSessionDetail(id),
+      ])
+      return NextResponse.json({ summary: sessionSummary, events })
+    }
+
     const events = await getSessionDetail(id)
     return NextResponse.json(events)
   } catch {
