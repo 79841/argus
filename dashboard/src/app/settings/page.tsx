@@ -11,6 +11,7 @@ import { useTheme } from '@/components/theme-provider'
 import { useLocale } from '@/lib/i18n'
 import type { Locale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { dataClient } from '@/lib/data-client'
 
 type Theme = 'light' | 'dark' | 'system'
 type AgentTheme = 'claude' | 'codex' | 'gemini'
@@ -215,10 +216,9 @@ const AgentsSection = () => {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    fetch('/api/settings/limits')
-      .then((r) => r.json())
+    dataClient.query('settings/limits')
       .then((data) => {
-        const existing = (data.limits ?? []) as { agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }[]
+        const existing = ((data as { limits?: { agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }[] }).limits ?? [])
         setLimits((prev) =>
           prev.map((l) => {
             const found = existing.find((e) => e.agent_type === l.agent_type)
@@ -247,16 +247,12 @@ const AgentsSection = () => {
     setSaving(true)
     setSaved(false)
     try {
-      await fetch('/api/settings/limits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          limits: limits.map((l) => ({
-            agent_type: l.agent_type,
-            daily_cost_limit: parseFloat(l.daily_cost_limit) || 0,
-            monthly_cost_limit: parseFloat(l.monthly_cost_limit) || 0,
-          })),
-        }),
+      await dataClient.mutate('settings/limits', {
+        limits: limits.map((l) => ({
+          agent_type: l.agent_type,
+          daily_cost_limit: parseFloat(l.daily_cost_limit) || 0,
+          monthly_cost_limit: parseFloat(l.monthly_cost_limit) || 0,
+        })),
       })
       setSaved(true)
     } catch {
@@ -369,9 +365,8 @@ const PricingSection = () => {
     setSyncing(true)
     setResult(null)
     try {
-      const res = await fetch('/api/pricing-sync', { method: 'POST' })
-      const json = await res.json()
-      setResult(json)
+      const json = await dataClient.mutate('pricing-sync')
+      setResult(json as { synced?: number; error?: string })
     } catch {
       setResult({ error: 'Failed to connect' })
     } finally {

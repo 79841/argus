@@ -6,6 +6,7 @@ import type { AgentType } from '@/lib/agents'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AgentDot } from '@/components/ui/agent-dot'
+import { dataClient } from '@/lib/data-client'
 
 type AgentStatus = {
   agent_type: string
@@ -82,34 +83,30 @@ export const BottomBar = () => {
   const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
 
   useEffect(() => {
-    fetch('/api/ingest-status')
-      .then((r) => r.json())
-      .then((data) => setAgents(data.agents ?? []))
+    dataClient.query('ingest-status')
+      .then((data: unknown) => setAgents((data as { agents?: AgentStatus[] }).agents ?? []))
       .catch(() => {})
-    fetch('/api/overview?agent_type=all')
-      .then((r) => r.json())
-      .then((data) => {
+    dataClient.query('overview', { agent_type: 'all' })
+      .then((data: unknown) => {
+        const d = data as { all_time_cost?: number; all_time_tokens?: number }
         setTotals({
-          total_cost: data.all_time_cost ?? 0,
-          total_tokens: data.all_time_tokens ?? 0,
+          total_cost: d.all_time_cost ?? 0,
+          total_tokens: d.all_time_tokens ?? 0,
         })
       })
       .catch(() => {})
-    fetch('/api/settings/limits')
-      .then((r) => r.json())
-      .then((data) => setLimits(data.limits ?? []))
+    dataClient.query('settings/limits')
+      .then((data: unknown) => setLimits((data as { limits?: AgentLimit[] }).limits ?? []))
       .catch(() => {})
-    fetch('/api/daily-costs')
-      .then((r) => r.json())
-      .then((data) => setDailyCosts(data.costs ?? []))
+    dataClient.query('daily-costs')
+      .then((data: unknown) => setDailyCosts((data as { costs?: AgentDailyCost[] }).costs ?? []))
       .catch(() => {})
   }, [])
 
   useEffect(() => {
     const fetchActive = () => {
-      fetch('/api/sessions/active')
-        .then((r) => r.json())
-        .then((data) => setActiveSessions(data.sessions ?? []))
+      dataClient.query('sessions/active')
+        .then((data: unknown) => setActiveSessions((data as { sessions?: ActiveSessionInfo[] }).sessions ?? []))
         .catch(() => {})
     }
     fetchActive()

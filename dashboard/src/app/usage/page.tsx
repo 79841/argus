@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { dataClient } from '@/lib/data-client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -62,12 +63,11 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   const [prevOverview, setPrevOverview] = useState<OverviewStats | null>(null)
 
   useEffect(() => {
-    const qs = new URLSearchParams({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
-    fetch(`/api/daily?${qs}`)
-      .then(r => r.json())
-      .then((rows: DailyStats[]) => {
+    dataClient.query('daily', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+      .then((rows) => {
+        const typedRows = rows as DailyStats[]
         const byDate: Record<string, DailyCostPoint> = {}
-        for (const row of rows) {
+        for (const row of typedRows) {
           if (!byDate[row.date]) byDate[row.date] = { date: row.date, claude: 0, codex: 0, gemini: 0, total: 0 }
           const point = byDate[row.date]
           point[row.agent_type as 'claude' | 'codex' | 'gemini'] = row.cost
@@ -76,7 +76,7 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         setDaily(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)))
 
         const agentMap: Record<string, number> = {}
-        for (const row of rows) {
+        for (const row of typedRows) {
           agentMap[row.agent_type] = (agentMap[row.agent_type] ?? 0) + row.cost
         }
         setAgentCosts(
@@ -86,9 +86,8 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
       })
       .catch(() => {})
 
-    fetch(`/api/overview?${qs}`)
-      .then(r => r.json())
-      .then(data => setOverview(data))
+    dataClient.query('overview', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+      .then((data) => setOverview(data as OverviewStats))
       .catch(() => {})
 
     const from = new Date(dateRange.from)
@@ -98,17 +97,15 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
     prevTo.setDate(prevTo.getDate() - 1)
     const prevFrom = new Date(prevTo)
     prevFrom.setDate(prevFrom.getDate() - days + 1)
-    const prevQs = new URLSearchParams({ agent_type: agentType, project, from: prevFrom.toISOString().slice(0, 10), to: prevTo.toISOString().slice(0, 10) })
-    fetch(`/api/overview?${prevQs}`)
-      .then(r => r.json())
-      .then(data => setPrevOverview(data))
+    dataClient.query('overview', { agent_type: agentType, project, from: prevFrom.toISOString().slice(0, 10), to: prevTo.toISOString().slice(0, 10) })
+      .then((data) => setPrevOverview(data as OverviewStats))
       .catch(() => {})
 
-    fetch(`/api/projects?agent_type=${agentType}&from=${dateRange.from}&to=${dateRange.to}`)
-      .then(r => r.json())
-      .then((data: Array<{ project_name: string; total_cost: number }>) =>
-        setProjectCosts(data.map(d => ({ project: d.project_name, cost: d.total_cost })))
-      )
+    dataClient.query('projects', { agent_type: agentType, from: dateRange.from, to: dateRange.to })
+      .then((data) => {
+        const typedData = data as Array<{ project_name: string; total_cost: number }>
+        setProjectCosts(typedData.map(d => ({ project: d.project_name, cost: d.total_cost })))
+      })
       .catch(() => {})
   }, [agentType, project, dateRange])
 
@@ -196,13 +193,11 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
   const [overview, setOverview] = useState<OverviewStats | null>(null)
 
   useEffect(() => {
-    const qs = new URLSearchParams({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
-
-    fetch(`/api/daily?${qs}`)
-      .then(r => r.json())
-      .then((rows: DailyStats[]) => {
+    dataClient.query('daily', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+      .then((rows) => {
+        const typedRows = rows as DailyStats[]
         const byDate: Record<string, DailyTokenPoint> = {}
-        for (const row of rows) {
+        for (const row of typedRows) {
           if (!byDate[row.date]) byDate[row.date] = { date: row.date, input: 0, output: 0, cache_read: 0 }
           byDate[row.date].input += row.input_tokens
           byDate[row.date].output += row.output_tokens
@@ -211,7 +206,7 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
         setDaily(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)))
 
         const agentMap: Record<string, { input: number; output: number; cache_read: number }> = {}
-        for (const row of rows) {
+        for (const row of typedRows) {
           if (!agentMap[row.agent_type]) agentMap[row.agent_type] = { input: 0, output: 0, cache_read: 0 }
           agentMap[row.agent_type].input += row.input_tokens
           agentMap[row.agent_type].output += row.output_tokens
@@ -229,9 +224,8 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
       })
       .catch(() => {})
 
-    fetch(`/api/overview?${qs}`)
-      .then(r => r.json())
-      .then(data => setOverview(data))
+    dataClient.query('overview', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+      .then((data) => setOverview(data as OverviewStats))
       .catch(() => {})
   }, [agentType, project, dateRange])
 
@@ -314,12 +308,11 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
   const [models, setModels] = useState<ModelTableRow[]>([])
 
   useEffect(() => {
-    const qs = new URLSearchParams({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
-    fetch(`/api/models?${qs}`)
-      .then(r => r.json())
-      .then((rows: ModelUsage[]) => {
+    dataClient.query('models', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+      .then((rows) => {
+        const typedRows = rows as ModelUsage[]
         setModels(
-          rows.map(r => ({
+          typedRows.map(r => ({
             model: r.model,
             agent_type: r.agent_type,
             request_count: r.request_count,
@@ -448,10 +441,9 @@ const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
   const [overall, setOverall] = useState<{ cacheRate: number; avgDuration: number; score: number } | null>(null)
 
   useEffect(() => {
-    const qs = new URLSearchParams({ project, from: dateRange.from, to: dateRange.to })
-    fetch(`/api/efficiency?${qs}`)
-      .then(r => r.json())
-      .then(({ data, comparison }: { data: EfficiencyRow[]; comparison: { current: EfficiencyComparisonRow[]; previous: EfficiencyComparisonRow[] } }) => {
+    dataClient.query('efficiency', { project, from: dateRange.from, to: dateRange.to })
+      .then((res) => {
+        const { data, comparison } = res as { data: EfficiencyRow[]; comparison: { current: EfficiencyComparisonRow[]; previous: EfficiencyComparisonRow[] } };
         const trendMap: Record<string, EfficiencyTrendPoint> = {}
         for (const row of data) {
           if (!trendMap[row.date]) trendMap[row.date] = { date: row.date }
@@ -556,15 +548,15 @@ const ImpactTab = ({ dateRange: _dateRange }: ImpactTabProps) => {
 
   const loadData = useCallback(() => {
     setLoading(true)
-    fetch('/api/config-history?days=90')
-      .then(r => r.json())
-      .then((data: ConfigChange[]) => {
+    dataClient.query('config-history', { days: 90 })
+      .then((data) => {
+        const typedData = data as ConfigChange[]
         const isUserScope = (fp: string) =>
           fp.startsWith('~') || fp.startsWith('/Users') || fp.startsWith('/home')
 
         const filtered = scope === 'all'
-          ? data
-          : data.filter(c => {
+          ? typedData
+          : typedData.filter(c => {
             const isUser = isUserScope(c.file_path)
             return scope === 'user' ? isUser : !isUser
           })

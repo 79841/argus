@@ -2,6 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell } from 'electron'
 import path from 'path'
 import { spawn, type ChildProcess } from 'child_process'
 import net from 'net'
+import { registerIpcHandlers } from './ipc-handlers'
 
 const PORT = 3000
 const DEV_URL = `http://localhost:${PORT}`
@@ -99,6 +100,7 @@ const createWindow = (): void => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
 
@@ -163,6 +165,7 @@ const createTray = (): void => {
 }
 
 app.whenReady().then(async () => {
+  registerIpcHandlers()
   createTray()
   await startNextServer()
 

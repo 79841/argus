@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutoRefresh } from '@/hooks/use-auto-refresh'
+import { dataClient } from '@/lib/data-client'
 import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -52,15 +53,15 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/pricing-sync', { method: 'POST' }).catch(() => {})
+    dataClient.mutate('pricing-sync').catch(() => {})
   }, [])
 
   const fetchData = useCallback((showLoading = true) => {
     if (showLoading) setLoading(true)
     Promise.all([
-      fetch('/api/overview').then((r) => r.json()),
-      fetch('/api/daily?days=112').then((r) => r.json()),
-      fetch('/api/sessions?limit=5').then((r) => r.json()),
+      dataClient.query('overview'),
+      dataClient.query('daily', { days: 112 }),
+      dataClient.query('sessions', { limit: 5 }),
     ])
       .then(([overviewData, dailyData, sessionsData]) => {
         setData({

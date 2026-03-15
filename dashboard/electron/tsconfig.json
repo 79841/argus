@@ -4,14 +4,22 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "../dist-electron",
-    "rootDir": ".",
+    "rootDir": "..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".."
   },
-  "include": ["./**/*.ts"]
+  "include": [
+    "../electron/**/*.ts",
+    "../src/lib/db.ts",
+    "../src/lib/queries.ts",
+    "../src/lib/config-tracker.ts",
+    "../src/lib/registered-tools.ts",
+    "../src/lib/pricing-sync.ts"
+  ]
 }

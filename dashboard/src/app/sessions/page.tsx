@@ -14,6 +14,7 @@ import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import { useLocale } from '@/lib/i18n'
+import { dataClient } from '@/lib/data-client'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {
@@ -202,9 +203,7 @@ export default function SessionsPage() {
     setLoading(true)
     setSelectedId(null)
     setDetailEvents([])
-    const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
-    fetch(`/api/sessions?${q}`)
-      .then((res) => res.json())
+    dataClient.query('sessions', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((data) => {
         setSessions(Array.isArray(data) ? data : [])
         setLoading(false)
@@ -218,8 +217,7 @@ export default function SessionsPage() {
   const handleSelect = useCallback((sessionId: string) => {
     setSelectedId(sessionId)
     setDetailLoading(true)
-    fetch(`/api/sessions/${encodeURIComponent(sessionId)}`)
-      .then((res) => res.json())
+    dataClient.query(`sessions/${encodeURIComponent(sessionId)}`)
       .then((data) => {
         setDetailEvents(Array.isArray(data) ? data : [])
         setDetailLoading(false)

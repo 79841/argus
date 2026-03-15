@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { dataClient } from '@/lib/data-client'
 
 type RegisteredTool = {
   name: string
@@ -30,10 +31,9 @@ export const RegisteredToolsCard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/tools/registered')
-      .then((r) => r.json())
-      .then((data) => {
-        setTools(data.tools ?? [])
+    dataClient.query('tools/registered')
+      .then((data: unknown) => {
+        setTools((data as { tools?: RegisteredTool[] }).tools ?? [])
         setLoading(false)
       })
       .catch(() => {
