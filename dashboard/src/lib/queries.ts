@@ -140,7 +140,7 @@ export const getSessions = async (agentType: string, project: string = 'all', fr
     SELECT
       session_id,
       agent_type,
-      (SELECT m.model FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '' GROUP BY m.model ORDER BY count(*) DESC LIMIT 1) as model,
+      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
       min(timestamp) as started_at,
       COALESCE(sum(cost_usd), 0) as cost,
       COALESCE(sum(input_tokens), 0) as input_tokens,
