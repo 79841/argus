@@ -4,9 +4,9 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { DailyStats } from '@/lib/queries'
-import { getAgentColor } from '@/lib/agents'
+import { getAgentColor, AGENTS } from '@/lib/agents'
 
-type HeatmapMode = 'sessions' | 'cost' | 'efficiency'
+type HeatmapMode = 'agents' | 'sessions' | 'cost' | 'efficiency'
 
 type UsageHeatmapProps = {
   data: DailyStats[]
@@ -18,6 +18,19 @@ type DayData = {
   sessions: number
   cost: number
   cacheHitRate: number
+  agents: Set<string>
+}
+
+const AGENT_COLORS: Record<string, string> = {
+  claude: AGENTS.claude.hex,
+  codex: AGENTS.codex.hex,
+  gemini: AGENTS.gemini.hex,
+}
+
+const AGENT_LABELS: Record<string, string> = {
+  claude: 'Claude Code',
+  codex: 'Codex',
+  gemini: 'Gemini CLI',
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -63,6 +76,18 @@ const getEfficiencyColor = (rate: number): string => {
   return `rgb(${r},${g},${b})`
 }
 
+const getAgentCellStyle = (agents: Set<string>): React.CSSProperties => {
+  if (agents.size === 0) return { backgroundColor: 'var(--color-muted)' }
+
+  const sorted = ['claude', 'codex', 'gemini'].filter((a) => agents.has(a))
+  if (sorted.length === 1) {
+    return { backgroundColor: AGENT_COLORS[sorted[0]] }
+  }
+
+  const colors = sorted.map((a) => AGENT_COLORS[a])
+  return { background: `linear-gradient(135deg, ${colors.join(', ')})` }
+}
+
 const formatCostShort = (v: number): string => {
   if (v >= 1) return `$${v.toFixed(1)}`
   if (v >= 0.01) return `$${v.toFixed(2)}`
@@ -71,7 +96,7 @@ const formatCostShort = (v: number): string => {
 }
 
 export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
-  const [mode, setMode] = useState<HeatmapMode>('sessions')
+  const [mode, setMode] = useState<HeatmapMode>('agents')
 
   const { grid, months, maxSessions, maxCost } = useMemo(() => {
     const today = new Date()
@@ -83,6 +108,9 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
       if (existing) {
         existing.sessions += d.sessions
         existing.cost += d.cost
+        if (d.agent_type && d.sessions > 0) {
+          existing.agents.add(d.agent_type)
+        }
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
         const prevInput = existing.cacheHitRate >= 0
           ? existing.cacheHitRate * 100
@@ -92,11 +120,16 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
           : existing.cacheHitRate
       } else {
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
+        const agents = new Set<string>()
+        if (d.agent_type && d.sessions > 0) {
+          agents.add(d.agent_type)
+        }
         dayMap.set(key, {
           date: key,
           sessions: d.sessions,
           cost: d.cost,
           cacheHitRate: totalInput > 0 ? (d.cache_read_tokens ?? 0) / totalInput : -1,
+          agents,
         })
       }
     }
@@ -119,7 +152,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
           week.push(null)
         } else {
           const key = cursor.toISOString().slice(0, 10)
-          week.push(dayMap.get(key) ?? { date: key, sessions: 0, cost: 0, cacheHitRate: -1 })
+          week.push(dayMap.get(key) ?? { date: key, sessions: 0, cost: 0, cacheHitRate: -1, agents: new Set() })
         }
         if (d === 0 && cursor.getMonth() !== lastMonth && cursor <= today) {
           lastMonth = cursor.getMonth()
@@ -151,16 +184,18 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
   const cellSize = 12
   const cellGap = 2
 
-  const getCellColor = (cell: DayData | null): string => {
-    if (!cell) return 'transparent'
-    switch (mode) {
-      case 'sessions':
-        return getSessionColor(cell.sessions, maxSessions, agentHex)
-      case 'cost':
-        return getCostColor(cell.cost, maxCost)
-      case 'efficiency':
-        return getEfficiencyColor(cell.cacheHitRate)
+  const getCellStyle = (cell: DayData | null): React.CSSProperties => {
+    if (!cell) return { backgroundColor: 'transparent' }
+    if (mode === 'agents') {
+      if (cell.sessions === 0) return { backgroundColor: 'var(--color-muted)' }
+      return getAgentCellStyle(cell.agents)
     }
+    const color = mode === 'sessions'
+      ? getSessionColor(cell.sessions, maxSessions, agentHex)
+      : mode === 'cost'
+        ? getCostColor(cell.cost, maxCost)
+        : getEfficiencyColor(cell.cacheHitRate)
+    return { backgroundColor: color }
   }
 
   const getTooltipText = (cell: DayData | null): string => {
@@ -173,6 +208,12 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
     const parts = [dateStr, `${cell.sessions} sessions`, formatCostShort(cell.cost)]
     if (cell.cacheHitRate >= 0) {
       parts.push(`Cache: ${(cell.cacheHitRate * 100).toFixed(0)}%`)
+    }
+    if (cell.agents.size > 0) {
+      const agentNames = [...cell.agents]
+        .map((a) => AGENT_LABELS[a] ?? a)
+        .join(', ')
+      parts.push(agentNames)
     }
     return parts.join(' / ')
   }
@@ -187,6 +228,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
             onValueChange={(v) => setMode(v as HeatmapMode)}
           >
             <TabsList className="h-7">
+              <TabsTrigger value="agents" className="text-xs px-2 py-0.5">Agents</TabsTrigger>
               <TabsTrigger value="sessions" className="text-xs px-2 py-0.5">Sessions</TabsTrigger>
               <TabsTrigger value="cost" className="text-xs px-2 py-0.5">Cost</TabsTrigger>
               <TabsTrigger value="efficiency" className="text-xs px-2 py-0.5">Cache</TabsTrigger>
@@ -233,7 +275,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
                         style={{
                           width: cellSize,
                           height: cellSize,
-                          backgroundColor: getCellColor(cell),
+                          ...getCellStyle(cell),
                         }}
                         title={getTooltipText(cell)}
                       />
@@ -243,6 +285,19 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
               </div>
             </div>
           </div>
+          {mode === 'agents' && (
+            <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
+              {(['claude', 'codex', 'gemini'] as const).map((agent) => (
+                <div key={agent} className="flex items-center gap-1">
+                  <div
+                    className="size-2.5 rounded-[2px]"
+                    style={{ backgroundColor: AGENT_COLORS[agent] }}
+                  />
+                  {AGENT_LABELS[agent]}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

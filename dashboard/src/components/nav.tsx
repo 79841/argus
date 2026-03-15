@@ -66,88 +66,13 @@ const SETTINGS_ITEM: NavPage = {
 const STORAGE_KEY = 'argus-nav-collapsed'
 const ACCORDION_KEY = 'argus-nav-accordion'
 
-const CategoryPopover = ({
-  category,
-  anchorRef,
-  onClose,
-  pathname,
-  translate,
-}: {
-  category: NavCategory
-  anchorRef: React.RefObject<HTMLButtonElement | null>
-  onClose: () => void
-  pathname: string
-  translate: (key: string) => string
-}) => {
-  const popoverRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node) &&
-        anchorRef.current &&
-        !anchorRef.current.contains(e.target as Node)
-      ) {
-        onClose()
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [onClose, anchorRef])
-
-  const [pos, setPos] = useState({ top: 0, left: 0 })
-
-  useEffect(() => {
-    if (anchorRef.current) {
-      const rect = anchorRef.current.getBoundingClientRect()
-      setPos({ top: rect.top, left: rect.right + 8 })
-    }
-  }, [anchorRef])
-
-  return (
-    <div
-      ref={popoverRef}
-      className="fixed z-50 min-w-40 rounded-md border bg-popover p-1 shadow-md"
-      style={{ top: pos.top, left: pos.left }}
-    >
-      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-        {translate(category.labelKey)}
-      </div>
-      {category.pages.map((page) => (
-        <Link
-          key={page.href}
-          href={page.href}
-          onClick={onClose}
-          className={cn(
-            'flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors',
-            pathname === page.href
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          )}
-        >
-          <page.icon className="size-4" />
-          {translate(page.labelKey)}
-        </Link>
-      ))}
-    </div>
-  )
-}
-
 export const Nav = () => {
   const pathname = usePathname()
   const { t } = useLocale()
   const [collapsed, setCollapsed] = useState(false)
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({})
-  const [popoverCategory, setPopoverCategory] = useState<string | null>(null)
-  const categoryRefs = useRef<Record<string, React.RefObject<HTMLButtonElement | null>>>({})
-
-  // Initialize refs for each category
-  for (const cat of NAV_CATEGORIES) {
-    if (!categoryRefs.current[cat.key]) {
-      categoryRefs.current[cat.key] = { current: null }
-    }
-  }
+  const [tempExpanded, setTempExpanded] = useState<string | null>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
 
   // Load persisted state
   useEffect(() => {
@@ -172,10 +97,22 @@ export const Nav = () => {
     }
   }, [])
 
+  // Outside click detection for temp expanded state
+  useEffect(() => {
+    if (!tempExpanded) return
+    const handleClick = (e: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setTempExpanded(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [tempExpanded])
+
   const toggleCollapsed = () => {
     const next = !collapsed
     setCollapsed(next)
-    setPopoverCategory(null)
+    setTempExpanded(null)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       window.dispatchEvent(new CustomEvent('argus-nav-toggle', { detail: next }))
@@ -196,22 +133,25 @@ export const Nav = () => {
     })
   }
 
-  const handlePopoverToggle = useCallback((key: string) => {
-    setPopoverCategory((prev) => (prev === key ? null : key))
+  const handleCollapsedCategoryClick = useCallback((key: string) => {
+    setTempExpanded((prev) => (prev === key ? null : key))
   }, [])
 
-  const closePopover = useCallback(() => {
-    setPopoverCategory(null)
+  const closeTempExpanded = useCallback(() => {
+    setTempExpanded(null)
   }, [])
 
   const isCategoryActive = (category: NavCategory) =>
     category.pages.some((p) => p.href === pathname)
 
+  const isExpanded = !collapsed || tempExpanded !== null
+
   return (
     <aside
+      ref={sidebarRef}
       className={cn(
         'fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-background transition-[width] duration-200',
-        collapsed ? 'w-14' : 'w-52'
+        isExpanded ? 'w-52' : 'w-14'
       )}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
@@ -219,19 +159,20 @@ export const Nav = () => {
       <div
         className={cn(
           'flex h-14 items-center pt-10',
-          collapsed ? 'justify-center px-2' : 'px-4'
+          !isExpanded ? 'justify-center px-2' : 'px-4'
         )}
       >
-        {!collapsed && (
+        {isExpanded && (
           <Link
             href="/"
             className="text-lg font-bold tracking-tight"
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            onClick={closeTempExpanded}
           >
             Argus
           </Link>
         )}
-        {collapsed && (
+        {!isExpanded && (
           <Link
             href="/"
             className="text-lg font-bold tracking-tight"
@@ -249,41 +190,77 @@ export const Nav = () => {
       >
         {NAV_CATEGORIES.map((category) => (
           <div key={category.key} className="mb-1">
-            {collapsed ? (
-              /* Collapsed: icon button + popover */
-              <>
+            {collapsed && !tempExpanded ? (
+              /* Collapsed: icon button, click to temp expand */
+              <Tooltip>
+                <TooltipTrigger
+                  onClick={() => handleCollapsedCategoryClick(category.key)}
+                  className={cn(
+                    'flex w-full items-center justify-center rounded-md p-2 transition-colors',
+                    isCategoryActive(category)
+                      ? 'text-foreground bg-muted'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  <category.icon className="size-5" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {t(category.labelKey)}
+                </TooltipContent>
+              </Tooltip>
+            ) : collapsed && tempExpanded ? (
+              /* Temp expanded: show selected category's pages inline */
+              tempExpanded === category.key ? (
+                <>
+                  <button
+                    onClick={() => setTempExpanded(null)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <category.icon className="size-4" />
+                    <span className="flex-1 text-left">{t(category.labelKey)}</span>
+                    <ChevronDown className="size-3.5" />
+                  </button>
+                  <div className="mt-0.5 space-y-0.5">
+                    {category.pages.map((page) => (
+                      <Link
+                        key={page.href}
+                        href={page.href}
+                        onClick={closeTempExpanded}
+                        className={cn(
+                          'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ml-2',
+                          pathname === page.href
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        )}
+                      >
+                        <page.icon className="size-4" />
+                        {t(page.labelKey)}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                /* Other categories: show as icon only */
                 <Tooltip>
                   <TooltipTrigger
-                    ref={(el: HTMLButtonElement | null) => {
-                      const ref = categoryRefs.current[category.key]
-                      if (ref) ref.current = el
-                    }}
-                    onClick={() => handlePopoverToggle(category.key)}
+                    onClick={() => handleCollapsedCategoryClick(category.key)}
                     className={cn(
-                      'flex w-full items-center justify-center rounded-md p-2 transition-colors',
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
                       isCategoryActive(category)
                         ? 'text-foreground bg-muted'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
                   >
-                    <category.icon className="size-5" />
+                    <category.icon className="size-4" />
+                    <span className="flex-1 text-left uppercase tracking-wider">{t(category.labelKey)}</span>
                   </TooltipTrigger>
                   <TooltipContent side="right">
                     {t(category.labelKey)}
                   </TooltipContent>
                 </Tooltip>
-                {popoverCategory === category.key && (
-                  <CategoryPopover
-                    category={category}
-                    anchorRef={categoryRefs.current[category.key]}
-                    onClose={closePopover}
-                    pathname={pathname}
-                    translate={t}
-                  />
-                )}
-              </>
+              )
             ) : (
-              /* Expanded: accordion */
+              /* Expanded (not collapsed): accordion */
               <>
                 <button
                   onClick={() => toggleAccordion(category.key)}
@@ -329,7 +306,7 @@ export const Nav = () => {
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         {/* Settings */}
-        {collapsed ? (
+        {!isExpanded ? (
           <Tooltip>
             <TooltipTrigger
               render={
@@ -351,6 +328,7 @@ export const Nav = () => {
         ) : (
           <Link
             href={SETTINGS_ITEM.href}
+            onClick={closeTempExpanded}
             className={cn(
               'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
               pathname === SETTINGS_ITEM.href
@@ -364,7 +342,7 @@ export const Nav = () => {
         )}
 
         {/* Collapse toggle */}
-        {collapsed ? (
+        {!isExpanded ? (
           <Tooltip>
             <TooltipTrigger
               onClick={toggleCollapsed}
@@ -374,6 +352,14 @@ export const Nav = () => {
             </TooltipTrigger>
             <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
           </Tooltip>
+        ) : collapsed ? (
+          <button
+            onClick={() => setTempExpanded(null)}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <ChevronLeft className="size-4" />
+            {t('nav.collapse')}
+          </button>
         ) : (
           <button
             onClick={toggleCollapsed}
