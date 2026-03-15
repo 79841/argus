@@ -25,10 +25,18 @@ const dateRangeFilter = () =>
 export type OverviewStats = {
   total_sessions: number
   total_cost: number
+  total_requests: number
   total_input_tokens: number
   total_output_tokens: number
   total_cache_read_tokens: number
   cache_hit_rate: number
+}
+
+export type OverviewDelta = {
+  cost_delta_pct: number | null
+  sessions_delta_pct: number | null
+  requests_delta_pct: number | null
+  cache_rate_delta_pct: number | null
 }
 
 export const getOverviewStats = async (agentType: string, project: string = 'all', from?: string, to?: string): Promise<OverviewStats> => {
@@ -40,6 +48,7 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
   const row = db.prepare(`
     SELECT
       count(DISTINCT session_id) as total_sessions,
+      count(*) as total_requests,
       COALESCE(sum(cost_usd), 0) as total_cost,
       COALESCE(sum(input_tokens), 0) as total_input_tokens,
       COALESCE(sum(output_tokens), 0) as total_output_tokens,
@@ -56,7 +65,66 @@ export const getOverviewStats = async (agentType: string, project: string = 'all
       ${projectFilter(project)}
   `).get(...dateParams, ...agentParams(agentType), ...projectParams(project)) as OverviewStats | undefined
 
-  return row ?? { total_sessions: 0, total_cost: 0, total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, cache_hit_rate: 0 }
+  return row ?? { total_sessions: 0, total_cost: 0, total_requests: 0, total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, cache_hit_rate: 0 }
+}
+
+export const getOverviewDelta = async (agentType: string, project: string = 'all'): Promise<OverviewDelta> => {
+  const db = getDb()
+
+  const query = `
+    SELECT
+      count(DISTINCT session_id) as total_sessions,
+      count(*) as total_requests,
+      COALESCE(sum(cost_usd), 0) as total_cost,
+      CASE
+        WHEN (sum(input_tokens) + sum(cache_read_tokens)) > 0
+        THEN CAST(sum(cache_read_tokens) AS REAL) / (sum(input_tokens) + sum(cache_read_tokens))
+        ELSE 0
+      END as cache_hit_rate
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND date(timestamp) = date('now', ?)
+      ${agentFilter(agentType)}
+      ${projectFilter(project)}
+  `
+
+  const today = db.prepare(query).get('0 days', ...agentParams(agentType), ...projectParams(project)) as { total_sessions: number; total_requests: number; total_cost: number; cache_hit_rate: number } | undefined
+  const yesterday = db.prepare(query).get('-1 day', ...agentParams(agentType), ...projectParams(project)) as { total_sessions: number; total_requests: number; total_cost: number; cache_hit_rate: number } | undefined
+
+  const calcDelta = (curr: number, prev: number): number | null => {
+    if (prev === 0) return null
+    return ((curr - prev) / prev) * 100
+  }
+
+  return {
+    cost_delta_pct: calcDelta(today?.total_cost ?? 0, yesterday?.total_cost ?? 0),
+    sessions_delta_pct: calcDelta(today?.total_sessions ?? 0, yesterday?.total_sessions ?? 0),
+    requests_delta_pct: calcDelta(today?.total_requests ?? 0, yesterday?.total_requests ?? 0),
+    cache_rate_delta_pct: calcDelta(today?.cache_hit_rate ?? 0, yesterday?.cache_hit_rate ?? 0),
+  }
+}
+
+export type AgentTodaySummary = {
+  agent_type: string
+  today_cost: number
+  today_requests: number
+  last_active: string | null
+}
+
+export const getAgentTodaySummaries = async (): Promise<AgentTodaySummary[]> => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      agent_type,
+      COALESCE(sum(cost_usd), 0) as today_cost,
+      count(*) as today_requests,
+      max(timestamp) as last_active
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND date(timestamp) = date('now')
+      AND agent_type IN ('claude', 'codex', 'gemini')
+    GROUP BY agent_type
+  `).all() as AgentTodaySummary[]
 }
 
 export type AllTimeStats = {
@@ -531,6 +599,28 @@ export const getProjects = async (): Promise<ProjectRow[]> => {
     GROUP BY project_name
     ORDER BY total_cost DESC
   `).all() as ProjectRow[]
+}
+
+export const getProjectCosts = async (agentType: string, from?: string, to?: string): Promise<ProjectRow[]> => {
+  const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : ''
+  const dateParams = useDate ? [from, to] : []
+
+  return db.prepare(`
+    SELECT
+      project_name,
+      count(DISTINCT session_id) as session_count,
+      COALESCE(sum(cost_usd), 0) as total_cost
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND project_name != ''
+      ${dateClause}
+      ${agentFilter(agentType)}
+    GROUP BY project_name
+    ORDER BY total_cost DESC
+    LIMIT 20
+  `).all(...dateParams, ...agentParams(agentType)) as ProjectRow[]
 }
 
 export type ActiveSession = {

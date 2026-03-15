@@ -3,9 +3,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import type { SessionRow } from '@/lib/queries'
-import type { SessionDetailEvent } from '@/lib/queries'
-import { useTopBar } from '@/components/top-bar-context'
+import { AgentFilter } from '@/components/agent-filter'
+import { ProjectFilter } from '@/components/project-filter'
+import { DateRangePicker } from '@/components/date-range-picker'
+import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
+import type { AgentType } from '@/lib/agents'
+import type { DateRange } from '@/components/top-bar-context'
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
+const daysAgoISO = (days: number) => {
+  const d = new Date()
+  d.setDate(d.getDate() - (days - 1))
+  return d.toISOString().slice(0, 10)
+}
 
 const AGENT_DOT_CLASSES: Record<string, string> = {
   codex: 'bg-emerald-500',
@@ -19,7 +29,7 @@ const AGENT_BADGE_CLASSES: Record<string, string> = {
   gemini: 'bg-blue-500 text-white',
 }
 
-type SortOption = 'latest' | 'cost'
+type SortOption = 'latest' | 'cost' | 'tokens'
 
 const formatTokens = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -52,9 +62,20 @@ const formatTime = (ts: string): string => {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-const formatDate = (ts: string): string => {
-  const d = new Date(ts)
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+const formatRelativeTime = (ts: string): string => {
+  const now = Date.now()
+  const then = new Date(ts).getTime()
+  const diff = Math.floor((now - then) / 1000)
+  if (diff < 60) return `${diff}초 전`
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
+  return `${Math.floor(diff / 86400)}일 전`
+}
+
+const computeCacheRate = (s: SessionRow): number => {
+  const total = s.input_tokens + s.cache_read_tokens
+  if (total === 0) return 0
+  return Math.round((s.cache_read_tokens / total) * 100)
 }
 
 type PromptGroup = {
@@ -91,7 +112,7 @@ const groupByPrompt = (events: SessionDetailEvent[]): PromptGroup[] => {
 const eventLabel = (ev: SessionDetailEvent): string => {
   switch (ev.event_name) {
     case 'api_request':
-      return `API Request${ev.model ? ` (${ev.model})` : ''}`
+      return `API Request${ev.model ? ` · ${shortenModel(ev.model)}` : ''}`
     case 'tool_result':
       return `Tool: ${ev.tool_name || 'unknown'}${ev.tool_success === 0 ? ' [FAIL]' : ''}`
     case 'user_prompt':
@@ -120,6 +141,21 @@ const eventDotColor = (ev: SessionDetailEvent): string => {
   }
 }
 
+const eventBgColor = (ev: SessionDetailEvent): string => {
+  switch (ev.event_name) {
+    case 'api_request':
+      return 'border-l-blue-500'
+    case 'tool_result':
+      return ev.tool_success === 0 ? 'border-l-red-500' : 'border-l-emerald-500'
+    case 'user_prompt':
+      return 'border-l-violet-500'
+    case 'api_error':
+      return 'border-l-red-500'
+    default:
+      return 'border-l-gray-300'
+  }
+}
+
 type SessionSummary = {
   agentType: string
   model: string
@@ -129,30 +165,44 @@ type SessionSummary = {
   cacheReadTokens: number
   wallTime: number
   requestCount: number
+  toolCallCount: number
+  cacheRate: number
 }
 
 const computeSummary = (events: SessionDetailEvent[], session: SessionRow): SessionSummary => {
   const apiEvents = events.filter((e) => e.event_name === 'api_request')
+  const toolEvents = events.filter((e) => e.event_name === 'tool_result')
+  const totalInput = apiEvents.reduce((s, e) => s + (e.input_tokens || 0), 0)
+  const totalCache = apiEvents.reduce((s, e) => s + (e.cache_read_tokens || 0), 0)
+  const cacheRate = (totalInput + totalCache) > 0
+    ? Math.round((totalCache / (totalInput + totalCache)) * 100)
+    : 0
   return {
     agentType: session.agent_type,
     model: session.model,
     totalCost: apiEvents.reduce((s, e) => s + (e.cost_usd || 0), 0),
-    inputTokens: apiEvents.reduce((s, e) => s + (e.input_tokens || 0), 0),
+    inputTokens: totalInput,
     outputTokens: apiEvents.reduce((s, e) => s + (e.output_tokens || 0), 0),
-    cacheReadTokens: apiEvents.reduce((s, e) => s + (e.cache_read_tokens || 0), 0),
+    cacheReadTokens: totalCache,
     wallTime: session.duration_ms,
     requestCount: apiEvents.length,
+    toolCallCount: toolEvents.length,
+    cacheRate,
   }
 }
 
 export default function SessionsPage() {
-  const { agentType, project, dateRange } = useTopBar()
+  const [agentType, setAgentType] = useState<AgentType>('all')
+  const [project, setProject] = useState<string>('all')
+  const [dateRange, setDateRange] = useState<DateRange>({ from: daysAgoISO(7), to: todayISO() })
+  const [search, setSearch] = useState<string>('')
+  const [sortBy, setSortBy] = useState<SortOption>('latest')
+
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailEvents, setDetailEvents] = useState<SessionDetailEvent[]>([])
   const [detailLoading, setDetailLoading] = useState(false)
-  const [sortBy, setSortBy] = useState<SortOption>('latest')
 
   useEffect(() => {
     setLoading(true)
@@ -162,7 +212,7 @@ export default function SessionsPage() {
     fetch(`/api/sessions?${q}`)
       .then((res) => res.json())
       .then((data) => {
-        setSessions(data)
+        setSessions(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(() => {
@@ -177,7 +227,7 @@ export default function SessionsPage() {
     fetch(`/api/sessions/${encodeURIComponent(sessionId)}`)
       .then((res) => res.json())
       .then((data) => {
-        setDetailEvents(data)
+        setDetailEvents(Array.isArray(data) ? data : [])
         setDetailLoading(false)
       })
       .catch(() => {
@@ -186,8 +236,20 @@ export default function SessionsPage() {
       })
   }, [])
 
-  const sortedSessions = [...sessions].sort((a, b) => {
+  const filteredSessions = sessions.filter((s) => {
+    if (!search) return true
+    const q = search.toLowerCase()
+    return (
+      s.session_id.toLowerCase().includes(q) ||
+      s.project_name?.toLowerCase().includes(q) ||
+      s.model?.toLowerCase().includes(q) ||
+      s.agent_type.toLowerCase().includes(q)
+    )
+  })
+
+  const sortedSessions = [...filteredSessions].sort((a, b) => {
     if (sortBy === 'cost') return b.cost - a.cost
+    if (sortBy === 'tokens') return (b.input_tokens + b.output_tokens) - (a.input_tokens + a.output_tokens)
     return new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
   })
 
@@ -195,88 +257,134 @@ export default function SessionsPage() {
   const totalCost = sessions.reduce((s, r) => s + r.cost, 0)
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] flex-col">
+    <div className="-mx-6 -my-6 flex h-[calc(100vh-2rem)] flex-col overflow-hidden">
+      {/* Filter Bar */}
+      <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 py-2.5 flex-wrap">
+        <AgentFilter value={agentType} onChange={setAgentType} />
+        <ProjectFilter value={project} onChange={setProject} />
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
+        <div className="flex flex-1 items-center gap-2 min-w-[180px]">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="세션 ID, 프로젝트, 모델 검색..."
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+          <SelectTrigger className="w-[120px] text-xs h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="latest">최신순</SelectItem>
+            <SelectItem value="cost">비용순</SelectItem>
+            <SelectItem value="tokens">토큰순</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Main Content */}
       <div className="flex min-h-0 flex-1">
-        {/* Left Panel: Session List */}
+        {/* Left Panel: Session List (35%) */}
         <div className="flex w-[35%] flex-col border-r">
           <div className="flex items-center justify-between border-b px-4 py-2">
-            <h2 className="text-sm font-semibold">Sessions</h2>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">Latest</SelectItem>
-                <SelectItem value="cost">Cost</SelectItem>
-              </SelectContent>
-            </Select>
+            <span className="text-xs text-muted-foreground">
+              {loading ? '로딩 중...' : `${sortedSessions.length}개 세션`}
+            </span>
+            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              총 {formatCost(totalCost)}
+            </span>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
-                Loading...
+                로딩 중...
               </div>
             ) : sortedSessions.length === 0 ? (
               <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
-                No sessions found
+                세션 없음
               </div>
             ) : (
-              sortedSessions.map((s) => (
-                <button
-                  key={s.session_id}
-                  type="button"
-                  onClick={() => handleSelect(s.session_id)}
-                  className={`w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
-                    selectedId === s.session_id ? 'bg-muted' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${AGENT_DOT_CLASSES[s.agent_type] ?? 'bg-violet-500'}`} />
-                    <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-                      {parseModels(s.model).map((m) => (
-                        <Badge key={m} variant="secondary" className="text-xs font-medium">
-                          {shortenModel(m)}
-                        </Badge>
-                      ))}
+              sortedSessions.map((s) => {
+                const cacheRate = computeCacheRate(s)
+                return (
+                  <button
+                    key={s.session_id}
+                    type="button"
+                    onClick={() => handleSelect(s.session_id)}
+                    className={`w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
+                      selectedId === s.session_id ? 'bg-muted ring-1 ring-inset ring-muted-foreground/20' : ''
+                    }`}
+                  >
+                    {/* Row 1: agent dot + models + cost */}
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${AGENT_DOT_CLASSES[s.agent_type] ?? 'bg-violet-500'}`} />
+                      <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                        {parseModels(s.model).map((m) => (
+                          <Badge key={m} variant="secondary" className="text-xs font-medium">
+                            {shortenModel(m)}
+                          </Badge>
+                        ))}
+                      </div>
+                      <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums">
+                        {formatCost(s.cost)}
+                      </span>
                     </div>
-                    <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums">
-                      {formatCost(s.cost)}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatDuration(s.duration_ms)}</span>
-                    <span className="text-border">|</span>
-                    <span className="truncate">{s.project_name || 'no project'}</span>
-                    <span className="ml-auto shrink-0">{formatDate(s.started_at)}</span>
-                  </div>
-                </button>
-              ))
+                    {/* Row 2: project + duration */}
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="truncate max-w-[120px]">{s.project_name || 'no project'}</span>
+                      <span className="text-border">·</span>
+                      <span>{formatDuration(s.duration_ms)}</span>
+                    </div>
+                    {/* Row 3: tokens + cache rate + relative time */}
+                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatTokens(s.input_tokens + s.output_tokens)} tok</span>
+                      {cacheRate > 0 && (
+                        <>
+                          <span className="text-border">·</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">캐시 {cacheRate}%</span>
+                        </>
+                      )}
+                      <span className="ml-auto shrink-0">{formatRelativeTime(s.started_at)}</span>
+                    </div>
+                  </button>
+                )
+              })
             )}
           </div>
         </div>
 
-        {/* Right Panel: Session Detail */}
+        {/* Right Panel: Session Detail (65%) */}
         <div className="flex flex-1 flex-col overflow-y-auto">
           {!selectedId ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              Select a session to view details
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="opacity-30"
+              >
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span className="text-sm">세션을 선택하면 상세 정보가 표시됩니다</span>
             </div>
           ) : detailLoading ? (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              Loading session detail...
+              세션 상세 로딩 중...
             </div>
           ) : selectedSession ? (
             <SessionDetail session={selectedSession} events={detailEvents} />
           ) : null}
         </div>
-      </div>
-
-      {/* Status Bar */}
-      <div className="flex h-8 items-center border-t bg-muted/30 px-4 text-xs text-muted-foreground">
-        <span>{sessions.length} sessions</span>
-        <span className="mx-2 text-border">|</span>
-        <span>Total {formatCost(totalCost)}</span>
       </div>
     </div>
   )
@@ -292,60 +400,62 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
   const promptGroups = groupByPrompt(events)
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Summary */}
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <Badge className={AGENT_BADGE_CLASSES[summary.agentType] ?? 'bg-violet-500 text-white'}>
-            {summary.agentType}
-          </Badge>
-          <div className="flex flex-wrap gap-1">
-            {parseModels(summary.model).map((m) => (
-              <Badge key={m} variant="outline" className="text-xs">
-                {shortenModel(m)}
-              </Badge>
-            ))}
-          </div>
-          <span className="ml-auto font-mono text-xs text-muted-foreground">
-            {session.session_id.slice(0, 12)}
-          </span>
+    <div className="space-y-5 p-6">
+      {/* Header */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge className={AGENT_BADGE_CLASSES[summary.agentType] ?? 'bg-violet-500 text-white'}>
+          {summary.agentType}
+        </Badge>
+        <div className="flex flex-wrap gap-1">
+          {parseModels(summary.model).map((m) => (
+            <Badge key={m} variant="outline" className="text-xs">
+              {shortenModel(m)}
+            </Badge>
+          ))}
         </div>
+        <span className="ml-auto font-mono text-xs text-muted-foreground">
+          {session.session_id.slice(0, 16)}
+        </span>
+      </div>
 
-        <div className="grid grid-cols-3 gap-4 rounded-lg border p-4 text-sm md:grid-cols-6">
-          <div>
-            <div className="text-xs text-muted-foreground">Cost</div>
-            <div className="font-semibold tabular-nums">{formatCost(summary.totalCost)}</div>
+      {/* Summary Grid */}
+      <div className="grid grid-cols-3 gap-3 rounded-lg border p-4 text-sm sm:grid-cols-6">
+        <div>
+          <div className="text-xs text-muted-foreground">비용</div>
+          <div className="font-semibold tabular-nums">{formatCost(summary.totalCost)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground">입력</div>
+          <div className="font-semibold tabular-nums">{formatTokens(summary.inputTokens)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground">출력</div>
+          <div className="font-semibold tabular-nums">{formatTokens(summary.outputTokens)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground">캐시</div>
+          <div className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+            {formatTokens(summary.cacheReadTokens)}
+            {summary.cacheRate > 0 && <span className="ml-1 text-xs font-normal">({summary.cacheRate}%)</span>}
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Input</div>
-            <div className="font-semibold tabular-nums">{formatTokens(summary.inputTokens)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Output</div>
-            <div className="font-semibold tabular-nums">{formatTokens(summary.outputTokens)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Cache</div>
-            <div className="font-semibold tabular-nums">{formatTokens(summary.cacheReadTokens)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Wall Time</div>
-            <div className="font-semibold tabular-nums">{formatDuration(summary.wallTime)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Requests</div>
-            <div className="font-semibold tabular-nums">{summary.requestCount}</div>
-          </div>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground">소요시간</div>
+          <div className="font-semibold tabular-nums">{formatDuration(summary.wallTime)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground">요청/도구</div>
+          <div className="font-semibold tabular-nums">{summary.requestCount} / {summary.toolCallCount}</div>
         </div>
       </div>
 
-      {/* Prompt Timeline */}
+      {/* Event Timeline */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold">Prompt Timeline</h3>
+        <h3 className="mb-3 text-sm font-semibold">이벤트 타임라인</h3>
         {promptGroups.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">No events</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">이벤트 없음</div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {promptGroups.map((group, idx) => (
               <PromptGroupCard key={group.promptId} group={group} index={idx} />
             ))}
@@ -374,12 +484,12 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
         <span className="font-mono text-xs text-muted-foreground">#{index + 1}</span>
         <span className="text-xs text-muted-foreground">{formatTime(group.startTime)}</span>
         <span className="text-xs text-muted-foreground">
-          ({group.events.length} events)
+          ({group.events.length} 이벤트)
         </span>
         <span className="ml-auto shrink-0 text-xs font-medium tabular-nums">
           {formatCost(group.cost)}
         </span>
-        <span className="text-muted-foreground">{expanded ? '\u25B4' : '\u25BE'}</span>
+        <span className="text-muted-foreground">{expanded ? '▴' : '▾'}</span>
       </button>
 
       {expanded && (
@@ -387,7 +497,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
           {group.events.map((ev, i) => (
             <div
               key={`${ev.timestamp}-${i}`}
-              className="flex items-start gap-3 border-b px-4 py-2 text-xs last:border-b-0"
+              className={`flex items-start gap-3 border-b border-l-2 px-4 py-2 text-xs last:border-b-0 ${eventBgColor(ev)}`}
             >
               <span className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${eventDotColor(ev)}`} />
               <div className="min-w-0 flex-1">
@@ -398,8 +508,12 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
                     <>
                       <span>in: {formatTokens(ev.input_tokens)}</span>
                       <span>out: {formatTokens(ev.output_tokens)}</span>
-                      {ev.cache_read_tokens > 0 && <span>cache: {formatTokens(ev.cache_read_tokens)}</span>}
-                      <span>{formatCost(ev.cost_usd)}</span>
+                      {ev.cache_read_tokens > 0 && (
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          cache: {formatTokens(ev.cache_read_tokens)}
+                        </span>
+                      )}
+                      <span className="font-medium">{formatCost(ev.cost_usd)}</span>
                     </>
                   )}
                   {ev.duration_ms > 0 && <span>{formatDuration(ev.duration_ms)}</span>}

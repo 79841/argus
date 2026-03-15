@@ -55,12 +55,28 @@ const getStatusDot = (iso: string | null): string => {
   return 'bg-gray-400'
 }
 
+type ActiveSessionInfo = {
+  session_id: string
+  agent_type: string
+  model: string
+  last_event: string
+  cost: number
+  event_count: number
+}
+
+const formatModel = (model: string): string => {
+  if (!model) return ''
+  const parts = model.split('/')
+  const name = parts[parts.length - 1]
+  return name.length > 20 ? `${name.slice(0, 18)}...` : name
+}
+
 const ACTIVE_POLL_MS = 30_000
 
 export const BottomBar = () => {
   const [agents, setAgents] = useState<AgentStatus[]>([])
   const [totals, setTotals] = useState<AllTimeTotals>({ total_cost: 0, total_tokens: 0 })
-  const [activeCount, setActiveCount] = useState(0)
+  const [activeSessions, setActiveSessions] = useState<ActiveSessionInfo[]>([])
   const [limits, setLimits] = useState<AgentLimit[]>([])
   const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
 
@@ -92,7 +108,7 @@ export const BottomBar = () => {
     const fetchActive = () => {
       fetch('/api/sessions/active')
         .then((r) => r.json())
-        .then((data) => setActiveCount((data.sessions ?? []).length))
+        .then((data) => setActiveSessions(data.sessions ?? []))
         .catch(() => {})
     }
     fetchActive()
@@ -136,16 +152,30 @@ export const BottomBar = () => {
         })}
       </div>
 
-      {activeCount > 0 && (
+      {activeSessions.length > 0 && (
         <div className="ml-4 flex items-center gap-1.5">
           <div className="h-3 w-px bg-border" />
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
           </span>
-          <span className="font-medium text-green-600 dark:text-green-400">
-            {activeCount} active
-          </span>
+          {activeSessions.slice(0, 3).map((s) => {
+            const config = AGENTS[s.agent_type as AgentType]
+            return (
+              <div key={s.session_id} className="flex items-center gap-1 ml-1">
+                <span className="font-medium" style={{ color: config?.hex ?? '#8b5cf6' }}>
+                  {config?.name ?? s.agent_type}
+                </span>
+                {s.model && (
+                  <span className="text-muted-foreground">{formatModel(s.model)}</span>
+                )}
+                <span className="text-muted-foreground">${s.cost.toFixed(2)}</span>
+              </div>
+            )
+          })}
+          {activeSessions.length > 3 && (
+            <span className="text-muted-foreground">+{activeSessions.length - 3}</span>
+          )}
         </div>
       )}
 

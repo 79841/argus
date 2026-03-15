@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOverviewStats, getAllTimeStats } from '@/lib/queries'
+import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries } from '@/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,14 +8,18 @@ export async function GET(request: NextRequest) {
     const project = sp.get('project') || 'all'
     const from = sp.get('from') || undefined
     const to = sp.get('to') || undefined
-    const [data, allTime] = await Promise.all([
+    const [data, allTime, delta, agentSummaries] = await Promise.all([
       getOverviewStats(agentType, project, from, to),
       getAllTimeStats(agentType, project),
+      getOverviewDelta(agentType, project),
+      getAgentTodaySummaries(),
     ])
     return NextResponse.json({
       ...data,
       all_time_cost: allTime.total_cost,
       all_time_tokens: allTime.total_tokens,
+      delta,
+      agent_summaries: agentSummaries,
     })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

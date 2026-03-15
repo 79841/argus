@@ -1,20 +1,17 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   MessageSquare,
-  DollarSign,
-  TrendingUp,
+  BarChart3,
   Wrench,
+  FileText,
   Settings,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  BarChart3,
-  FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocale } from '@/lib/i18n'
@@ -22,97 +19,47 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 
 import type { LucideIcon } from 'lucide-react'
 
-type NavPage = {
+type NavItem = {
   href: string
   labelKey: string
   icon: LucideIcon
 }
 
-type NavCategory = {
-  key: string
-  labelKey: string
-  icon: LucideIcon
-  pages: NavPage[]
-}
-
-const NAV_CATEGORIES: NavCategory[] = [
-  {
-    key: 'monitoring',
-    labelKey: 'nav.monitoring',
-    icon: BarChart3,
-    pages: [
-      { href: '/', labelKey: 'nav.overview', icon: LayoutDashboard },
-      { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
-      { href: '/cost', labelKey: 'nav.cost', icon: DollarSign },
-      { href: '/trends', labelKey: 'nav.trends', icon: TrendingUp },
-    ],
-  },
-  {
-    key: 'analysis',
-    labelKey: 'nav.analysis',
-    icon: FlaskConical,
-    pages: [
-      { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
-    ],
-  },
+const NAV_ITEMS: NavItem[] = [
+  { href: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
+  { href: '/usage', labelKey: 'nav.usage', icon: BarChart3 },
+  { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
+  { href: '/rules', labelKey: 'nav.rules', icon: FileText },
 ]
 
-const SETTINGS_ITEM: NavPage = {
+const SETTINGS_ITEM: NavItem = {
   href: '/settings',
   labelKey: 'nav.settings',
   icon: Settings,
 }
 
 const STORAGE_KEY = 'argus-nav-collapsed'
-const ACCORDION_KEY = 'argus-nav-accordion'
 
 export const Nav = () => {
   const pathname = usePathname()
   const { t } = useLocale()
-  const [collapsed, setCollapsed] = useState(false)
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({})
-  const [tempExpanded, setTempExpanded] = useState<string | null>(null)
-  const sidebarRef = useRef<HTMLElement>(null)
+  const [collapsed, setCollapsed] = useState(true)
 
-  // Load persisted state
   useEffect(() => {
     try {
-      const storedCollapsed = localStorage.getItem(STORAGE_KEY)
-      if (storedCollapsed !== null) {
-        setCollapsed(JSON.parse(storedCollapsed))
-      }
-      const storedAccordion = localStorage.getItem(ACCORDION_KEY)
-      if (storedAccordion !== null) {
-        setOpenAccordions(JSON.parse(storedAccordion))
-      } else {
-        // Default: all open
-        const defaults: Record<string, boolean> = {}
-        for (const cat of NAV_CATEGORIES) {
-          defaults[cat.key] = true
-        }
-        setOpenAccordions(defaults)
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored !== null) {
+        setCollapsed(JSON.parse(stored))
       }
     } catch {
       // ignore
     }
   }, [])
 
-  // Outside click detection for temp expanded state
-  useEffect(() => {
-    if (!tempExpanded) return
-    const handleClick = (e: MouseEvent) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
-        setTempExpanded(null)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [tempExpanded])
-
   const toggleCollapsed = () => {
     const next = !collapsed
     setCollapsed(next)
-    setTempExpanded(null)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       window.dispatchEvent(new CustomEvent('argus-nav-toggle', { detail: next }))
@@ -121,37 +68,11 @@ export const Nav = () => {
     }
   }
 
-  const toggleAccordion = (key: string) => {
-    setOpenAccordions((prev) => {
-      const next = { ...prev, [key]: !prev[key] }
-      try {
-        localStorage.setItem(ACCORDION_KEY, JSON.stringify(next))
-      } catch {
-        // ignore
-      }
-      return next
-    })
-  }
-
-  const handleCollapsedCategoryClick = useCallback((key: string) => {
-    setTempExpanded((prev) => (prev === key ? null : key))
-  }, [])
-
-  const closeTempExpanded = useCallback(() => {
-    setTempExpanded(null)
-  }, [])
-
-  const isCategoryActive = (category: NavCategory) =>
-    category.pages.some((p) => p.href === pathname)
-
-  const isExpanded = !collapsed || tempExpanded !== null
-
   return (
     <aside
-      ref={sidebarRef}
       className={cn(
         'fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-background transition-[width] duration-200',
-        isExpanded ? 'w-52' : 'w-14'
+        collapsed ? 'w-14' : 'w-48'
       )}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
@@ -159,145 +80,59 @@ export const Nav = () => {
       <div
         className={cn(
           'flex h-14 items-center pt-10',
-          !isExpanded ? 'justify-center px-2' : 'px-4'
+          collapsed ? 'justify-center px-2' : 'px-4'
         )}
       >
-        {isExpanded && (
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tight"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            onClick={closeTempExpanded}
-          >
-            Argus
-          </Link>
-        )}
-        {!isExpanded && (
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tight"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          >
-            A
-          </Link>
-        )}
+        <Link
+          href="/"
+          className="text-lg font-bold tracking-tight"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
+          {collapsed ? 'A' : 'Argus'}
+        </Link>
       </div>
 
       {/* Navigation */}
       <nav
-        className="flex-1 space-y-1 px-2 py-3 overflow-y-auto"
+        className="flex-1 space-y-0.5 px-2 py-3 overflow-y-auto"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        {NAV_CATEGORIES.map((category) => (
-          <div key={category.key} className="mb-1">
-            {collapsed && !tempExpanded ? (
-              /* Collapsed: icon button, click to temp expand */
-              <Tooltip>
-                <TooltipTrigger
-                  onClick={() => handleCollapsedCategoryClick(category.key)}
-                  className={cn(
-                    'flex w-full items-center justify-center rounded-md p-2 transition-colors',
-                    isCategoryActive(category)
-                      ? 'text-foreground bg-muted'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  )}
-                >
-                  <category.icon className="size-5" />
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {t(category.labelKey)}
-                </TooltipContent>
-              </Tooltip>
-            ) : collapsed && tempExpanded ? (
-              /* Temp expanded: show selected category's pages inline */
-              tempExpanded === category.key ? (
-                <>
-                  <button
-                    onClick={() => setTempExpanded(null)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <category.icon className="size-4" />
-                    <span className="flex-1 text-left">{t(category.labelKey)}</span>
-                    <ChevronDown className="size-3.5" />
-                  </button>
-                  <div className="mt-0.5 space-y-0.5">
-                    {category.pages.map((page) => (
-                      <Link
-                        key={page.href}
-                        href={page.href}
-                        onClick={closeTempExpanded}
-                        className={cn(
-                          'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ml-2',
-                          pathname === page.href
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        )}
-                      >
-                        <page.icon className="size-4" />
-                        {t(page.labelKey)}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                /* Other categories: show as icon only */
-                <Tooltip>
-                  <TooltipTrigger
-                    onClick={() => handleCollapsedCategoryClick(category.key)}
+        {NAV_ITEMS.map((item) =>
+          collapsed ? (
+            <Tooltip key={item.href}>
+              <TooltipTrigger
+                render={
+                  <Link
+                    href={item.href}
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
-                      isCategoryActive(category)
-                        ? 'text-foreground bg-muted'
+                      'flex items-center justify-center rounded-md p-2 transition-colors',
+                      pathname === item.href
+                        ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
-                  >
-                    <category.icon className="size-4" />
-                    <span className="flex-1 text-left uppercase tracking-wider">{t(category.labelKey)}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    {t(category.labelKey)}
-                  </TooltipContent>
-                </Tooltip>
-              )
-            ) : (
-              /* Expanded (not collapsed): accordion */
-              <>
-                <button
-                  onClick={() => toggleAccordion(category.key)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <category.icon className="size-4" />
-                  <span className="flex-1 text-left">{t(category.labelKey)}</span>
-                  <ChevronDown
-                    className={cn(
-                      'size-3.5 transition-transform duration-200',
-                      openAccordions[category.key] ? '' : '-rotate-90'
-                    )}
                   />
-                </button>
-                {openAccordions[category.key] && (
-                  <div className="mt-0.5 space-y-0.5">
-                    {category.pages.map((page) => (
-                      <Link
-                        key={page.href}
-                        href={page.href}
-                        className={cn(
-                          'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ml-2',
-                          pathname === page.href
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        )}
-                      >
-                        <page.icon className="size-4" />
-                        {t(page.labelKey)}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ))}
+                }
+              >
+                <item.icon className="size-5" />
+              </TooltipTrigger>
+              <TooltipContent side="right">{t(item.labelKey)}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                pathname === item.href
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              )}
+            >
+              <item.icon className="size-4" />
+              {t(item.labelKey)}
+            </Link>
+          )
+        )}
       </nav>
 
       {/* Bottom section: Settings + Toggle */}
@@ -305,8 +140,7 @@ export const Nav = () => {
         className="border-t px-2 py-2 space-y-1"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        {/* Settings */}
-        {!isExpanded ? (
+        {collapsed ? (
           <Tooltip>
             <TooltipTrigger
               render={
@@ -328,7 +162,6 @@ export const Nav = () => {
         ) : (
           <Link
             href={SETTINGS_ITEM.href}
-            onClick={closeTempExpanded}
             className={cn(
               'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
               pathname === SETTINGS_ITEM.href
@@ -342,7 +175,7 @@ export const Nav = () => {
         )}
 
         {/* Collapse toggle */}
-        {!isExpanded ? (
+        {collapsed ? (
           <Tooltip>
             <TooltipTrigger
               onClick={toggleCollapsed}
@@ -352,14 +185,6 @@ export const Nav = () => {
             </TooltipTrigger>
             <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
           </Tooltip>
-        ) : collapsed ? (
-          <button
-            onClick={() => setTempExpanded(null)}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-            {t('nav.collapse')}
-          </button>
         ) : (
           <button
             onClick={toggleCollapsed}

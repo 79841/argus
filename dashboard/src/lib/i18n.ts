@@ -8,14 +8,12 @@ const STORAGE_KEY = 'argus-locale'
 
 const translations: Record<Locale, Record<string, string>> = {
   ko: {
-    // Nav categories
-    'nav.monitoring': '모니터링',
-    'nav.analysis': '분석',
-    'nav.overview': '오버뷰',
+    // Nav
+    'nav.dashboard': '대시보드',
     'nav.sessions': '세션',
-    'nav.cost': '비용',
-    'nav.trends': '추이',
+    'nav.usage': '사용량',
     'nav.tools': '도구',
+    'nav.rules': '규칙',
     'nav.settings': '설정',
     'nav.collapse': '접기',
     'nav.expand': '펼치기',
@@ -26,7 +24,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.agents': '에이전트',
     'settings.pricing': '요금',
     'settings.data': '데이터',
-    'settings.config': '설정 이력',
+    'settings.setup': '설정 가이드',
 
     // General section
     'settings.theme': '테마',
@@ -42,14 +40,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.language.description': '인터페이스 언어를 선택하세요.',
   },
   en: {
-    // Nav categories
-    'nav.monitoring': 'Monitoring',
-    'nav.analysis': 'Analysis',
-    'nav.overview': 'Overview',
+    // Nav
+    'nav.dashboard': 'Dashboard',
     'nav.sessions': 'Sessions',
-    'nav.cost': 'Cost',
-    'nav.trends': 'Trends',
+    'nav.usage': 'Usage',
     'nav.tools': 'Tools',
+    'nav.rules': 'Rules',
     'nav.settings': 'Settings',
     'nav.collapse': 'Collapse',
     'nav.expand': 'Expand',
@@ -60,7 +56,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.agents': 'Agents',
     'settings.pricing': 'Pricing',
     'settings.data': 'Data',
-    'settings.config': 'Config',
+    'settings.setup': 'Setup',
 
     // General section
     'settings.theme': 'Theme',

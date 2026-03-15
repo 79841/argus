@@ -1,80 +1,66 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutoRefresh } from '@/hooks/use-auto-refresh'
-import type { OverviewStats, ModelUsage, DailyStats, ToolUsageRow, SessionRow, AllTimeStats } from '@/lib/queries'
-import { useTopBar } from '@/components/top-bar-context'
+import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UsageHeatmap } from '@/components/usage-heatmap'
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
-} from 'recharts'
 
-const formatTokens = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return String(value)
-}
-
-const formatCost = (value: number): string => `$${value.toFixed(2)}`
-
-const AGENT_PALETTE: Record<string, string[]> = {
-  codex: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'],
-  claude: ['#f97316', '#ea580c', '#c2410c', '#9a3412', '#7c2d12'],
-  gemini: ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'],
-}
-
-const DEFAULT_COLORS = [
-  '#8b5cf6', '#a78bfa', '#c4b5fd', '#7c3aed', '#6d28d9',
-  '#5b21b6', '#4c1d95',
-]
-
-const getModelColor = (agentType: string, index: number): string => {
-  const palette = AGENT_PALETTE[agentType]
-  if (palette) return palette[index % palette.length]
-  return DEFAULT_COLORS[index % DEFAULT_COLORS.length]
-}
-
-const TOOL_COLORS = [
-  '#8b5cf6', '#f97316', '#10b981', '#3b82f6', '#ef4444',
-  '#eab308', '#ec4899', '#14b8a6', '#6366f1', '#f59e0b',
-  '#06b6d4', '#84cc16', '#a855f7', '#f43f5e', '#22d3ee',
-]
+const formatCost = (v: number) => `$${v.toFixed(2)}`
 
 const formatRelativeTime = (iso: string): string => {
-  const now = Date.now()
-  const diff = now - new Date(iso).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  const diff = Date.now() - new Date(iso).getTime()
+  const s = Math.floor(diff / 1000)
+  if (s < 60) return `${s}s ago`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
 }
 
-export default function OverviewPage() {
+const formatDuration = (ms: number): string => {
+  if (ms <= 0) return '-'
+  const m = Math.floor(ms / 60000)
+  const s = Math.floor((ms % 60000) / 1000)
+  if (m === 0) return `${s}s`
+  return `${m}m ${s}s`
+}
+
+type DeltaBadgeProps = { value: number | null; higherIsBetter?: boolean }
+
+const DeltaBadge = ({ value, higherIsBetter = true }: DeltaBadgeProps) => {
+  if (value === null) return <span className="text-[10px] text-muted-foreground">—</span>
+  const positive = value >= 0
+  const good = higherIsBetter ? positive : !positive
+  const arrow = positive ? '▲' : '▼'
+  const color = good ? 'text-emerald-500' : 'text-red-500'
+  return (
+    <span className={`text-[10px] font-medium ${color}`}>
+      {arrow} {Math.abs(value).toFixed(1)}%
+    </span>
+  )
+}
+
+type DashboardData = {
+  stats: OverviewStats | null
+  delta: OverviewDelta | null
+  agentSummaries: AgentTodaySummary[]
+  daily: DailyStats[]
+  sessions: SessionRow[]
+}
+
+export default function DashboardPage() {
   const router = useRouter()
-  const { agentType, project, dateRange } = useTopBar()
-  const [stats, setStats] = useState<OverviewStats | null>(null)
-  const [allTime, setAllTime] = useState<AllTimeStats>({ total_cost: 0, total_tokens: 0 })
-  const [models, setModels] = useState<ModelUsage[]>([])
-  const [daily, setDaily] = useState<DailyStats[]>([])
-  const [tools, setTools] = useState<ToolUsageRow[]>([])
-  const [sessions, setSessions] = useState<SessionRow[]>([])
+  const [data, setData] = useState<DashboardData>({
+    stats: null,
+    delta: null,
+    agentSummaries: [],
+    daily: [],
+    sessions: [],
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -83,34 +69,23 @@ export default function OverviewPage() {
 
   const fetchData = useCallback((showLoading = true) => {
     if (showLoading) setLoading(true)
-    const q = `agent_type=${agentType}&project=${project}&from=${dateRange.from}&to=${dateRange.to}`
     Promise.all([
-      fetch(`/api/overview?${q}`).then((r) => r.json()),
-      fetch(`/api/models?${q}`).then((r) => r.json()),
-      fetch(`/api/daily?${q}`).then((r) => r.json()),
-      fetch(`/api/tools?${q}`).then((r) => r.json()),
-      fetch(`/api/sessions?${q}&limit=10`).then((r) => r.json()),
+      fetch('/api/overview').then((r) => r.json()),
+      fetch('/api/daily?days=112').then((r) => r.json()),
+      fetch('/api/sessions?limit=5').then((r) => r.json()),
     ])
-      .then(([statsData, modelsData, dailyData, toolsData, sessionsData]) => {
-        const { all_time_cost, all_time_tokens, ...rest } = statsData as OverviewStats & { all_time_cost: number; all_time_tokens: number }
-        setStats(rest as OverviewStats)
-        setAllTime({ total_cost: all_time_cost ?? 0, total_tokens: all_time_tokens ?? 0 })
-        setModels(modelsData as ModelUsage[])
-        setDaily(dailyData as DailyStats[])
-        setTools((toolsData as { tools: ToolUsageRow[] }).tools ?? [])
-        setSessions(Array.isArray(sessionsData) ? sessionsData as SessionRow[] : [])
+      .then(([overviewData, dailyData, sessionsData]) => {
+        setData({
+          stats: overviewData as OverviewStats,
+          delta: (overviewData as { delta: OverviewDelta }).delta ?? null,
+          agentSummaries: (overviewData as { agent_summaries: AgentTodaySummary[] }).agent_summaries ?? [],
+          daily: Array.isArray(dailyData) ? (dailyData as DailyStats[]) : [],
+          sessions: Array.isArray(sessionsData) ? (sessionsData as SessionRow[]) : [],
+        })
         setLoading(false)
       })
-      .catch(() => {
-        setStats(null)
-        setAllTime({ total_cost: 0, total_tokens: 0 })
-        setModels([])
-        setDaily([])
-        setTools([])
-        setSessions([])
-        setLoading(false)
-      })
-  }, [agentType, project, dateRange])
+      .catch(() => setLoading(false))
+  }, [])
 
   useEffect(() => {
     fetchData(true)
@@ -118,245 +93,181 @@ export default function OverviewPage() {
 
   useAutoRefresh(useCallback(() => fetchData(false), [fetchData]))
 
-  const modelPieData = useMemo(() => {
-    const total = models.reduce((sum, d) => sum + d.request_count, 0)
-    return { data: models.map((d, i) => ({ ...d, fill: getModelColor(d.agent_type, i) })), total }
-  }, [models])
+  const { stats, delta, agentSummaries, daily, sessions } = data
 
-  const toolChartData = useMemo(() => {
-    return tools.slice(0, 15).map((row) => ({
-      name: row.tool_name,
-      count: row.invocation_count,
-      success: row.success_count,
-      fail: row.fail_count,
-      avgMs: Math.round(row.avg_duration_ms),
-    }))
-  }, [tools])
+  const AGENT_ORDER = ['claude', 'codex', 'gemini'] as const
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 p-1">
-        <div className="flex flex-[35] gap-4">
-          <div className="grid w-72 shrink-0 grid-cols-2 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-xl bg-muted" />
-            ))}
-          </div>
-          <div className="flex-1 animate-pulse rounded-xl bg-muted" />
+      <div className="flex h-[calc(100vh-2rem)] flex-col gap-4 p-4">
+        <div className="grid grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+          ))}
         </div>
-        <div className="flex flex-[35] gap-4">
-          <div className="flex-1 animate-pulse rounded-xl bg-muted" />
-          <div className="w-80 shrink-0 animate-pulse rounded-xl bg-muted" />
+        <div className="flex-1 animate-pulse rounded-xl bg-muted" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-48 animate-pulse rounded-xl bg-muted" />
+          <div className="h-48 animate-pulse rounded-xl bg-muted" />
         </div>
-        <div className="flex-[30] animate-pulse rounded-xl bg-muted" />
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 p-1">
-      {/* Row 1 (35%): KPI 2x2 + Model Pie */}
-      <div className="flex min-h-0 flex-[35] gap-4">
-        {/* KPI Cards 2x2 */}
-        <div className="grid w-72 shrink-0 grid-cols-2 gap-3">
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Sessions</CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="text-xl font-bold">{stats?.total_sessions ?? 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-help" title={[
-            'Claude: API cost_usd',
-            'Codex/Gemini: LiteLLM pricing',
-          ].join('\n')}>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Total Cost</CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="text-xl font-bold">{formatCost(stats?.total_cost ?? 0)}</div>
-              <p className="text-[10px] text-muted-foreground mt-0.5">All time: {formatCost(allTime.total_cost)}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Tokens</CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="text-xl font-bold">{formatTokens((stats?.total_input_tokens ?? 0) + (stats?.total_output_tokens ?? 0) + (stats?.total_cache_read_tokens ?? 0))}</div>
-              <div className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
-                <div>In: {formatTokens(stats?.total_input_tokens ?? 0)}</div>
-                <div>Out: {formatTokens(stats?.total_output_tokens ?? 0)}</div>
-                <div>Cache: {formatTokens(stats?.total_cache_read_tokens ?? 0)}</div>
-                <div className="mt-0.5 border-t border-border/50 pt-0.5">All time: {formatTokens(allTime.total_tokens)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-1 pt-3 px-3">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Cache Hit</CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="text-xl font-bold">{((stats?.cache_hit_rate ?? 0) * 100).toFixed(1)}%</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Model Pie Chart */}
-        <Card className="min-w-0 flex-1">
+    <div className="flex h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto p-4">
+      {/* KPI 카드 4개 */}
+      <div className="grid grid-cols-4 gap-3">
+        <Card>
           <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-sm font-medium">Models</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">Today Cost</CardTitle>
           </CardHeader>
-          <CardContent className="h-[calc(100%-2.5rem)] px-2 pb-2">
-            {modelPieData.data.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                No data
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={modelPieData.data}
-                    dataKey="request_count"
-                    nameKey="model"
-                    cx="50%"
-                    cy="45%"
-                    outerRadius="70%"
-                    innerRadius="40%"
-                    paddingAngle={2}
-                  >
-                    {modelPieData.data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null
-                      const item = payload[0]
-                      const count = item.value as number
-                      const pct = modelPieData.total > 0 ? ((count / modelPieData.total) * 100).toFixed(1) : '0.0'
-                      return (
-                        <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
-                          <p className="text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{count.toLocaleString()} ({pct}%)</p>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: 10 }}
-                    formatter={(value: string) => value.length > 20 ? `${value.slice(0, 18)}...` : value}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+          <CardContent className="px-4 pb-3">
+            <div className="text-2xl font-bold">{formatCost(stats?.total_cost ?? 0)}</div>
+            <div className="mt-1">
+              <DeltaBadge value={delta?.cost_delta_pct ?? null} higherIsBetter={false} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Sessions</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="text-2xl font-bold">{stats?.total_sessions ?? 0}</div>
+            <div className="mt-1">
+              <DeltaBadge value={delta?.sessions_delta_pct ?? null} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Requests</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="text-2xl font-bold">{stats?.total_requests ?? 0}</div>
+            <div className="mt-1">
+              <DeltaBadge value={delta?.requests_delta_pct ?? null} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Cache Hit Rate</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="text-2xl font-bold">{((stats?.cache_hit_rate ?? 0) * 100).toFixed(1)}%</div>
+            <div className="mt-1">
+              <DeltaBadge value={delta?.cache_rate_delta_pct ?? null} />
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Row 2 (35%): Recent Sessions + Tool Usage */}
-      <div className="flex min-h-0 flex-[35] gap-4">
-        {/* Recent Sessions */}
-        <Card className="min-w-0 flex-1">
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-sm font-medium">Recent Sessions</CardTitle>
+      {/* 히트맵 */}
+      <UsageHeatmap data={daily} agentType="all" />
+
+      {/* 에이전트 요약 + 최근 세션 */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* 에이전트별 오늘 요약 */}
+        <Card>
+          <CardHeader className="pb-2 pt-3 px-4">
+            <CardTitle className="text-sm font-medium">Today by Agent</CardTitle>
           </CardHeader>
-          <CardContent className="h-[calc(100%-2.5rem)] overflow-y-auto px-4 pb-3">
+          <CardContent className="px-4 pb-3 space-y-2">
+            {AGENT_ORDER.map((agentId) => {
+              const agent = AGENTS[agentId]
+              const summary = agentSummaries.find((s) => s.agent_type === agentId)
+              return (
+                <div
+                  key={agentId}
+                  className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="size-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: agent.hex }}
+                    />
+                    <span className="text-sm font-medium">{agent.name}</span>
+                  </div>
+                  {summary ? (
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{formatCost(summary.today_cost)}</span>
+                      <span>{summary.today_requests} reqs</span>
+                      {summary.last_active && (
+                        <span>{formatRelativeTime(summary.last_active)}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No activity today</span>
+                  )}
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+
+        {/* 최근 세션 5개 */}
+        <Card>
+          <CardHeader className="pb-2 pt-3 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Recent Sessions</CardTitle>
+              <button
+                onClick={() => router.push('/sessions')}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                View all →
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
             {sessions.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-28 items-center justify-center text-sm text-muted-foreground">
                 No sessions
               </div>
             ) : (
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-2 font-medium">Agent</th>
-                    <th className="pb-2 font-medium">Model</th>
-                    <th className="pb-2 text-right font-medium">Cost</th>
-                    <th className="pb-2 text-right font-medium">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((s) => (
-                    <tr
+              <div className="space-y-1.5">
+                {sessions.map((s) => {
+                  const agent = AGENTS[s.agent_type as keyof typeof AGENTS]
+                  return (
+                    <div
                       key={s.session_id}
-                      className="cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/50"
-                      onClick={() => router.push('/sessions')}
+                      className="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
+                      onClick={() => router.push(`/sessions?id=${s.session_id}`)}
                     >
-                      <td className="py-1.5">
-                        <span
-                          className="inline-block h-2 w-2 rounded-full mr-1.5"
-                          style={{ backgroundColor: AGENTS[s.agent_type as keyof typeof AGENTS]?.hex ?? '#8b5cf6' }}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className="size-2 rounded-full shrink-0"
+                          style={{ backgroundColor: agent?.hex ?? '#8b5cf6' }}
                         />
-                        {AGENTS[s.agent_type as keyof typeof AGENTS]?.name ?? s.agent_type}
-                      </td>
-                      <td className="py-1.5 max-w-[120px] truncate">{s.model || '-'}</td>
-                      <td className="py-1.5 text-right">{formatCost(s.cost)}</td>
-                      <td className="py-1.5 text-right text-muted-foreground">{formatRelativeTime(s.started_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Tool Usage */}
-        <Card className="w-80 shrink-0">
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-sm font-medium">Tool Usage</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[calc(100%-2.5rem)] px-2 pb-2">
-            {toolChartData.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                No tool data
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={toolChartData} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" horizontal={false} />
-                  <XAxis type="number" fontSize={10} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    fontSize={10}
-                    width={100}
-                    tickFormatter={(v: string) => v.length > 14 ? `${v.slice(0, 12)}...` : v}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null
-                      const d = payload[0].payload as typeof toolChartData[number]
-                      return (
-                        <div className="rounded-lg border bg-background p-2 shadow-md">
-                          <p className="text-xs font-medium">{d.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {d.count} calls ({d.success} ok, {d.fail} fail)
-                          </p>
-                          <p className="text-xs text-muted-foreground">avg {d.avgMs}ms</p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <span className="font-medium">{agent?.name ?? s.agent_type}</span>
+                            {s.project_name && (
+                              <span className="text-muted-foreground truncate max-w-[100px]">
+                                · {s.project_name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate">
+                            {s.model || '-'}
+                          </div>
                         </div>
-                      )
-                    }}
-                  />
-                  <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                    {toolChartData.map((entry, i) => (
-                      <Cell key={entry.name} fill={TOOL_COLORS[i % TOOL_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs shrink-0 ml-2">
+                        <span className="font-medium">{formatCost(s.cost)}</span>
+                        <span className="text-muted-foreground">{formatDuration(s.duration_ms)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
-      </div>
-
-      {/* Row 3 (30%): Usage Heatmap */}
-      <div className="min-h-0 flex-[30]">
-        <UsageHeatmap data={daily} agentType={agentType} />
       </div>
     </div>
   )
