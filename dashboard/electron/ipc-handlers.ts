@@ -23,6 +23,9 @@ import {
   getIngestStatus,
   getAgentDailyCosts,
   getConfigCompareStats,
+  getHighCostSessions,
+  getModelCostEfficiency,
+  getBudgetStatus,
 } from '../src/lib/queries'
 import { getDb } from '../src/lib/db'
 import { scanRegisteredTools } from '../src/lib/registered-tools'
@@ -143,6 +146,17 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
         return getProjectCosts(agentType, from, to)
       }
       return getProjects()
+    }
+
+    case 'insights': {
+      const days = num(params?.days, 7)
+      const limit = num(params?.limit, 10)
+      const [highCostSessions, modelEfficiency, budgetStatus] = await Promise.all([
+        getHighCostSessions(days, limit),
+        getModelCostEfficiency(days),
+        getBudgetStatus(),
+      ])
+      return { highCostSessions, modelEfficiency, budgetStatus }
     }
 
     case 'ingest-status':

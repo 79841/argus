@@ -9,6 +9,7 @@ import {
   BarChart3,
   Wrench,
   FileText,
+  Lightbulb,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/usage', labelKey: 'nav.usage', icon: BarChart3 },
   { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
   { href: '/rules', labelKey: 'nav.rules', icon: FileText },
+  { href: '/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ]
 
 const SETTINGS_ITEM: NavItem = {
