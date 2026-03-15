@@ -117,10 +117,6 @@
 }
 
 /* Agent themes — accent color overrides */
-[data-agent-theme="default"] {
-  --agent-primary: #8b5cf6;
-  --agent-accent: #a78bfa;
-}
 [data-agent-theme="claude"] {
   --agent-primary: #f97316;
   --agent-accent: #fb923c;
@@ -134,11 +130,6 @@
   --agent-accent: #60a5fa;
 }
 
-.dark[data-agent-theme="default"],
-.dark [data-agent-theme="default"] {
-  --agent-primary: #a78bfa;
-  --agent-accent: #8b5cf6;
-}
 .dark[data-agent-theme="claude"],
 .dark [data-agent-theme="claude"] {
   --agent-primary: #fb923c;
