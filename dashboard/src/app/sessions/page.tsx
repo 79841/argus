@@ -6,6 +6,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
 import { DateRangePicker } from '@/components/date-range-picker'
+import { AgentDot } from '@/components/ui/agent-dot'
+import { AgentBadge } from '@/components/ui/agent-badge'
+import { FilterBar } from '@/components/filter-bar'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
@@ -16,18 +20,6 @@ const daysAgoISO = (days: number) => {
   const d = new Date()
   d.setDate(d.getDate() - (days - 1))
   return d.toISOString().slice(0, 10)
-}
-
-const AGENT_DOT_CLASSES: Record<string, string> = {
-  codex: 'bg-emerald-500',
-  claude: 'bg-orange-500',
-  gemini: 'bg-blue-500',
-}
-
-const AGENT_BADGE_CLASSES: Record<string, string> = {
-  codex: 'bg-emerald-500 text-white',
-  claude: 'bg-orange-500 text-white',
-  gemini: 'bg-blue-500 text-white',
 }
 
 type SortOption = 'latest' | 'cost' | 'tokens'
@@ -261,7 +253,7 @@ export default function SessionsPage() {
   return (
     <div className="-mx-6 -my-6 flex h-[calc(100vh-2rem)] flex-col overflow-hidden">
       {/* Filter Bar */}
-      <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 py-2.5 flex-wrap">
+      <FilterBar>
         <AgentFilter value={agentType} onChange={setAgentType} />
         <ProjectFilter value={project} onChange={setProject} />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
@@ -284,7 +276,7 @@ export default function SessionsPage() {
             <SelectItem value="tokens">{t('sessions.sort.tokens')}</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </FilterBar>
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">
@@ -305,9 +297,7 @@ export default function SessionsPage() {
                 {t('sessions.loading')}
               </div>
             ) : sortedSessions.length === 0 ? (
-              <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
-                {t('sessions.empty')}
-              </div>
+              <EmptyState title={t('sessions.empty')} />
             ) : (
               sortedSessions.map((s) => {
                 const cacheRate = computeCacheRate(s)
@@ -322,7 +312,7 @@ export default function SessionsPage() {
                   >
                     {/* Row 1: agent dot + models + cost */}
                     <div className="flex items-center gap-2">
-                      <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${AGENT_DOT_CLASSES[s.agent_type] ?? 'bg-violet-500'}`} />
+                      <AgentDot agent={s.agent_type as AgentType} size="md" />
                       <div className="flex min-w-0 flex-1 flex-wrap gap-1">
                         {parseModels(s.model).map((m) => (
                           <Badge key={m} variant="secondary" className="text-xs font-medium">
@@ -406,9 +396,7 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
     <div className="space-y-5 p-6">
       {/* Header */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge className={AGENT_BADGE_CLASSES[summary.agentType] ?? 'bg-violet-500 text-white'}>
-          {summary.agentType}
-        </Badge>
+        <AgentBadge agent={summary.agentType as AgentType} />
         <div className="flex flex-wrap gap-1">
           {parseModels(summary.model).map((m) => (
             <Badge key={m} variant="outline" className="text-xs">

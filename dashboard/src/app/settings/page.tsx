@@ -19,10 +19,10 @@ type Category = 'general' | 'agents' | 'pricing' | 'setup' | 'data'
 
 const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
 
-const AGENT_THEMES: { value: AgentTheme; label: string; color: string }[] = [
-  { value: 'claude', label: 'Claude', color: '#f97316' },
-  { value: 'codex', label: 'Codex', color: '#10b981' },
-  { value: 'gemini', label: 'Gemini', color: '#3b82f6' },
+const AGENT_THEMES: { value: AgentTheme; label: string }[] = [
+  { value: 'claude', label: 'Claude' },
+  { value: 'codex', label: 'Codex' },
+  { value: 'gemini', label: 'Gemini' },
 ]
 
 const REFRESH_OPTIONS = [
@@ -128,11 +128,11 @@ const GeneralSection = () => {
                     ? 'border-2 text-foreground'
                     : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
-                style={agentTheme === at.value ? { borderColor: at.color } : undefined}
+                style={agentTheme === at.value ? { borderColor: `var(--agent-${at.value})` } : undefined}
               >
                 <span
                   className="size-8 rounded-full"
-                  style={{ backgroundColor: at.color }}
+                  style={{ backgroundColor: `var(--agent-${at.value})` }}
                 />
                 {at.label}
               </button>
@@ -201,9 +201,9 @@ type AgentLimitState = {
 }
 
 const LIMIT_AGENT_TYPES = [
-  { id: 'claude', label: 'Claude Code', color: 'bg-orange-500' },
-  { id: 'codex', label: 'Codex', color: 'bg-emerald-500' },
-  { id: 'gemini', label: 'Gemini CLI', color: 'bg-blue-500' },
+  { id: 'claude', label: 'Claude Code' },
+  { id: 'codex', label: 'Codex' },
+  { id: 'gemini', label: 'Gemini CLI' },
 ]
 
 const AgentsSection = () => {
@@ -295,7 +295,10 @@ const AgentsSection = () => {
                     <tr key={agent.id} className="border-b border-border/50 last:border-0">
                       <td className="py-3 pr-4">
                         <span className="inline-flex items-center gap-2 text-sm font-medium">
-                          <span className={cn('h-2.5 w-2.5 rounded-full', agent.color)} />
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: `var(--agent-${agent.id})` }}
+                          />
                           {agent.label}
                         </span>
                       </td>
@@ -412,7 +415,7 @@ const SetupSection = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-orange-500" />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-claude)' }} />
             Claude Code
           </CardTitle>
         </CardHeader>
@@ -464,7 +467,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-emerald-500" />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-codex)' }} />
             Codex
           </CardTitle>
         </CardHeader>
@@ -495,7 +498,7 @@ exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-blue-500" />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-gemini)' }} />
             Gemini CLI
           </CardTitle>
         </CardHeader>

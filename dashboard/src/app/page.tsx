@@ -6,6 +6,9 @@ import { useAutoRefresh } from '@/hooks/use-auto-refresh'
 import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { KpiCard } from '@/components/ui/kpi-card'
+import { AgentDot } from '@/components/ui/agent-dot'
+import { EmptyState } from '@/components/ui/empty-state'
 import { UsageHeatmap } from '@/components/usage-heatmap'
 
 const formatCost = (v: number) => `$${v.toFixed(2)}`
@@ -27,21 +30,6 @@ const formatDuration = (ms: number): string => {
   const s = Math.floor((ms % 60000) / 1000)
   if (m === 0) return `${s}s`
   return `${m}m ${s}s`
-}
-
-type DeltaBadgeProps = { value: number | null; higherIsBetter?: boolean }
-
-const DeltaBadge = ({ value, higherIsBetter = true }: DeltaBadgeProps) => {
-  if (value === null) return <span className="text-[10px] text-muted-foreground">—</span>
-  const positive = value >= 0
-  const good = higherIsBetter ? positive : !positive
-  const arrow = positive ? '▲' : '▼'
-  const color = good ? 'text-emerald-500' : 'text-red-500'
-  return (
-    <span className={`text-[10px] font-medium ${color}`}>
-      {arrow} {Math.abs(value).toFixed(1)}%
-    </span>
-  )
 }
 
 type DashboardData = {
@@ -118,53 +106,27 @@ export default function DashboardPage() {
     <div className="flex h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto p-4">
       {/* KPI 카드 4개 */}
       <div className="grid grid-cols-4 gap-3">
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Today Cost</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="text-2xl font-bold">{formatCost(stats?.total_cost ?? 0)}</div>
-            <div className="mt-1">
-              <DeltaBadge value={delta?.cost_delta_pct ?? null} higherIsBetter={false} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Sessions</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="text-2xl font-bold">{stats?.total_sessions ?? 0}</div>
-            <div className="mt-1">
-              <DeltaBadge value={delta?.sessions_delta_pct ?? null} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Requests</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="text-2xl font-bold">{stats?.total_requests ?? 0}</div>
-            <div className="mt-1">
-              <DeltaBadge value={delta?.requests_delta_pct ?? null} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Cache Hit Rate</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="text-2xl font-bold">{((stats?.cache_hit_rate ?? 0) * 100).toFixed(1)}%</div>
-            <div className="mt-1">
-              <DeltaBadge value={delta?.cache_rate_delta_pct ?? null} />
-            </div>
-          </CardContent>
-        </Card>
+        <KpiCard
+          label="Today Cost"
+          value={formatCost(stats?.total_cost ?? 0)}
+          delta={delta?.cost_delta_pct ?? null}
+          deltaInverted
+        />
+        <KpiCard
+          label="Sessions"
+          value={String(stats?.total_sessions ?? 0)}
+          delta={delta?.sessions_delta_pct ?? null}
+        />
+        <KpiCard
+          label="Requests"
+          value={String(stats?.total_requests ?? 0)}
+          delta={delta?.requests_delta_pct ?? null}
+        />
+        <KpiCard
+          label="Cache Hit Rate"
+          value={`${((stats?.cache_hit_rate ?? 0) * 100).toFixed(1)}%`}
+          delta={delta?.cache_rate_delta_pct ?? null}
+        />
       </div>
 
       {/* 히트맵 */}
@@ -187,10 +149,7 @@ export default function DashboardPage() {
                   className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <div
-                      className="size-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: agent.hex }}
-                    />
+                    <AgentDot agent={agentId} size="md" />
                     <span className="text-sm font-medium">{agent.name}</span>
                   </div>
                   {summary ? (
@@ -225,9 +184,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             {sessions.length === 0 ? (
-              <div className="flex h-28 items-center justify-center text-sm text-muted-foreground">
-                No sessions
-              </div>
+              <EmptyState title="No sessions" />
             ) : (
               <div className="space-y-1.5">
                 {sessions.map((s) => {
@@ -239,10 +196,7 @@ export default function DashboardPage() {
                       onClick={() => router.push(`/sessions?id=${s.session_id}`)}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div
-                          className="size-2 rounded-full shrink-0"
-                          style={{ backgroundColor: agent?.hex ?? '#8b5cf6' }}
-                        />
+                        <AgentDot agent={s.agent_type as keyof typeof AGENTS} size="xs" />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 text-xs">
                             <span className="font-medium">{agent?.name ?? s.agent_type}</span>
