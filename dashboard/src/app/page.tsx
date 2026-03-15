@@ -4,15 +4,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutoRefresh } from '@/hooks/use-auto-refresh'
 import type { OverviewStats, ModelUsage, DailyStats, ToolUsageRow, SessionRow, AllTimeStats } from '@/lib/queries'
-import type { ConfigChange } from '@/lib/config-tracker'
-import type { ConfigChangeMarker } from '@/components/cost-chart'
 import { useTopBar } from '@/components/top-bar-context'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UsageHeatmap } from '@/components/usage-heatmap'
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -24,10 +20,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
-  ReferenceLine,
 } from 'recharts'
-
-const AGENT_KEYS = ['codex', 'claude', 'gemini'] as const
 
 const formatTokens = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -36,20 +29,6 @@ const formatTokens = (value: number): string => {
 }
 
 const formatCost = (value: number): string => `$${value.toFixed(2)}`
-
-const formatDate = (label: unknown) => {
-  const d = new Date(String(label))
-  return `${d.getMonth() + 1}/${d.getDate()}`
-}
-
-const formatChartTokens = (value: unknown) => {
-  const num = Number(value)
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
-  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`
-  return String(num)
-}
-
-const formatChartCost = (value: unknown) => `$${Number(value).toFixed(2)}`
 
 const AGENT_PALETTE: Record<string, string[]> = {
   codex: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'],
@@ -95,7 +74,6 @@ export default function OverviewPage() {
   const [daily, setDaily] = useState<DailyStats[]>([])
   const [tools, setTools] = useState<ToolUsageRow[]>([])
   const [sessions, setSessions] = useState<SessionRow[]>([])
-  const [configChanges, setConfigChanges] = useState<ConfigChangeMarker[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -109,11 +87,10 @@ export default function OverviewPage() {
       fetch(`/api/overview?${q}`).then((r) => r.json()),
       fetch(`/api/models?${q}`).then((r) => r.json()),
       fetch(`/api/daily?${q}`).then((r) => r.json()),
-      fetch(`/api/config-history?days=30`).then((r) => r.json()),
       fetch(`/api/tools?${q}`).then((r) => r.json()),
       fetch(`/api/sessions?${q}&limit=10`).then((r) => r.json()),
     ])
-      .then(([statsData, modelsData, dailyData, configData, toolsData, sessionsData]) => {
+      .then(([statsData, modelsData, dailyData, toolsData, sessionsData]) => {
         const { all_time_cost, all_time_tokens, ...rest } = statsData as OverviewStats & { all_time_cost: number; all_time_tokens: number }
         setStats(rest as OverviewStats)
         setAllTime({ total_cost: all_time_cost ?? 0, total_tokens: all_time_tokens ?? 0 })
@@ -121,21 +98,6 @@ export default function OverviewPage() {
         setDaily(dailyData as DailyStats[])
         setTools((toolsData as { tools: ToolUsageRow[] }).tools ?? [])
         setSessions(Array.isArray(sessionsData) ? sessionsData as SessionRow[] : [])
-        const changes = Array.isArray(configData) ? configData as ConfigChange[] : []
-        const grouped = changes.reduce<Record<string, string[]>>(
-          (acc, change) => {
-            const dateKey = change.date.split('T')[0]
-            if (!acc[dateKey]) acc[dateKey] = []
-            if (!acc[dateKey].includes(change.file_path)) {
-              acc[dateKey].push(change.file_path)
-            }
-            return acc
-          },
-          {}
-        )
-        setConfigChanges(
-          Object.entries(grouped).map(([date, files]) => ({ date, files }))
-        )
         setLoading(false)
       })
       .catch(() => {
@@ -145,7 +107,6 @@ export default function OverviewPage() {
         setDaily([])
         setTools([])
         setSessions([])
-        setConfigChanges([])
         setLoading(false)
       })
   }, [agentType, project, dateRange])
@@ -155,50 +116,6 @@ export default function OverviewPage() {
   }, [fetchData])
 
   useAutoRefresh(useCallback(() => fetchData(false), [fetchData]))
-
-  const costChartData = useMemo((): Record<string, unknown>[] => {
-    if (agentType === 'all') {
-      const grouped = daily.reduce<Record<string, Record<string, number>>>((acc, row) => {
-        if (!acc[row.date]) acc[row.date] = {}
-        acc[row.date][row.agent_type] = row.cost
-        return acc
-      }, {})
-      return Object.entries(grouped)
-        .map(([date, agents]) => ({
-          date,
-          codex: agents.codex ?? 0,
-          claude: agents.claude ?? 0,
-          gemini: agents.gemini ?? 0,
-        }))
-        .sort((a, b) => (a.date as string).localeCompare(b.date as string))
-    }
-    return daily
-      .map((row) => ({ date: row.date, cost: row.cost }))
-      .sort((a, b) => (a.date as string).localeCompare(b.date as string))
-  }, [daily, agentType])
-
-  const tokenChartData = useMemo((): Record<string, unknown>[] => {
-    if (agentType === 'all') {
-      const grouped = daily.reduce<Record<string, Record<string, number>>>((acc, row) => {
-        if (!acc[row.date]) acc[row.date] = {}
-        acc[row.date][`${row.agent_type}_cache`] = row.cache_read_tokens
-        acc[row.date][`${row.agent_type}_input`] = row.input_tokens
-        acc[row.date][`${row.agent_type}_output`] = row.output_tokens
-        return acc
-      }, {})
-      return Object.entries(grouped)
-        .map(([date, tokens]) => ({ date, ...tokens }))
-        .sort((a, b) => (a.date as string).localeCompare(b.date as string))
-    }
-    return daily
-      .map((row) => ({
-        date: row.date,
-        cache_read_tokens: row.cache_read_tokens,
-        input_tokens: row.input_tokens,
-        output_tokens: row.output_tokens,
-      }))
-      .sort((a, b) => (a.date as string).localeCompare(b.date as string))
-  }, [daily, agentType])
 
   const modelPieData = useMemo(() => {
     const total = models.reduce((sum, d) => sum + d.request_count, 0)
@@ -218,7 +135,7 @@ export default function OverviewPage() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 p-1">
-        <div className="flex flex-[3] gap-4">
+        <div className="flex flex-[35] gap-4">
           <div className="grid w-72 shrink-0 grid-cols-2 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-xl bg-muted" />
@@ -226,22 +143,19 @@ export default function OverviewPage() {
           </div>
           <div className="flex-1 animate-pulse rounded-xl bg-muted" />
         </div>
-        <div className="flex-[3] animate-pulse rounded-xl bg-muted" />
-        <div className="flex flex-[4] gap-4">
-          <div className="w-64 shrink-0 animate-pulse rounded-xl bg-muted" />
+        <div className="flex flex-[35] gap-4">
           <div className="flex-1 animate-pulse rounded-xl bg-muted" />
           <div className="w-80 shrink-0 animate-pulse rounded-xl bg-muted" />
         </div>
+        <div className="flex-[30] animate-pulse rounded-xl bg-muted" />
       </div>
     )
   }
 
-  const singleColor = AGENTS[agentType as keyof typeof AGENTS]?.hex ?? '#8b5cf6'
-
   return (
     <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 p-1">
-      {/* Row 1: KPI + Cost Trend */}
-      <div className="flex min-h-0 flex-[3] gap-4">
+      {/* Row 1 (35%): KPI 2x2 + Model Pie */}
+      <div className="flex min-h-0 flex-[35] gap-4">
         {/* KPI Cards 2x2 */}
         <div className="grid w-72 shrink-0 grid-cols-2 gap-3">
           <Card>
@@ -291,106 +205,8 @@ export default function OverviewPage() {
           </Card>
         </div>
 
-        {/* Cost Trend */}
-        <Card className="min-w-0 flex-1">
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-sm font-medium">Cost Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[calc(100%-2.5rem)] px-4 pb-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={costChartData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="date" tickFormatter={formatDate} fontSize={11} />
-                <YAxis tickFormatter={formatChartCost} fontSize={11} width={50} />
-                <Tooltip formatter={formatChartCost} labelFormatter={formatDate} />
-                <Legend />
-                {configChanges.map((marker) => (
-                  <ReferenceLine
-                    key={`config-${marker.date}`}
-                    x={marker.date}
-                    stroke="#ef4444"
-                    strokeDasharray="4 4"
-                    strokeWidth={1.5}
-                  />
-                ))}
-                {agentType === 'all' ? (
-                  AGENT_KEYS.map((key) => (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      name={AGENTS[key].name}
-                      stroke={AGENTS[key].hex}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  ))
-                ) : (
-                  <Line
-                    type="monotone"
-                    dataKey="cost"
-                    name="Cost"
-                    stroke={singleColor}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 2: Token Trend */}
-      <Card className="min-h-0 flex-[3]">
-        <CardHeader className="pb-1 pt-3 px-4">
-          <CardTitle className="text-sm font-medium">Token Trend</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[calc(100%-2.5rem)] px-4 pb-3">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={tokenChartData}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="date" tickFormatter={formatDate} fontSize={11} />
-              <YAxis tickFormatter={formatChartTokens} fontSize={11} width={50} />
-              <Tooltip formatter={formatChartTokens} labelFormatter={formatDate} />
-              <Legend />
-              {configChanges.map((marker) => (
-                <ReferenceLine
-                  key={`config-${marker.date}`}
-                  x={marker.date}
-                  stroke="#ef4444"
-                  strokeDasharray="4 4"
-                  strokeWidth={1.5}
-                />
-              ))}
-              {agentType === 'all' ? (
-                <>
-                  {AGENT_KEYS.map((key) => (
-                    <Bar key={`${key}_cache`} dataKey={`${key}_cache`} name={`${AGENTS[key].name} Cache`} fill={AGENTS[key].hex} stackId={`${key}_cache`} barSize={8} opacity={0.3} />
-                  ))}
-                  {AGENT_KEYS.map((key) => (
-                    <Bar key={`${key}_input`} dataKey={`${key}_input`} name={`${AGENTS[key].name} Input`} fill={AGENTS[key].hex} stackId={key} barSize={20} opacity={0.8} />
-                  ))}
-                  {AGENT_KEYS.map((key) => (
-                    <Bar key={`${key}_output`} dataKey={`${key}_output`} name={`${AGENTS[key].name} Output`} fill={AGENTS[key].hex} stackId={key} barSize={20} opacity={0.5} />
-                  ))}
-                </>
-              ) : (
-                <>
-                  <Bar dataKey="cache_read_tokens" name="Cache Read" fill={singleColor} stackId="cache" barSize={8} opacity={0.3} />
-                  <Bar dataKey="input_tokens" name="Input" fill={singleColor} stackId="tokens" barSize={20} opacity={0.8} />
-                  <Bar dataKey="output_tokens" name="Output" fill={singleColor} stackId="tokens" barSize={20} opacity={0.5} />
-                </>
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Row 3: Model Pie + Sessions + Tool Usage */}
-      <div className="flex min-h-0 flex-[4] gap-4">
         {/* Model Pie Chart */}
-        <Card className="w-64 shrink-0">
+        <Card className="min-w-0 flex-1">
           <CardHeader className="pb-1 pt-3 px-4">
             <CardTitle className="text-sm font-medium">Models</CardTitle>
           </CardHeader>
@@ -439,7 +255,10 @@ export default function OverviewPage() {
             )}
           </CardContent>
         </Card>
+      </div>
 
+      {/* Row 2 (35%): Recent Sessions + Tool Usage */}
+      <div className="flex min-h-0 flex-[35] gap-4">
         {/* Recent Sessions */}
         <Card className="min-w-0 flex-1">
           <CardHeader className="pb-1 pt-3 px-4">
@@ -538,8 +357,8 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      {/* Row 4: Usage Heatmap */}
-      <div className="shrink-0">
+      {/* Row 3 (30%): Usage Heatmap */}
+      <div className="min-h-0 flex-[30]">
         <UsageHeatmap data={daily} agentType={agentType} />
       </div>
     </div>
