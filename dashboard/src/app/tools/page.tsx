@@ -5,7 +5,11 @@ import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } fro
 import { ToolDetailTable } from '@/components/tool-detail-table'
 import { IndividualToolTable } from '@/components/individual-tool-table'
 import { RegisteredToolsCard } from '@/components/registered-tools-card'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { KpiCard } from '@/components/ui/kpi-card'
+import { ChartCard } from '@/components/ui/chart-card'
+import { FilterBar } from '@/components/filter-bar'
+import { EmptyState } from '@/components/ui/empty-state'
+import { AgentFilter } from '@/components/agent-filter'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   BarChart,
@@ -23,7 +27,9 @@ import {
   Legend,
   Treemap,
 } from 'recharts'
+import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
+import type { AgentType } from '@/lib/agents'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,14 +48,7 @@ type TreemapItem = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const AGENT_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'claude', label: 'Claude' },
-  { value: 'codex', label: 'Codex' },
-  { value: 'gemini', label: 'Gemini' },
-]
-
-const DATE_OPTION_KEYS = [
+const DATE_OPTIONS = [
   { value: '7', labelKey: 'tools.date.7' },
   { value: '14', labelKey: 'tools.date.14' },
   { value: '30', labelKey: 'tools.date.30' },
@@ -101,35 +100,6 @@ const formatNumber = (n: number): string => n.toLocaleString()
 
 const formatPercent = (n: number): string => `${(n * 100).toFixed(1)}%`
 
-// ─── KPI Cards ────────────────────────────────────────────────────────────────
-
-const KpiCards = ({ kpi, loading }: { kpi: ToolsKpi | null; loading: boolean }) => {
-  const { t } = useLocale()
-  const items = [
-    { label: t('tools.kpi.totalCalls'), value: kpi ? formatNumber(kpi.total_calls) : '—' },
-    { label: t('tools.kpi.successRate'), value: kpi ? formatPercent(kpi.success_rate) : '—' },
-    { label: t('tools.kpi.avgDuration'), value: kpi ? formatDuration(kpi.avg_duration_ms) : '—' },
-    { label: t('tools.kpi.uniqueTools'), value: kpi ? formatNumber(kpi.unique_tools) : '—' },
-  ]
-
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {items.map(({ label, value }) => (
-        <Card key={label}>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground">{label}</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold">
-              {loading ? <span className="text-muted-foreground text-lg">...</span> : value}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
 // ─── Top Tools Bar Chart ──────────────────────────────────────────────────────
 
 const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
@@ -142,64 +112,56 @@ const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
     avgMs: Math.round(r.avg_duration_ms),
   }))
 
-  if (chartData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{t('tools.chart.topTools')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
-            No data
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">{t('tools.chart.topTools')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[360px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" horizontal={false} />
-              <XAxis type="number" fontSize={12} />
-              <YAxis
-                type="category"
-                dataKey="name"
-                fontSize={11}
-                width={130}
-                tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 18)}...` : v)}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const d = payload[0].payload as typeof chartData[number]
-                  return (
-                    <div className="rounded-lg border bg-background p-3 shadow-md">
-                      <p className="font-medium text-sm">{d.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatNumber(d.count)} calls ({d.success} ok, {d.fail} fail)
-                      </p>
-                      <p className="text-sm text-muted-foreground">avg {d.avgMs}ms</p>
-                    </div>
-                  )
-                }}
-              />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, i) => (
-                  <Cell key={entry.name} fill={TOP_COLORS[i % TOP_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <ChartCard
+      title={t('tools.chart.topTools')}
+      height={360}
+      empty={chartData.length === 0}
+    >
+      <div className="h-[360px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
+            <CartesianGrid
+              strokeDasharray={CHART_THEME.grid.strokeDasharray}
+              stroke={CHART_THEME.grid.stroke}
+              strokeOpacity={CHART_THEME.grid.strokeOpacity}
+              horizontal={false}
+            />
+            <XAxis type="number" fontSize={CHART_THEME.axis.fontSize} />
+            <YAxis
+              type="category"
+              dataKey="name"
+              fontSize={CHART_THEME.axis.fontSize}
+              width={130}
+              tickFormatter={(v: string) => (v.length > 20 ? `${v.slice(0, 18)}...` : v)}
+            />
+            <Tooltip
+              contentStyle={CHART_THEME.tooltip.containerStyle}
+              labelStyle={CHART_THEME.tooltip.labelStyle}
+              itemStyle={CHART_THEME.tooltip.itemStyle}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const d = payload[0].payload as typeof chartData[number]
+                return (
+                  <div style={CHART_THEME.tooltip.containerStyle}>
+                    <p className="font-medium text-sm">{d.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatNumber(d.count)} calls ({d.success} ok, {d.fail} fail)
+                    </p>
+                    <p className="text-sm text-muted-foreground">avg {d.avgMs}ms</p>
+                  </div>
+                )
+              }}
+            />
+            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+              {chartData.map((entry, i) => (
+                <Cell key={entry.name} fill={TOP_COLORS[i % TOP_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </ChartCard>
   )
 }
 
@@ -250,7 +212,7 @@ const CategoryTooltip = ({ active, payload }: { active?: boolean; payload?: Tree
   const total = item.root?.children?.reduce((sum: number, c: TreemapItem) => sum + c.size, 0) || 1
   const percent = ((item.size / total) * 100).toFixed(1)
   return (
-    <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
+    <div style={CHART_THEME.tooltip.containerStyle}>
       <p className="text-sm font-medium">{item.name}</p>
       <p className="text-sm text-muted-foreground">{item.size.toLocaleString()} calls ({percent}%)</p>
     </div>
@@ -271,34 +233,20 @@ const CategoryTreemap = ({ data }: { data: ToolDetailRow[] }) => {
     fill: CATEGORY_COLORS[name] ?? DEFAULT_COLORS[defaultIdx++ % DEFAULT_COLORS.length],
   }))
 
-  if (treemapData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{t('tools.chart.categoryDist')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">No data</div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">{t('tools.chart.categoryDist')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <Treemap data={treemapData} dataKey="size" aspectRatio={4 / 3} content={<CategoryTreemapContent />}>
-              <Tooltip content={<CategoryTooltip />} />
-            </Treemap>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <ChartCard
+      title={t('tools.chart.categoryDist')}
+      height={280}
+      empty={treemapData.length === 0}
+    >
+      <div className="h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <Treemap data={treemapData} dataKey="size" aspectRatio={4 / 3} content={<CategoryTreemapContent />}>
+            <Tooltip content={<CategoryTooltip />} />
+          </Treemap>
+        </ResponsiveContainer>
+      </div>
+    </ChartCard>
   )
 }
 
@@ -316,16 +264,16 @@ const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
   }
 
   const topTools = [...toolSet]
-    .map((t) => ({ name: t, total: data.filter((r) => r.tool_name === t).reduce((s, r) => s + r.count, 0) }))
+    .map((tool) => ({ name: tool, total: data.filter((r) => r.tool_name === tool).reduce((s, r) => s + r.count, 0) }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 8)
-    .map((t) => t.name)
+    .map((tool) => tool.name)
 
   const chartData = Object.entries(byDate)
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([date, counts]) => {
       const row: Record<string, string | number> = { date: date.slice(5) }
-      for (const t of topTools) row[t] = counts[t] ?? 0
+      for (const tool of topTools) row[tool] = counts[tool] ?? 0
       return row
     })
 
@@ -336,45 +284,35 @@ const DailyTrendChart = ({ data }: { data: DailyToolRow[] }) => {
     return DEFAULT_COLORS[colorIdx++ % DEFAULT_COLORS.length]
   }
 
-  if (chartData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTrend')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">No data</div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTrend')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ left: 0, right: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="date" fontSize={11} />
-              <YAxis fontSize={11} />
-              <Tooltip />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
-              {topTools.map((t) => (
-                <Area key={t} type="monotone" dataKey={t} stackId="1" stroke={getColor(t)} fill={getColor(t)} fillOpacity={0.4} />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <ChartCard
+      title={t('tools.chart.dailyTrend')}
+      height={280}
+      empty={chartData.length === 0}
+    >
+      <div className="h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ left: 0, right: 8 }}>
+            <CartesianGrid
+              strokeDasharray={CHART_THEME.grid.strokeDasharray}
+              stroke={CHART_THEME.grid.stroke}
+              strokeOpacity={CHART_THEME.grid.strokeOpacity}
+            />
+            <XAxis dataKey="date" fontSize={CHART_THEME.axis.fontSize} />
+            <YAxis fontSize={CHART_THEME.axis.fontSize} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} />
+            <Legend wrapperStyle={{ fontSize: `${CHART_THEME.legend.fontSize}px` }} />
+            {topTools.map((tool) => (
+              <Area key={tool} type="monotone" dataKey={tool} stackId="1" stroke={getColor(tool)} fill={getColor(tool)} fillOpacity={0.4} />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </ChartCard>
   )
 }
 
-// ─── Fail Rate Trend ──────────────────────────────────────────────────────────
+// ─── Daily Total Trend ────────────────────────────────────────────────────────
 
 const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
   const { t } = useLocale()
@@ -392,85 +330,28 @@ const FailRateTrendChart = ({ data }: { data: DailyToolRow[] }) => {
       total: count,
     }))
 
-  if (chartData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTotal')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[240px] items-center justify-center text-muted-foreground text-sm">No data</div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">{t('tools.chart.dailyTotal')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[240px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ left: 0, right: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="date" fontSize={11} />
-              <YAxis fontSize={11} />
-              <Tooltip />
-              <Line type="monotone" dataKey="total" stroke="#8b5cf6" strokeWidth={2} dot={false} name={t('tools.chart.totalCalls')} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Filter Bar ───────────────────────────────────────────────────────────────
-
-type FilterBarProps = {
-  agentType: string
-  days: string
-  onAgentChange: (v: string) => void
-  onDaysChange: (v: string) => void
-}
-
-const FilterBar = ({ agentType, days, onAgentChange, onDaysChange }: FilterBarProps) => {
-  const { t } = useLocale()
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-        {AGENT_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => onAgentChange(opt.value)}
-            className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
-              agentType === opt.value
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+    <ChartCard
+      title={t('tools.chart.dailyTotal')}
+      height={240}
+      empty={chartData.length === 0}
+    >
+      <div className="h-[240px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ left: 0, right: 8 }}>
+            <CartesianGrid
+              strokeDasharray={CHART_THEME.grid.strokeDasharray}
+              stroke={CHART_THEME.grid.stroke}
+              strokeOpacity={CHART_THEME.grid.strokeOpacity}
+            />
+            <XAxis dataKey="date" fontSize={CHART_THEME.axis.fontSize} />
+            <YAxis fontSize={CHART_THEME.axis.fontSize} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} />
+            <Line type="monotone" dataKey="total" stroke="#8b5cf6" strokeWidth={2} dot={false} name={t('tools.chart.totalCalls')} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
-      <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-        {DATE_OPTION_KEYS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => onDaysChange(opt.value)}
-            className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
-              days === opt.value
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t(opt.labelKey)}
-          </button>
-        ))}
-      </div>
-    </div>
+    </ChartCard>
   )
 }
 
@@ -478,7 +359,7 @@ const FilterBar = ({ agentType, days, onAgentChange, onDaysChange }: FilterBarPr
 
 export default function ToolsPage() {
   const { t } = useLocale()
-  const [agentType, setAgentType] = useState('all')
+  const [agentType, setAgentType] = useState<AgentType>('all')
   const [days, setDays] = useState('7')
 
   const [tools, setTools] = useState<ToolDetailRow[]>([])
@@ -544,14 +425,47 @@ export default function ToolsPage() {
         <p className="text-muted-foreground text-sm mt-1">{t('tools.subtitle')}</p>
       </div>
 
-      <FilterBar
-        agentType={agentType}
-        days={days}
-        onAgentChange={setAgentType}
-        onDaysChange={setDays}
-      />
+      <FilterBar>
+        <AgentFilter value={agentType} onChange={setAgentType} />
+        <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+          {DATE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setDays(opt.value)}
+              className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                days === opt.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t(opt.labelKey)}
+            </button>
+          ))}
+        </div>
+      </FilterBar>
 
-      <KpiCards kpi={kpi} loading={loading} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard
+          label={t('tools.kpi.totalCalls')}
+          value={kpi ? formatNumber(kpi.total_calls) : '—'}
+          loading={loading}
+        />
+        <KpiCard
+          label={t('tools.kpi.successRate')}
+          value={kpi ? formatPercent(kpi.success_rate) : '—'}
+          loading={loading}
+        />
+        <KpiCard
+          label={t('tools.kpi.avgDuration')}
+          value={kpi ? formatDuration(kpi.avg_duration_ms) : '—'}
+          loading={loading}
+        />
+        <KpiCard
+          label={t('tools.kpi.uniqueTools')}
+          value={kpi ? formatNumber(kpi.unique_tools) : '—'}
+          loading={loading}
+        />
+      </div>
 
       <Tabs defaultValue="overview">
         <TabsList>
@@ -578,6 +492,8 @@ export default function ToolsPage() {
             <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
               Loading...
             </div>
+          ) : tools.length === 0 ? (
+            <EmptyState title={t('tools.empty') ?? 'No tool data'} />
           ) : (
             <>
               <ToolDetailTable data={tools} />

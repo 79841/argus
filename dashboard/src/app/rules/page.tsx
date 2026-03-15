@@ -43,10 +43,10 @@ const AGENT_LABELS: Record<Agent, string> = {
   gemini: 'Gemini',
 }
 
-const AGENT_COLORS: Record<Agent, string> = {
-  claude: 'text-orange-500',
-  codex: 'text-emerald-500',
-  gemini: 'text-blue-500',
+const AGENT_CSS_VARS: Record<Agent, string> = {
+  claude: 'var(--agent-claude)',
+  codex: 'var(--agent-codex)',
+  gemini: 'var(--agent-gemini)',
 }
 
 const getFileIcon = (filePath: string) => {
@@ -551,10 +551,8 @@ export default function RulesPage() {
                         <div key={agent} className="ml-3">
                           <button
                             onClick={() => toggleGroup(agentKey)}
-                            className={cn(
-                              'flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium hover:bg-muted transition-colors',
-                              AGENT_COLORS[agent]
-                            )}
+                            className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium hover:bg-muted transition-colors"
+                            style={{ color: AGENT_CSS_VARS[agent] }}
                           >
                             {agentCollapsed ? (
                               <ChevronRight className="size-3" />

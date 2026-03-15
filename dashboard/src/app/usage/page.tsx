@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell,
@@ -12,12 +11,20 @@ import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
 import { DateRangePicker } from '@/components/date-range-picker'
 import { ConfigTimeline } from '@/components/config-timeline'
-import { AGENTS, getAgentColor } from '@/lib/agents'
+import { FilterBar } from '@/components/filter-bar'
+import { KpiCard } from '@/components/ui/kpi-card'
+import { ChartCard } from '@/components/ui/chart-card'
+import { DataTable } from '@/components/ui/data-table'
+import { EmptyState } from '@/components/ui/empty-state'
+import { AgentBadge } from '@/components/ui/agent-badge'
+import { AGENTS } from '@/lib/agents'
+import { AGENT_CHART_COLORS, TOKEN_COLORS, CHART_THEME } from '@/lib/chart-theme'
 import { calculateEfficiency } from '@/lib/efficiency'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { DailyStats, OverviewStats, ModelUsage, EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
 import type { ConfigChange } from '@/lib/config-tracker'
+import type { ReactNode } from 'react'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {
@@ -27,34 +34,6 @@ const daysAgoISO = (days: number) => {
 }
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
-
-// ─── KPI Card ───────────────────────────────────────────────────────────────
-
-type KpiCardProps = {
-  label: string
-  value: string
-  sub?: string
-  delta?: number | null
-}
-
-const KpiCard = ({ label, value, sub, delta }: KpiCardProps) => {
-  return (
-    <Card>
-      <CardHeader className="pb-1 pt-3 px-4">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-3">
-        <div className="text-2xl font-bold">{value}</div>
-        {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
-        {delta !== undefined && delta !== null && (
-          <div className={`text-xs font-medium mt-0.5 ${delta >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-            {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}% vs prev period
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
 
 // ─── Cost Tab ───────────────────────────────────────────────────────────────
 
@@ -72,7 +51,7 @@ type DailyCostPoint = {
   total: number
 }
 
-type AgentCostPoint = { agent: string; cost: number; color: string }
+type AgentCostPoint = { agent: string; cost: number; agentId: AgentType }
 type ProjectCostPoint = { project: string; cost: number }
 
 const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
@@ -96,25 +75,22 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         }
         setDaily(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)))
 
-        // Agent cost breakdown
         const agentMap: Record<string, number> = {}
         for (const row of rows) {
           agentMap[row.agent_type] = (agentMap[row.agent_type] ?? 0) + row.cost
         }
         setAgentCosts(
-          AGENT_TYPES.map(id => ({ agent: AGENTS[id].name, cost: agentMap[id] ?? 0, color: AGENTS[id].hex }))
+          AGENT_TYPES.map(id => ({ agent: AGENTS[id].name, cost: agentMap[id] ?? 0, agentId: id }))
             .filter(a => a.cost > 0)
         )
       })
       .catch(() => {})
 
-    // Overview stats
     fetch(`/api/overview?${qs}`)
       .then(r => r.json())
       .then(data => setOverview(data))
       .catch(() => {})
 
-    // Prev period for delta
     const from = new Date(dateRange.from)
     const to = new Date(dateRange.to)
     const days = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1
@@ -128,7 +104,6 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
       .then(data => setPrevOverview(data))
       .catch(() => {})
 
-    // Project costs
     fetch(`/api/projects?agent_type=${agentType}&from=${dateRange.from}&to=${dateRange.to}`)
       .then(r => r.json())
       .then((data: Array<{ project_name: string; total_cost: number }>) =>
@@ -147,71 +122,52 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
-        <KpiCard label="Total Cost" value={`$${totalCost.toFixed(2)}`} delta={delta} />
+        <KpiCard label="Total Cost" value={`$${totalCost.toFixed(2)}`} delta={delta} deltaInverted />
         <KpiCard label="Daily Average" value={`$${avgCost.toFixed(2)}`} sub="per day" />
         <KpiCard label="Requests" value={(overview?.total_requests ?? 0).toLocaleString()} sub="API requests" />
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Daily Cost Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `$${v.toFixed(2)}`} width={55} />
-              <Tooltip formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, '']} />
-              <Legend />
-              <Area type="monotone" dataKey="claude" stackId="1" stroke={AGENTS.claude.hex} fill={AGENTS.claude.hex} fillOpacity={0.6} name="Claude" />
-              <Area type="monotone" dataKey="codex" stackId="1" stroke={AGENTS.codex.hex} fill={AGENTS.codex.hex} fillOpacity={0.6} name="Codex" />
-              <Area type="monotone" dataKey="gemini" stackId="1" stroke={AGENTS.gemini.hex} fill={AGENTS.gemini.hex} fillOpacity={0.6} name="Gemini" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <ChartCard title="Daily Cost Trend" height={220}>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid {...CHART_THEME.grid} />
+            <XAxis dataKey="date" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={d => d.slice(5)} />
+            <YAxis tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} width={55} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, '']} />
+            <Legend {...CHART_THEME.legend} />
+            <Area type="monotone" dataKey="claude" stackId="1" stroke={AGENT_CHART_COLORS.claude} fill={AGENT_CHART_COLORS.claude} fillOpacity={0.15} name="Claude" />
+            <Area type="monotone" dataKey="codex" stackId="1" stroke={AGENT_CHART_COLORS.codex} fill={AGENT_CHART_COLORS.codex} fillOpacity={0.15} name="Codex" />
+            <Area type="monotone" dataKey="gemini" stackId="1" stroke={AGENT_CHART_COLORS.gemini} fill={AGENT_CHART_COLORS.gemini} fillOpacity={0.15} name="Gemini" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cost by Agent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `$${v.toFixed(2)}`} />
-                <YAxis type="category" dataKey="agent" tick={{ fontSize: 11 }} width={80} />
-                <Tooltip formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
-                <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
-                  {agentCosts.map((entry) => (
-                    <Cell key={entry.agent} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ChartCard title="Cost by Agent" height={160}>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>
+              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} />
+              <YAxis type="category" dataKey="agent" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+              <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
+                {agentCosts.map((entry) => (
+                  <Cell key={entry.agent} fill={AGENT_CHART_COLORS[entry.agentId]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cost by Project</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {projectCosts.length === 0 ? (
-              <div className="flex h-[160px] items-center justify-center text-sm text-muted-foreground">No project data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={projectCosts.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `$${v.toFixed(2)}`} />
-                  <YAxis type="category" dataKey="project" tick={{ fontSize: 11 }} width={80} />
-                  <Tooltip formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
-                  <Bar dataKey="cost" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <ChartCard title="Cost by Project" height={160} empty={projectCosts.length === 0} emptyMessage="No project data">
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={projectCosts.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
+              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} />
+              <YAxis type="category" dataKey="project" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+              <Bar dataKey="cost" fill={AGENT_CHART_COLORS.all} radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
     </div>
   )
@@ -232,7 +188,7 @@ type DailyTokenPoint = {
   cache_read: number
 }
 
-type AgentTokenPoint = { agent: string; input: number; output: number; cache_read: number; color: string }
+type AgentTokenPoint = { agent: string; input: number; output: number; cache_read: number; agentId: AgentType }
 
 const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
   const [daily, setDaily] = useState<DailyTokenPoint[]>([])
@@ -254,7 +210,6 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
         }
         setDaily(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)))
 
-        // Agent token breakdown
         const agentMap: Record<string, { input: number; output: number; cache_read: number }> = {}
         for (const row of rows) {
           if (!agentMap[row.agent_type]) agentMap[row.agent_type] = { input: 0, output: 0, cache_read: 0 }
@@ -268,7 +223,7 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
             input: agentMap[id]?.input ?? 0,
             output: agentMap[id]?.output ?? 0,
             cache_read: agentMap[id]?.cache_read ?? 0,
-            color: AGENTS[id].hex,
+            agentId: id,
           })).filter(a => a.input + a.output + a.cache_read > 0)
         )
       })
@@ -285,7 +240,6 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
   const totalCache = overview?.total_cache_read_tokens ?? 0
   const totalTokens = totalInput + totalOutput + totalCache
   const inputRatio = totalInput + totalOutput > 0 ? ((totalInput / (totalInput + totalOutput)) * 100).toFixed(1) : '0.0'
-  const cacheSavings = totalCache
 
   const fmtTokens = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : n.toString()
 
@@ -294,51 +248,37 @@ const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
       <div className="grid grid-cols-3 gap-4">
         <KpiCard label="Total Tokens" value={fmtTokens(totalTokens)} sub="input + output + cache" />
         <KpiCard label="Input / Output Ratio" value={`${inputRatio}%`} sub="input proportion" />
-        <KpiCard label="Cache Savings" value={fmtTokens(cacheSavings)} sub="tokens served from cache" />
+        <KpiCard label="Cache Savings" value={fmtTokens(totalCache)} sub="tokens served from cache" />
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Daily Token Usage</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => fmtTokens(v)} width={55} />
-              <Tooltip formatter={(v: unknown) => [fmtTokens(Number(v)), '']} />
-              <Legend />
-              <Bar dataKey="input" stackId="a" fill="#6366f1" name="Input" />
-              <Bar dataKey="output" stackId="a" fill="#ec4899" name="Output" />
-              <Bar dataKey="cache_read" stackId="a" fill="#10b981" name="Cache Read" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <ChartCard title="Daily Token Usage" height={220}>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid {...CHART_THEME.grid} />
+            <XAxis dataKey="date" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={d => d.slice(5)} />
+            <YAxis tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => fmtTokens(v)} width={55} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [fmtTokens(Number(v)), '']} />
+            <Legend {...CHART_THEME.legend} />
+            <Bar dataKey="input" stackId="a" fill={TOKEN_COLORS.input} name="Input" />
+            <Bar dataKey="output" stackId="a" fill={TOKEN_COLORS.output} name="Output" />
+            <Bar dataKey="cache_read" stackId="a" fill={TOKEN_COLORS.cache_read} name="Cache Read" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Token Distribution by Agent</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {agentTokens.length === 0 ? (
-            <div className="flex h-[160px] items-center justify-center text-sm text-muted-foreground">No data</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={agentTokens} layout="vertical" margin={{ left: 0, right: 10 }}>
-                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => fmtTokens(v)} />
-                <YAxis type="category" dataKey="agent" tick={{ fontSize: 11 }} width={80} />
-                <Tooltip formatter={(v: unknown) => [fmtTokens(Number(v)), '']} />
-                <Legend />
-                <Bar dataKey="input" stackId="a" fill="#6366f1" name="Input" />
-                <Bar dataKey="output" stackId="a" fill="#ec4899" name="Output" />
-                <Bar dataKey="cache_read" stackId="a" fill="#10b981" name="Cache" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      <ChartCard title="Token Distribution by Agent" height={160} empty={agentTokens.length === 0}>
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={agentTokens} layout="vertical" margin={{ left: 0, right: 10 }}>
+            <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => fmtTokens(v)} />
+            <YAxis type="category" dataKey="agent" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [fmtTokens(Number(v)), '']} />
+            <Legend {...CHART_THEME.legend} />
+            <Bar dataKey="input" stackId="a" fill={TOKEN_COLORS.input} name="Input" />
+            <Bar dataKey="output" stackId="a" fill={TOKEN_COLORS.output} name="Output" />
+            <Bar dataKey="cache_read" stackId="a" fill={TOKEN_COLORS.cache_read} name="Cache" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
     </div>
   )
 }
@@ -355,12 +295,20 @@ type ModelTableRow = {
   model: string
   agent_type: string
   request_count: number
-  total_tokens: number
   cost: number
   avg_cost: number
 }
 
-const PIE_COLORS = ['#6366f1', '#ec4899', '#f97316', '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#14b8a6']
+const SERIES_PIE_COLORS = [
+  'oklch(0.55 0 0)',
+  'oklch(0.65 0 0)',
+  'oklch(0.45 0 0)',
+  'oklch(0.75 0 0)',
+  'oklch(0.35 0 0)',
+  'oklch(0.60 0 0)',
+  'oklch(0.70 0 0)',
+  'oklch(0.40 0 0)',
+]
 
 const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
   const [models, setModels] = useState<ModelTableRow[]>([])
@@ -375,7 +323,6 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
             model: r.model,
             agent_type: r.agent_type,
             request_count: r.request_count,
-            total_tokens: 0,
             cost: r.cost,
             avg_cost: r.request_count > 0 ? r.cost / r.request_count : 0,
           }))
@@ -388,102 +335,70 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
   const pieData = models.slice(0, 8).map((m, i) => ({
     name: m.model,
     value: m.cost,
-    color: PIE_COLORS[i % PIE_COLORS.length],
+    color: SERIES_PIE_COLORS[i % SERIES_PIE_COLORS.length],
   }))
+
+  const modelColumns = [
+    { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
+    {
+      key: 'agent_type',
+      label: 'Agent',
+      format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
+    },
+    { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
+    { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => `$${Number(v).toFixed(4)}` },
+    { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => `$${Number(v).toFixed(4)}` },
+  ]
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Model Usage</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Model</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Agent</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Reqs</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Cost</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Avg/req</th>
-                </tr>
-              </thead>
-              <tbody>
-                {models.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No data</td>
-                  </tr>
-                ) : (
-                  models.map((m) => (
-                    <tr key={`${m.model}-${m.agent_type}`} className="border-b hover:bg-muted/20">
-                      <td className="px-4 py-2 font-mono text-xs">{m.model}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className="rounded px-1.5 py-0.5 text-[10px] font-medium text-white"
-                          style={{ backgroundColor: getAgentColor(m.agent_type) }}
-                        >
-                          {m.agent_type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">{m.request_count.toLocaleString()}</td>
-                      <td className="px-4 py-2 text-right">${m.cost.toFixed(4)}</td>
-                      <td className="px-4 py-2 text-right">${m.avg_cost.toFixed(4)}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <ChartCard title="Model Usage">
+        <DataTable
+          columns={modelColumns}
+          data={models as unknown as Record<string, unknown>[]}
+          emptyMessage="No model data"
+        />
+      </ChartCard>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cost by Model</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {pieData.length === 0 ? (
-              <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">No data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }: { name?: string; percent?: number }) => (percent ?? 0) > 0.05 ? `${(name ?? '').slice(0, 10)} ${((percent ?? 0) * 100).toFixed(0)}%` : ''} labelLine={false}>
-                    {pieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <ChartCard title="Cost by Model" height={200} empty={pieData.length === 0}>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+                label={({ name, percent }: { name?: string; percent?: number }) =>
+                  (percent ?? 0) > 0.05 ? `${(name ?? '').slice(0, 10)} ${((percent ?? 0) * 100).toFixed(0)}%` : ''
+                }
+                labelLine={false}
+              >
+                {pieData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Requests by Model</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {models.length === 0 ? (
-              <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">No data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={models.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="model" tick={{ fontSize: 9 }} width={90} />
-                  <Tooltip formatter={(v: unknown) => [Number(v).toLocaleString(), 'Requests']} />
-                  <Bar dataKey="request_count" name="Requests" radius={[0, 4, 4, 0]}>
-                    {models.slice(0, 8).map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <ChartCard title="Requests by Model" height={200} empty={models.length === 0}>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={models.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
+              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} />
+              <YAxis type="category" dataKey="model" tick={{ fontSize: 9, fill: CHART_THEME.axis.fill }} tickLine={false} width={90} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [Number(v).toLocaleString(), 'Requests']} />
+              <Bar dataKey="request_count" name="Requests" radius={[0, 4, 4, 0]}>
+                {models.slice(0, 8).map((_, i) => (
+                  <Cell key={i} fill={SERIES_PIE_COLORS[i % SERIES_PIE_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
       {totalCost > 0 && (
@@ -515,6 +430,18 @@ type EfficiencyTrendPoint = {
   [agent: string]: number | string
 }
 
+const efficiencyColumns = [
+  {
+    key: 'agent_type',
+    label: 'Agent',
+    format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
+  },
+  { key: 'cache_rate', label: 'Cache Rate', align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(1)}%` },
+  { key: 'token_efficiency', label: 'Token Eff.', align: 'right' as const, format: (v: unknown) => Number(v).toFixed(2) },
+  { key: 'avg_duration_s', label: 'Avg Speed', align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(2)}s` },
+  { key: 'score', label: 'Score', align: 'right' as const, format: (v: unknown) => <span className="font-semibold">{String(v)}</span> },
+]
+
 const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
   const [agentRows, setAgentRows] = useState<EfficiencyAgentRow[]>([])
   const [trend, setTrend] = useState<EfficiencyTrendPoint[]>([])
@@ -525,7 +452,6 @@ const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
     fetch(`/api/efficiency?${qs}`)
       .then(r => r.json())
       .then(({ data, comparison }: { data: EfficiencyRow[]; comparison: { current: EfficiencyComparisonRow[]; previous: EfficiencyComparisonRow[] } }) => {
-        // Trend points
         const trendMap: Record<string, EfficiencyTrendPoint> = {}
         for (const row of data) {
           if (!trendMap[row.date]) trendMap[row.date] = { date: row.date }
@@ -541,7 +467,6 @@ const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
         }
         setTrend(Object.values(trendMap).sort((a, b) => String(a.date).localeCompare(String(b.date))))
 
-        // Per-agent comparison
         const rows = comparison.current.map(cur => {
           const eff = calculateEfficiency({
             cacheReadTokens: cur.total_cache_read,
@@ -564,7 +489,6 @@ const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
         })
         setAgentRows(rows)
 
-        // Overall
         const allCur = comparison.current
         const totalCacheRead = allCur.reduce((s, r) => s + r.total_cache_read, 0)
         const totalInput = allCur.reduce((s, r) => s + r.total_input, 0)
@@ -590,72 +514,28 @@ const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
         <KpiCard label="Efficiency Score" value={overall ? `${overall.score}` : '-'} sub="composite score (0-100)" />
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Efficiency Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {trend.length === 0 ? (
-            <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">No data</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                {AGENT_TYPES.map(id => (
-                  <Line key={id} type="monotone" dataKey={id} stroke={AGENTS[id].hex} dot={false} name={AGENTS[id].name} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      <ChartCard title="Efficiency Trend" height={180} empty={trend.length === 0}>
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart data={trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid {...CHART_THEME.grid} />
+            <XAxis dataKey="date" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={d => d.slice(5)} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} />
+            <Legend {...CHART_THEME.legend} />
+            {AGENT_TYPES.map(id => (
+              <Line key={id} type="monotone" dataKey={id} stroke={AGENT_CHART_COLORS[id]} dot={false} name={AGENTS[id].name} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Efficiency by Agent</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Agent</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Cache Rate</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Token Eff.</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Avg Speed</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agentRows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No data</td>
-                </tr>
-              ) : (
-                agentRows.map(row => (
-                  <tr key={row.agent_type} className="border-b hover:bg-muted/20">
-                    <td className="px-4 py-2">
-                      <span
-                        className="rounded px-1.5 py-0.5 text-[10px] font-medium text-white"
-                        style={{ backgroundColor: getAgentColor(row.agent_type) }}
-                      >
-                        {row.agent_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right">{row.cache_rate.toFixed(1)}%</td>
-                    <td className="px-4 py-2 text-right">{row.token_efficiency.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-right">{row.avg_duration_s.toFixed(2)}s</td>
-                    <td className="px-4 py-2 text-right font-semibold">{row.score}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+      <ChartCard title="Efficiency by Agent">
+        <DataTable
+          columns={efficiencyColumns}
+          data={agentRows as unknown as Record<string, unknown>[]}
+          emptyMessage="No efficiency data"
+        />
+      </ChartCard>
     </div>
   )
 }
@@ -722,6 +602,8 @@ const ImpactTab = ({ dateRange: _dateRange }: ImpactTabProps) => {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">Loading...</div>
+      ) : configData.length === 0 ? (
+        <EmptyState title="No config changes" description="Config history will appear here after changes are detected." />
       ) : (
         <ConfigTimeline data={configData} />
       )}
@@ -738,16 +620,14 @@ export default function UsagePage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Filter bar */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b bg-background/95 backdrop-blur-sm shrink-0">
+      <FilterBar>
         <AgentFilter value={agentType} onChange={setAgentType} />
         <ProjectFilter value={project} onChange={setProject} />
         <div className="ml-auto">
           <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
-      </div>
+      </FilterBar>
 
-      {/* Tab content */}
       <div className="flex-1 overflow-auto px-6 py-4">
         <Tabs defaultValue="cost" className="h-full">
           <TabsList className="mb-4">

@@ -5,6 +5,7 @@ import { AGENTS } from '@/lib/agents'
 import type { AgentType } from '@/lib/agents'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { AgentDot } from '@/components/ui/agent-dot'
 
 type AgentStatus = {
   agent_type: string
@@ -141,7 +142,7 @@ export const BottomBar = () => {
               <span
                 className={`inline-block h-2 w-2 rounded-full ${getStatusDot(status?.last_received ?? null)}`}
               />
-              <span style={{ color: config.hex }}>{config.name}</span>
+              <span style={{ color: `var(--agent-${type})` }}>{config.name}</span>
               {status ? (
                 <span>{formatRelativeTime(status.last_received)}</span>
               ) : (
@@ -155,15 +156,12 @@ export const BottomBar = () => {
       {activeSessions.length > 0 && (
         <div className="ml-4 flex items-center gap-1.5">
           <div className="h-3 w-px bg-border" />
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
+          <AgentDot agent={activeSessions[0].agent_type as AgentType} size="sm" pulse />
           {activeSessions.slice(0, 3).map((s) => {
             const config = AGENTS[s.agent_type as AgentType]
             return (
               <div key={s.session_id} className="flex items-center gap-1 ml-1">
-                <span className="font-medium" style={{ color: config?.hex ?? '#8b5cf6' }}>
+                <span className="font-medium" style={{ color: `var(--agent-${s.agent_type})` }}>
                   {config?.name ?? s.agent_type}
                 </span>
                 {s.model && (
@@ -187,7 +185,7 @@ export const BottomBar = () => {
             return (
               <Tooltip key={bar.type}>
                 <TooltipTrigger className="flex items-center gap-1.5">
-                  <span style={{ color: config.hex }} className="text-[10px] font-medium">
+                  <span style={{ color: `var(--agent-${bar.type})` }} className="text-[10px] font-medium">
                     {config.name}
                   </span>
                   <div className="relative h-2 w-16 rounded-full bg-muted overflow-hidden">
@@ -198,7 +196,7 @@ export const BottomBar = () => {
                       )}
                       style={{
                         width: `${bar.pct}%`,
-                        ...(!bar.exceeded ? { backgroundColor: config.hex } : {}),
+                        ...(!bar.exceeded ? { backgroundColor: `var(--agent-${bar.type})` } : {}),
                       }}
                     />
                   </div>
