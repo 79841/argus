@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AgentFilter } from '@/components/agent-filter'
 import { ProjectFilter } from '@/components/project-filter'
 import { DateRangePicker } from '@/components/date-range-picker'
@@ -11,6 +12,7 @@ import { AgentBadge } from '@/components/ui/agent-badge'
 import { FilterBar } from '@/components/filter-bar'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SessionModelCostChart } from '@/components/session-model-cost-chart'
+import { TraceWaterfall } from '@/components/trace-waterfall'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
@@ -444,16 +446,31 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
 
       {/* Event Timeline */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
-        {promptGroups.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">{t('sessions.detail.noEvents')}</div>
-        ) : (
-          <div className="space-y-2">
-            {promptGroups.map((group, idx) => (
-              <PromptGroupCard key={group.promptId} group={group} index={idx} />
-            ))}
+        <Tabs defaultValue="list">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
+            <TabsList>
+              <TabsTrigger value="list">List</TabsTrigger>
+              <TabsTrigger value="waterfall">Waterfall</TabsTrigger>
+            </TabsList>
           </div>
-        )}
+
+          <TabsContent value="list">
+            {promptGroups.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">{t('sessions.detail.noEvents')}</div>
+            ) : (
+              <div className="space-y-2">
+                {promptGroups.map((group, idx) => (
+                  <PromptGroupCard key={group.promptId} group={group} index={idx} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="waterfall">
+            <TraceWaterfall events={events} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
