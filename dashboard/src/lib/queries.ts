@@ -1,4 +1,5 @@
 import { getDb } from './db'
+import type { SuggestionInput } from './suggestions'
 
 /**
  * Query functions for Argus dashboard.
@@ -1095,4 +1096,150 @@ export const getBudgetStatus = async (dbOverride?: import('better-sqlite3').Data
       daily_usage_pct: dailyLimit > 0 ? (dailySpent / dailyLimit) * 100 : 0,
     }
   })
+}
+
+const EXPENSIVE_MODEL_PATTERNS = ['opus', 'o3', 'gpt-5']
+
+const isExpensiveModel = (model: string): boolean =>
+  EXPENSIVE_MODEL_PATTERNS.some(p => model.toLowerCase().includes(p))
+
+export const getSuggestionMetrics = async (
+  days: number,
+  dbOverride?: import('better-sqlite3').Database
+): Promise<SuggestionInput> => {
+  const db = dbOverride ?? getDb()
+
+  const cacheRow = db.prepare(`
+    SELECT
+      COALESCE(sum(cache_read_tokens), 0) as total_cache_read,
+      COALESCE(sum(input_tokens), 0) as total_input
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+  `).get(days) as { total_cache_read: number; total_input: number } | undefined
+
+  const totalCacheRead = cacheRow?.total_cache_read ?? 0
+  const totalInput = cacheRow?.total_input ?? 0
+  const overallCacheRate = (totalInput + totalCacheRead) > 0
+    ? totalCacheRead / (totalInput + totalCacheRead)
+    : 0
+
+  const sessionCostRows = db.prepare(`
+    SELECT
+      session_id,
+      COALESCE(sum(cost_usd), 0) as session_cost
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND session_id != ''
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY session_id
+  `).all(days) as Array<{ session_id: string; session_cost: number }>
+
+  const avgCostPerSession = sessionCostRows.length > 0
+    ? sessionCostRows.reduce((s, r) => s + r.session_cost, 0) / sessionCostRows.length
+    : 0
+
+  const modelRows = db.prepare(`
+    SELECT
+      model,
+      count(*) as cnt
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND model != ''
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY model
+  `).all(days) as Array<{ model: string; cnt: number }>
+
+  const totalRequests = modelRows.reduce((s, r) => s + r.cnt, 0)
+  const expensiveCount = modelRows
+    .filter(r => isExpensiveModel(r.model))
+    .reduce((s, r) => s + r.cnt, 0)
+  const expensiveModelRatio = totalRequests > 0 ? expensiveCount / totalRequests : 0
+
+  const toolRow = db.prepare(`
+    SELECT
+      count(*) as total,
+      COALESCE(sum(CASE WHEN tool_success = 0 THEN 1 ELSE 0 END), 0) as fail_count
+    FROM agent_logs
+    WHERE event_name = 'tool_result'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+  `).get(days) as { total: number; fail_count: number } | undefined
+
+  const toolFailRate = (toolRow?.total ?? 0) > 0
+    ? (toolRow?.fail_count ?? 0) / toolRow!.total
+    : 0
+
+  const topFailingToolRows = db.prepare(`
+    SELECT
+      tool_name,
+      count(*) as total,
+      COALESCE(sum(CASE WHEN tool_success = 0 THEN 1 ELSE 0 END), 0) as fail_count
+    FROM agent_logs
+    WHERE event_name = 'tool_result'
+      AND tool_name != ''
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY tool_name
+    HAVING total >= 3
+    ORDER BY (CAST(fail_count AS REAL) / total) DESC
+    LIMIT 5
+  `).all(days) as Array<{ tool_name: string; total: number; fail_count: number }>
+
+  const topFailingTools = topFailingToolRows.map(r => ({
+    name: r.tool_name,
+    failRate: r.total > 0 ? r.fail_count / r.total : 0,
+  }))
+
+  const dailyCostRow = db.prepare(`
+    SELECT COALESCE(sum(cost_usd), 0) as daily_cost
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND date(timestamp) = date('now')
+  `).get() as { daily_cost: number } | undefined
+
+  const totalDailyCost = dailyCostRow?.daily_cost ?? 0
+
+  const modelBreakdownRows = db.prepare(`
+    SELECT
+      model,
+      COALESCE(sum(cost_usd), 0) as cost
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      AND model != ''
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY model
+    ORDER BY cost DESC
+    LIMIT 10
+  `).all(days) as Array<{ model: string; cost: number }>
+
+  const totalCost = modelBreakdownRows.reduce((s, r) => s + r.cost, 0)
+  const modelUsageBreakdown = modelBreakdownRows.map(r => ({
+    model: r.model,
+    cost: r.cost,
+    ratio: totalCost > 0 ? r.cost / totalCost : 0,
+  }))
+
+  const avgDurationRow = db.prepare(`
+    SELECT COALESCE(avg(session_duration), 0) as avg_ms
+    FROM (
+      SELECT
+        session_id,
+        CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as session_duration
+      FROM agent_logs
+      WHERE ${API_REQUEST_FILTER}
+        AND session_id != ''
+        AND timestamp >= datetime('now', '-' || ? || ' days')
+      GROUP BY session_id
+    )
+  `).get(days) as { avg_ms: number } | undefined
+
+  return {
+    overallCacheRate,
+    avgCostPerSession,
+    expensiveModelRatio,
+    toolFailRate,
+    avgSessionDurationMs: avgDurationRow?.avg_ms ?? 0,
+    totalDailyCost,
+    topFailingTools,
+    modelUsageBreakdown,
+  }
 }

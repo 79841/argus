@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { AlertTriangle, AlertCircle, Info, CheckCircle2 } from 'lucide-react'
 import { dataClient } from '@/lib/data-client'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { AgentType } from '@/lib/agents'
 import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/queries'
+import type { Suggestion } from '@/lib/suggestions'
 
 const DATE_OPTIONS = [
   { value: '7', label: '7d' },
@@ -25,8 +27,28 @@ const CAUSE_LABELS: Record<string, { label: string; color: string }> = {
   no_cache: { label: 'No Cache', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
 }
 
+const SEVERITY_CONFIG = {
+  critical: {
+    border: 'border-l-red-500',
+    icon: AlertCircle,
+    iconColor: 'text-red-500',
+    badge: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+  },
+  warning: {
+    border: 'border-l-orange-500',
+    icon: AlertTriangle,
+    iconColor: 'text-orange-500',
+    badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+  },
+  info: {
+    border: 'border-l-blue-500',
+    icon: Info,
+    iconColor: 'text-blue-500',
+    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+  },
+} as const
+
 const formatCost = (v: number) => `$${v.toFixed(3)}`
-const formatTokens = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v)
 const formatDuration = (ms: number) => {
   if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
   if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
@@ -42,10 +64,59 @@ type InsightsData = {
   budgetStatus: BudgetStatus[]
 }
 
+type SuggestionsData = {
+  suggestions: Suggestion[]
+}
+
+type SuggestionCardProps = {
+  suggestion: Suggestion
+}
+
+const SuggestionCard = ({ suggestion }: SuggestionCardProps) => {
+  const cfg = SEVERITY_CONFIG[suggestion.severity]
+  const Icon = cfg.icon
+  return (
+    <div
+      className={cn(
+        'flex gap-3 rounded-md border border-l-4 bg-card p-4',
+        cfg.border
+      )}
+    >
+      <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', cfg.iconColor)} />
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">{suggestion.title}</span>
+          <Badge className={cn('text-[10px] px-1.5 py-0 capitalize', cfg.badge)}>
+            {suggestion.severity}
+          </Badge>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
+            {suggestion.category}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+        <div className="flex flex-wrap gap-4 pt-1 text-xs text-muted-foreground">
+          <span>
+            현재: <span className="font-medium text-foreground">{suggestion.metric}</span>
+          </span>
+          <span>
+            목표: <span className="font-medium text-foreground">{suggestion.target}</span>
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">개선 방법: </span>
+          {suggestion.action}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function InsightsPage() {
   const [days, setDays] = useState('7')
   const [data, setData] = useState<InsightsData | null>(null)
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true)
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -57,9 +128,20 @@ export default function InsightsPage() {
       .catch(() => setLoading(false))
   }, [days])
 
+  const fetchSuggestions = useCallback(() => {
+    setSuggestionsLoading(true)
+    dataClient.query('suggestions', { days: Number(days) })
+      .then((res) => {
+        setSuggestions((res as SuggestionsData).suggestions ?? [])
+        setSuggestionsLoading(false)
+      })
+      .catch(() => setSuggestionsLoading(false))
+  }, [days])
+
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+    fetchSuggestions()
+  }, [fetchData, fetchSuggestions])
 
   const totalHighCost = data?.highCostSessions.reduce((s, r) => s + r.total_cost, 0) ?? 0
   const avgSessionCost = data?.highCostSessions.length
@@ -171,6 +253,29 @@ export default function InsightsPage() {
         </div>
       </div>
 
+      {/* Suggestions */}
+      <ChartCard title="Suggestions">
+        {suggestionsLoading ? (
+          <div className="flex h-[120px] items-center justify-center text-muted-foreground text-sm">
+            Loading...
+          </div>
+        ) : suggestions.length === 0 ? (
+          <div className="flex items-center gap-3 rounded-md border border-l-4 border-l-green-500 bg-card p-4">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
+            <div>
+              <p className="text-sm font-semibold">모든 지표가 양호합니다</p>
+              <p className="text-xs text-muted-foreground">현재 사용 패턴에서 개선이 필요한 항목이 없습니다.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {suggestions.map((s) => (
+              <SuggestionCard key={s.id} suggestion={s} />
+            ))}
+          </div>
+        )}
+      </ChartCard>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-3 gap-3">
         <KpiCard
@@ -195,7 +300,7 @@ export default function InsightsPage() {
         <ChartCard title="Daily Budget">
           <div className="grid grid-cols-3 gap-4 p-2">
             {data.budgetStatus.map((b) => {
-              const pct = Math.min(b.daily_usage_pct, 100)
+              const usagePct = Math.min(b.daily_usage_pct, 100)
               const exceeded = b.daily_usage_pct > 100
               return (
                 <div key={b.agent_type} className="space-y-2">
@@ -213,7 +318,7 @@ export default function InsightsPage() {
                           exceeded ? 'bg-red-500' : 'bg-primary'
                         )}
                         style={{
-                          width: `${pct}%`,
+                          width: `${usagePct}%`,
                           ...(!exceeded ? { backgroundColor: `var(--agent-${b.agent_type})` } : {}),
                         }}
                       />
