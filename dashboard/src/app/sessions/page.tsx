@@ -10,6 +10,7 @@ import { AgentDot } from '@/components/ui/agent-dot'
 import { AgentBadge } from '@/components/ui/agent-badge'
 import { FilterBar } from '@/components/filter-bar'
 import { EmptyState } from '@/components/ui/empty-state'
+import { SessionModelCostChart } from '@/components/session-model-cost-chart'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
@@ -437,6 +438,9 @@ const SessionDetail = ({ session, events }: SessionDetailProps) => {
           <div className="font-semibold tabular-nums">{summary.requestCount} / {summary.toolCallCount}</div>
         </div>
       </div>
+
+      {/* Model Cost Breakdown */}
+      <SessionModelCostChart events={events} />
 
       {/* Event Timeline */}
       <div>
