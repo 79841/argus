@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -20,6 +21,7 @@ type TokenChartProps = {
   data: DailyStats[]
   agentType: string
   configChanges?: ConfigChangeMarker[]
+  showCache?: boolean
 }
 
 const AGENT_KEYS = ['codex', 'claude', 'gemini'] as const
@@ -36,7 +38,9 @@ const formatTokens = (value: unknown) => {
   return String(num)
 }
 
-export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartProps) => {
+export const TokenChart = ({ data, agentType, configChanges = [], showCache: showCacheDefault = false }: TokenChartProps) => {
+  const [showCache, setShowCache] = useState(showCacheDefault)
+
   if (agentType === 'all') {
     const grouped = data.reduce<Record<string, Record<string, number>>>((acc, row) => {
       if (!acc[row.date]) {
@@ -57,8 +61,15 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
 
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Daily Tokens</CardTitle>
+          <button
+            type="button"
+            onClick={() => setShowCache((prev) => !prev)}
+            className="text-xs px-2 py-1 rounded-md border border-border bg-background hover:bg-accent transition-colors"
+          >
+            {showCache ? 'Hide Cache' : 'Show Cache'}
+          </button>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
@@ -82,7 +93,7 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                     label={{ value: '\u2699', position: 'top', fontSize: 14 }}
                   />
                 ))}
-                {AGENT_KEYS.map((key) => (
+                {showCache && AGENT_KEYS.map((key) => (
                   <Bar
                     key={`${key}_cache`}
                     dataKey={`${key}_cache`}
@@ -136,8 +147,15 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Daily Tokens</CardTitle>
+        <button
+          type="button"
+          onClick={() => setShowCache((prev) => !prev)}
+          className="text-xs px-2 py-1 rounded-md border border-border bg-background hover:bg-accent transition-colors"
+        >
+          {showCache ? 'Hide Cache' : 'Show Cache'}
+        </button>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
@@ -161,14 +179,16 @@ export const TokenChart = ({ data, agentType, configChanges = [] }: TokenChartPr
                   label={{ value: '\u2699', position: 'top', fontSize: 14 }}
                 />
               ))}
-              <Bar
-                dataKey="cache_read_tokens"
-                name="Cache Read"
-                fill={color}
-                stackId="cache"
-                barSize={8}
-                opacity={0.3}
-              />
+              {showCache && (
+                <Bar
+                  dataKey="cache_read_tokens"
+                  name="Cache Read"
+                  fill={color}
+                  stackId="cache"
+                  barSize={8}
+                  opacity={0.3}
+                />
+              )}
               <Bar
                 dataKey="input_tokens"
                 name="Input Tokens"
