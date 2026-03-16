@@ -28,11 +28,8 @@ const formatDate = (iso: string) => {
 }
 
 const COLORS = [
-  'oklch(0.55 0.17 300)',
-  'oklch(0.62 0.17 300)',
-  'oklch(0.48 0.17 300)',
-  'oklch(0.70 0.17 300)',
-  'oklch(0.42 0.17 300)',
+  '#8b5cf6', '#f97316', '#10b981', '#3b82f6', '#ef4444',
+  '#eab308', '#ec4899', '#14b8a6', '#6366f1', '#f59e0b',
 ]
 
 export default function ProjectsPage() {
