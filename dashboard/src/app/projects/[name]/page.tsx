@@ -21,6 +21,7 @@ import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { AgentBadge } from '@/components/ui/agent-badge'
+import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { ProjectDetailStats, ProjectDailyCost } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
@@ -56,6 +57,7 @@ type ProjectData = {
 export default function ProjectDetailPage() {
   const params = useParams()
   const projectName = decodeURIComponent(params.name as string)
+  const { t } = useLocale()
 
   const [data, setData] = useState<ProjectData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,18 +93,18 @@ export default function ProjectDetailPage() {
   const recentSessionsColumns = [
     {
       key: 'agent_type',
-      label: 'Agent',
+      label: t('insights.col.agent'),
       format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
     },
     {
       key: 'cost',
-      label: 'Cost',
+      label: t('projects.detail.kpi.totalCost'),
       align: 'right' as const,
       format: (v: unknown) => formatCost(Number(v)),
     },
     {
       key: 'sessions',
-      label: 'Sessions',
+      label: t('projects.detail.kpi.sessions'),
       align: 'right' as const,
       format: (v: unknown) => Number(v).toLocaleString(),
     },
@@ -122,7 +124,7 @@ export default function ProjectDetailPage() {
           className="mt-1 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="size-4" />
-          Projects
+          {t('projects.title')}
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{projectName}</h1>
@@ -133,32 +135,32 @@ export default function ProjectDetailPage() {
       {/* KPI 카드 6개 */}
       <div className="grid grid-cols-3 gap-3 xl:grid-cols-6">
         <KpiCard
-          label="Total Cost"
+          label={t('projects.detail.kpi.totalCost')}
           value={loading ? '—' : formatCost(stats?.total_cost ?? 0)}
           loading={loading}
         />
         <KpiCard
-          label="Sessions"
+          label={t('projects.detail.kpi.sessions')}
           value={loading ? '—' : (stats?.total_sessions ?? 0).toLocaleString()}
           loading={loading}
         />
         <KpiCard
-          label="Requests"
+          label={t('projects.detail.kpi.requests')}
           value={loading ? '—' : (stats?.total_requests ?? 0).toLocaleString()}
           loading={loading}
         />
         <KpiCard
-          label="Input Tokens"
+          label={t('projects.detail.kpi.inputTokens')}
           value={loading ? '—' : formatTokens(stats?.total_input_tokens ?? 0)}
           loading={loading}
         />
         <KpiCard
-          label="Output Tokens"
+          label={t('projects.detail.kpi.outputTokens')}
           value={loading ? '—' : formatTokens(stats?.total_output_tokens ?? 0)}
           loading={loading}
         />
         <KpiCard
-          label="Cache Hit Rate"
+          label={t('projects.detail.kpi.cacheHitRate')}
           value={loading ? '—' : formatPct(stats?.cache_hit_rate ?? 0)}
           loading={loading}
         />
@@ -167,11 +169,11 @@ export default function ProjectDetailPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* 에이전트별 비용 분포 PieChart */}
         <ChartCard
-          title="에이전트별 비용 분포"
+          title={t('projects.detail.chart.agentDist')}
           height={260}
           loading={loading}
           empty={!loading && pieData.length === 0}
-          emptyMessage="데이터 없음"
+          emptyMessage={t('projects.detail.noData')}
         >
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
@@ -211,11 +213,11 @@ export default function ProjectDetailPage() {
 
         {/* 일별 비용 추이 AreaChart */}
         <ChartCard
-          title="일별 비용 추이"
+          title={t('projects.detail.chart.dailyCost')}
           height={260}
           loading={loading}
           empty={!loading && areaData.length === 0}
-          emptyMessage="데이터 없음"
+          emptyMessage={t('projects.detail.noData')}
         >
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={areaData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -253,10 +255,10 @@ export default function ProjectDetailPage() {
 
       {/* 에이전트별 상세 테이블 */}
       <ChartCard
-        title="에이전트별 현황"
+        title={t('projects.detail.chart.agentStatus')}
         loading={loading}
         empty={!loading && (stats?.agent_breakdown ?? []).length === 0}
-        emptyMessage="데이터 없음"
+        emptyMessage={t('projects.detail.noData')}
       >
         <DataTable
           columns={recentSessionsColumns}

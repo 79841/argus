@@ -16,6 +16,7 @@ import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { CHART_THEME } from '@/lib/chart-theme'
+import { useLocale } from '@/lib/i18n'
 import type { ProjectComparisonRow } from '@/lib/queries'
 
 const formatCost = (v: number) => `$${v.toFixed(3)}`
@@ -37,6 +38,7 @@ const COLORS = [
 
 export default function ProjectsPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [projects, setProjects] = useState<ProjectComparisonRow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -63,26 +65,26 @@ export default function ProjectsPage() {
   const columns = [
     {
       key: 'project_name',
-      label: 'Project',
+      label: t('projects.col.project'),
       format: (v: unknown) => (
         <span className="font-medium">{String(v)}</span>
       ),
     },
     {
       key: 'session_count',
-      label: 'Sessions',
+      label: t('projects.col.sessions'),
       align: 'right' as const,
       format: (v: unknown) => Number(v).toLocaleString(),
     },
     {
       key: 'request_count',
-      label: 'Requests',
+      label: t('projects.col.requests'),
       align: 'right' as const,
       format: (v: unknown) => Number(v).toLocaleString(),
     },
     {
       key: 'total_cost',
-      label: 'Total Cost',
+      label: t('projects.col.cost'),
       align: 'right' as const,
       format: (v: unknown) => (
         <span className="font-semibold tabular-nums">{formatCost(Number(v))}</span>
@@ -90,7 +92,7 @@ export default function ProjectsPage() {
     },
     {
       key: 'top_model',
-      label: 'Top Model',
+      label: t('projects.col.topModel'),
       format: (v: unknown) => (
         <span className="font-mono text-xs text-muted-foreground">
           {String(v || '—').replace(/^claude-/, '').replace(/^models\//, '').replace(/-\d{8}$/, '')}
@@ -99,7 +101,7 @@ export default function ProjectsPage() {
     },
     {
       key: 'last_activity',
-      label: 'Last Active',
+      label: t('projects.col.lastActive'),
       align: 'right' as const,
       format: (v: unknown) => formatDate(String(v)),
     },
@@ -114,39 +116,39 @@ export default function ProjectsPage() {
   return (
     <div className="flex flex-col gap-4 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('projects.title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          프로젝트별 비용 및 사용 현황
+          {t('projects.subtitle')}
         </p>
       </div>
 
       {/* KPI 카드 */}
       <div className="grid grid-cols-3 gap-3">
         <KpiCard
-          label="Total Projects"
+          label={t('projects.kpi.totalProjects')}
           value={loading ? '—' : projects.length.toLocaleString()}
           loading={loading}
         />
         <KpiCard
-          label="Total Cost"
+          label={t('projects.kpi.totalCost')}
           value={loading ? '—' : formatCost(totalCost)}
           loading={loading}
         />
         <KpiCard
-          label="Most Active"
+          label={t('projects.kpi.mostActive')}
           value={loading ? '—' : (mostActive?.project_name ?? '—')}
-          sub={mostActive ? `${mostActive.session_count.toLocaleString()} sessions` : undefined}
+          sub={mostActive ? `${mostActive.session_count.toLocaleString()} ${t('projects.sessions')}` : undefined}
           loading={loading}
         />
       </div>
 
       {/* 프로젝트별 비용 비교 바 차트 */}
       <ChartCard
-        title="프로젝트별 비용 비교 (Top 15)"
+        title={t('projects.chart.costComparison')}
         height={320}
         loading={loading}
         empty={!loading && projects.length === 0}
-        emptyMessage="프로젝트 데이터가 없습니다"
+        emptyMessage={t('projects.chart.noData')}
       >
         <ResponsiveContainer width="100%" height={320}>
           <BarChart
@@ -191,10 +193,10 @@ export default function ProjectsPage() {
 
       {/* 프로젝트 목록 테이블 */}
       <ChartCard
-        title="프로젝트 목록"
+        title={t('projects.table.title')}
         loading={loading}
         empty={!loading && projects.length === 0}
-        emptyMessage="프로젝트 데이터가 없습니다"
+        emptyMessage={t('projects.chart.noData')}
       >
         <div
           className="cursor-pointer"
