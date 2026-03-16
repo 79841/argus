@@ -55,7 +55,7 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
   }
 
   // projects/{name} 패턴 처리
-  if (name.startsWith('projects/') && name !== 'projects/comparison') {
+  if (name.startsWith('projects/')) {
     const projectName = decodeURIComponent(name.slice('projects/'.length))
     const [stats, daily] = await Promise.all([
       getProjectDetailStats(projectName),
@@ -155,6 +155,10 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
     }
 
     case 'projects': {
+      const view = str(params?.view)
+      if (view === 'comparison') {
+        return getProjectComparison()
+      }
       const agentType = str(params?.agent_type, 'all')
       const from = params?.from ? str(params.from) : undefined
       const to = params?.to ? str(params.to) : undefined
@@ -163,9 +167,6 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
       }
       return getProjects()
     }
-
-    case 'projects/comparison':
-      return getProjectComparison()
 
     case 'insights': {
       const days = num(params?.days, 7)

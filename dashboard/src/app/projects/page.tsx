@@ -42,7 +42,7 @@ export default function ProjectsPage() {
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    dataClient.query('projects/comparison')
+    dataClient.query('projects', { view: 'comparison' })
       .then((res) => {
         setProjects(res as ProjectComparisonRow[])
         setLoading(false)
