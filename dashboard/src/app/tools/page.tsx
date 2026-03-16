@@ -190,15 +190,38 @@ const CategoryTreemapContent = (props: {
     )
   }
 
+  // 셀 크기에 비례해 폰트 크기 조정 (최소 9, 최대 13)
+  const nameFontSize = Math.min(13, Math.max(9, Math.floor(width / 10)))
+  const subFontSize = Math.min(11, Math.max(8, nameFontSize - 2))
+
+  // 폰트 크기 기준 한 줄에 표시 가능한 글자 수 (영문 기준 약 0.6배)
+  const charsPerPx = 0.6 / nameFontSize
+  const maxChars = Math.floor(width * charsPerPx * (width - 8))
+  const displayName = name.length > maxChars && maxChars > 3
+    ? name.slice(0, maxChars - 1) + '…'
+    : name
+
+  // 크기가 충분할 때만 수치 표시
+  const showSub = height >= 50 && width >= 60
+
   return (
     <g>
       <rect x={x} y={y} width={width} height={height} fill={fill} stroke="var(--background)" strokeWidth={2} rx={4} />
-      <text x={x + width / 2} y={y + height / 2 - 8} textAnchor="middle" fill="#fff" fontSize={13} fontWeight={600}>
-        {name}
+      <text
+        x={x + width / 2}
+        y={showSub ? y + height / 2 - 6 : y + height / 2 + nameFontSize / 3}
+        textAnchor="middle"
+        fill="#fff"
+        fontSize={nameFontSize}
+        fontWeight={600}
+      >
+        {displayName}
       </text>
-      <text x={x + width / 2} y={y + height / 2 + 10} textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize={11}>
-        {size.toLocaleString()} ({percent}%)
-      </text>
+      {showSub && (
+        <text x={x + width / 2} y={y + height / 2 + subFontSize + 2} textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize={subFontSize}>
+          {size.toLocaleString()} ({percent}%)
+        </text>
+      )}
     </g>
   )
 }
