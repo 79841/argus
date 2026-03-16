@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AlertTriangle, AlertCircle, Info, CheckCircle2 } from 'lucide-react'
 import { dataClient } from '@/lib/data-client'
+import { useLocale } from '@/lib/i18n'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
@@ -15,9 +16,10 @@ import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/q
 import type { Suggestion } from '@/lib/suggestions'
 
 const DATE_OPTIONS = [
-  { value: '7', label: '7d' },
-  { value: '14', label: '14d' },
-  { value: '30', label: '30d' },
+  { value: '7', labelKey: 'insights.date.7' },
+  { value: '14', labelKey: 'insights.date.14' },
+  { value: '30', labelKey: 'insights.date.30' },
+  { value: '90', labelKey: 'insights.date.90' },
 ]
 
 const CAUSE_LABELS: Record<string, { label: string; color: string }> = {
@@ -112,6 +114,7 @@ const SuggestionCard = ({ suggestion }: SuggestionCardProps) => {
 }
 
 export default function InsightsPage() {
+  const { t } = useLocale()
   const [days, setDays] = useState('7')
   const [data, setData] = useState<InsightsData | null>(null)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -247,7 +250,7 @@ export default function InsightsPage() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
