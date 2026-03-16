@@ -16,8 +16,6 @@ Argus collects OpenTelemetry (OTLP) telemetry from AI coding agents and visualiz
 
 ## Prerequisites
 
-- **Node.js** 20+
-- **pnpm** (install: `npm install -g pnpm`)
 - At least one supported AI coding agent:
   - [Claude Code](https://code.claude.com)
   - [Codex CLI](https://github.com/openai/codex)
@@ -25,39 +23,36 @@ Argus collects OpenTelemetry (OTLP) telemetry from AI coding agents and visualiz
 
 ---
 
-## Dashboard Installation
+## Installation
 
-### 1. Clone and install
+### Desktop App (Recommended)
+
+Download the latest installer from [Releases](https://github.com/79841/argus/releases):
+
+| Platform | File | Instructions |
+|----------|------|-------------|
+| **macOS** (Apple Silicon) | `Argus-x.x.x-arm64.dmg` | Open DMG → drag Argus to Applications → launch |
+| **Windows** | `Argus Setup x.x.x.exe` | Run the installer → launch from Start Menu |
+
+After launching, Argus runs as a **tray-resident app** and automatically starts an OTLP receiver on `http://localhost:3000`. The SQLite database is created automatically — no manual setup needed.
+
+### From Source (Contributors)
+
+Requires **Node.js 20+** and **pnpm**.
 
 ```bash
 git clone https://github.com/79841/argus.git
 cd argus/dashboard
 pnpm install
+pnpm dev              # Web mode: http://localhost:3000
+pnpm electron:dev     # Desktop mode with Electron
 ```
-
-### 2. Start the dashboard
-
-**Web mode** (Next.js dev server on port 3000):
-
-```bash
-pnpm dev
-```
-
-**Desktop mode** (Electron app with tray icon):
-
-```bash
-pnpm electron:dev
-```
-
-### 3. Environment variables (optional)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ARGUS_DB_PATH` | `../argus.db` | Path to the SQLite database file |
 
-The database is created automatically on first launch. No manual migration is needed.
-
-### 4. OTLP receive endpoints
+### OTLP receive endpoints
 
 Argus exposes two endpoints for telemetry ingestion:
 

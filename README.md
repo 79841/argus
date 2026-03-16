@@ -24,20 +24,27 @@
 
 > Screenshots will be added soon. Run `pnpm dev` to see the dashboard in action.
 
-## Quick Start
+## Installation
+
+Download the latest installer for your platform from [Releases](https://github.com/79841/argus/releases):
+
+| Platform | File | Note |
+|----------|------|------|
+| **macOS** (Apple Silicon) | `Argus-x.x.x-arm64.dmg` | Open DMG → drag to Applications |
+| **Windows** | `Argus Setup x.x.x.exe` | Run installer (NSIS) |
+
+After installing, launch Argus. It runs as a tray-resident app and automatically starts an OTLP receiver on `http://localhost:3000`.
+
+### Development Mode
+
+For contributors who want to run from source:
 
 ```bash
 git clone https://github.com/79841/argus.git
 cd argus/dashboard
 pnpm install
-pnpm dev
-# Open http://localhost:3000
-```
-
-To seed test data for development:
-
-```bash
-curl -X POST http://localhost:3000/api/seed
+pnpm dev              # Web mode: http://localhost:3000
+pnpm electron:dev     # Desktop mode with Electron
 ```
 
 ## Agent Setup
