@@ -252,7 +252,7 @@ export default function SessionsPage() {
   const totalCost = sessions.reduce((s, r) => s + r.cost, 0)
 
   return (
-    <div className="-mx-6 -my-6 flex h-[calc(100vh-2rem)] flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {/* Filter Bar */}
       <FilterBar>
         <AgentFilter value={agentType} onChange={setAgentType} />

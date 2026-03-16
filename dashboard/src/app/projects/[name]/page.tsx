@@ -16,6 +16,7 @@ import {
   Legend,
 } from 'recharts'
 import { ChevronLeft } from 'lucide-react'
+import { FilterBar } from '@/components/filter-bar'
 import { dataClient } from '@/lib/data-client'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
@@ -115,22 +116,23 @@ export default function ProjectDetailPage() {
       : '—'
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      {/* 헤더 */}
-      <div className="flex items-start gap-4">
+    <div className="flex h-full flex-col">
+      <FilterBar>
         <Link
           href="/projects"
-          className="mt-1 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="size-4" />
           {t('projects.title')}
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{projectName}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{activityPeriod}</p>
-        </div>
-      </div>
+        <span className="text-sm font-semibold">{projectName}</span>
+        {activityPeriod !== '—' && (
+          <span className="text-xs text-muted-foreground">{activityPeriod}</span>
+        )}
+      </FilterBar>
 
+      <div className="flex-1 overflow-auto px-4 py-4">
+      <div className="flex flex-col gap-4">
       {/* KPI 카드 6개 */}
       <div className="grid grid-cols-3 gap-3 xl:grid-cols-6">
         <KpiCard
@@ -264,6 +266,8 @@ export default function ProjectDetailPage() {
           data={(stats?.agent_breakdown ?? []) as unknown as Record<string, unknown>[]}
         />
       </ChartCard>
+      </div>
+      </div>
     </div>
   )
 }

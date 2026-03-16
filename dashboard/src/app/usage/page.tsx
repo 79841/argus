@@ -621,7 +621,7 @@ export default function UsagePage() {
         </div>
       </FilterBar>
 
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-auto px-4 py-4">
         <Tabs defaultValue="cost" className="h-full">
           <TabsList className="mb-4">
             <TabsTrigger value="cost">Cost</TabsTrigger>
