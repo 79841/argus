@@ -11,8 +11,7 @@ import { KpiCard } from '@/components/ui/kpi-card'
 import { AgentDot } from '@/components/ui/agent-dot'
 import { EmptyState } from '@/components/ui/empty-state'
 import { UsageHeatmap } from '@/components/usage-heatmap'
-
-const formatCost = (v: number) => `$${v.toFixed(2)}`
+import { formatCost } from '@/lib/format'
 
 const formatRelativeTime = (iso: string): string => {
   const diff = Date.now() - new Date(iso).getTime()

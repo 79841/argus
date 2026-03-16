@@ -17,8 +17,8 @@ import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { ProjectComparisonRow } from '@/lib/queries'
+import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 
-const formatCost = (v: number) => `$${v.toFixed(3)}`
 const formatDate = (iso: string) => {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('ko-KR', {
@@ -85,7 +85,7 @@ export default function ProjectsPage() {
       label: 'Total Cost',
       align: 'right' as const,
       format: (v: unknown) => (
-        <span className="font-semibold tabular-nums">{formatCost(Number(v))}</span>
+        <span className="font-semibold tabular-nums">{formatCostDetail(Number(v))}</span>
       ),
     },
     {
@@ -156,7 +156,7 @@ export default function ProjectsPage() {
           >
             <XAxis
               type="number"
-              tickFormatter={(v) => `$${Number(v).toFixed(2)}`}
+              tickFormatter={(v) => formatCost(Number(v))}
               {...CHART_THEME.axis}
             />
             <YAxis
@@ -166,7 +166,7 @@ export default function ProjectsPage() {
               {...CHART_THEME.axis}
             />
             <Tooltip
-              formatter={(value) => [formatCost(Number(value)), 'Cost']}
+              formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
               labelFormatter={(_label, payload) => {
                 if (payload?.[0]) {
                   return (payload[0].payload as { fullName: string }).fullName

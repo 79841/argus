@@ -24,8 +24,7 @@ import { AgentBadge } from '@/components/ui/agent-badge'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { ProjectDetailStats, ProjectDailyCost } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
-
-const formatCost = (v: number) => `$${v.toFixed(4)}`
+import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 const formatTokens = (v: number) =>
   v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v)
 const formatPct = (v: number) => `${(v * 100).toFixed(1)}%`
@@ -98,7 +97,7 @@ export default function ProjectDetailPage() {
       key: 'cost',
       label: 'Cost',
       align: 'right' as const,
-      format: (v: unknown) => formatCost(Number(v)),
+      format: (v: unknown) => formatCostDetail(Number(v)),
     },
     {
       key: 'sessions',
@@ -196,7 +195,7 @@ export default function ProjectDetailPage() {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => [formatCost(Number(value)), 'Cost']}
+                formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
                 contentStyle={CHART_THEME.tooltip.containerStyle}
                 labelStyle={CHART_THEME.tooltip.labelStyle}
                 itemStyle={CHART_THEME.tooltip.itemStyle}
@@ -230,11 +229,11 @@ export default function ProjectDetailPage() {
                 {...CHART_THEME.axis}
               />
               <YAxis
-                tickFormatter={(v) => `$${Number(v).toFixed(2)}`}
+                tickFormatter={(v) => formatCost(Number(v))}
                 {...CHART_THEME.axis}
               />
               <Tooltip
-                formatter={(value) => [formatCost(Number(value)), 'Cost']}
+                formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
                 contentStyle={CHART_THEME.tooltip.containerStyle}
                 labelStyle={CHART_THEME.tooltip.labelStyle}
                 itemStyle={CHART_THEME.tooltip.itemStyle}

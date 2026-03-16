@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import type { AgentType } from '@/lib/agents'
 import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/queries'
 import type { Suggestion } from '@/lib/suggestions'
+import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 
 const DATE_OPTIONS = [
   { value: '7', label: '7d' },
@@ -48,7 +49,6 @@ const SEVERITY_CONFIG = {
   },
 } as const
 
-const formatCost = (v: number) => `$${v.toFixed(3)}`
 const formatDuration = (ms: number) => {
   if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
   if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
@@ -176,7 +176,7 @@ export default function InsightsPage() {
       key: 'total_cost',
       label: 'Cost',
       align: 'right' as const,
-      format: (v: unknown) => <span className="font-semibold">{formatCost(Number(v))}</span>,
+      format: (v: unknown) => <span className="font-semibold">{formatCostDetail(Number(v))}</span>,
     },
     {
       key: 'request_count',
@@ -220,9 +220,9 @@ export default function InsightsPage() {
       format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
     },
     { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
-    { key: 'total_cost', label: 'Total Cost', align: 'right' as const, format: (v: unknown) => formatCost(Number(v)) },
-    { key: 'avg_cost_per_request', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCost(Number(v)) },
-    { key: 'cost_per_1k_tokens', label: '$/1K tok', align: 'right' as const, format: (v: unknown) => `$${Number(v).toFixed(4)}` },
+    { key: 'total_cost', label: 'Total Cost', align: 'right' as const, format: (v: unknown) => formatCostDetail(Number(v)) },
+    { key: 'avg_cost_per_request', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCostDetail(Number(v)) },
+    { key: 'cost_per_1k_tokens', label: '$/1K tok', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
     { key: 'avg_duration_ms', label: 'Avg Speed', align: 'right' as const, format: (v: unknown) => formatDuration(Number(v)) },
   ]
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAgentColor } from '@/lib/agents'
 import { cn } from '@/lib/utils'
 import { dataClient } from '@/lib/data-client'
+import { formatCostChart } from '@/lib/format'
 
 type ConfigTimelineProps = {
   data: ConfigChange[]
@@ -27,7 +28,6 @@ const DiffLine = ({ line }: { line: string }) => {
 }
 
 const formatPercent = (value: number): string => `${(value * 100).toFixed(1)}%`
-const formatCost = (value: number): string => `$${value.toFixed(4)}`
 
 const ChangeIndicator = ({ before, after, format }: { before: number; after: number; format: (v: number) => string }) => {
   if (before === 0 && after === 0) return <span className="text-muted-foreground">-</span>
@@ -63,7 +63,7 @@ const ComparePanel = ({ date }: { date: string }) => {
   if (!data) return null
 
   const metrics = [
-    { label: 'Avg Cost / req', before: data.before.avg_cost, after: data.after.avg_cost, format: formatCost },
+    { label: 'Avg Cost / req', before: data.before.avg_cost, after: data.after.avg_cost, format: formatCostChart },
     { label: 'Cache Rate', before: data.before.cache_rate, after: data.after.cache_rate, format: formatPercent },
     { label: 'Tool Fail Rate', before: data.before.tool_fail_rate, after: data.after.tool_fail_rate, format: formatPercent },
   ]
