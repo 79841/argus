@@ -184,6 +184,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'insights.suggestions.allGood': '모든 지표가 양호합니다',
     'insights.suggestions.allGood.desc': '현재 사용 패턴에서 개선이 필요한 항목이 없습니다.',
     'insights.suggestions.loading': '로딩 중...',
+    'insights.suggestions.current': '현재',
+    'insights.suggestions.targetLabel': '목표',
+    'insights.suggestions.actionLabel': '개선 방법',
+    'suggestions.lowCacheRate.title': '캐시 히트율 개선 필요',
+    'suggestions.lowCacheRate.desc': '캐시 히트율이 {rate}로 낮습니다. CLAUDE.md에 컨텍스트 힌트를 추가하면 캐시 재사용률을 높일 수 있습니다.',
+    'suggestions.lowCacheRate.target': '50% 이상',
+    'suggestions.lowCacheRate.action': 'CLAUDE.md에 자주 쓰이는 컨텍스트(프로젝트 구조, 코딩 규칙 등)를 추가하세요.',
+    'suggestions.highToolFail.title': '도구 실패율이 높습니다',
+    'suggestions.highToolFail.desc': '도구 실패율이 {rate}입니다. 도구 설정 및 권한을 확인하세요.',
+    'suggestions.highToolFail.target': '15% 미만',
+    'suggestions.highToolFail.action': '실패율이 높은 도구의 권한과 경로 설정을 검토하세요.',
+    'suggestions.expensiveModel.title': '고가 모델 사용 비율이 높습니다',
+    'suggestions.expensiveModel.desc': '고가 모델(opus 계열) 사용 비율이 {ratio}입니다. 단순 작업에는 sonnet을 사용하면 비용을 절감할 수 있습니다.',
+    'suggestions.expensiveModel.target': '70% 미만',
+    'suggestions.expensiveModel.action': '반복적이거나 단순한 작업은 claude-sonnet 모델을 사용하도록 설정하세요.',
+    'suggestions.highSessionCost.title': '세션 평균 비용이 높습니다',
+    'suggestions.highSessionCost.desc': '세션당 평균 비용이 {cost}입니다. 프롬프트를 구체적으로 작성하면 불필요한 왕복 요청을 줄일 수 있습니다.',
+    'suggestions.highSessionCost.target': '$2.00 미만',
+    'suggestions.highSessionCost.action': '프롬프트를 명확하고 구체적으로 작성해 불필요한 추가 요청을 줄이세요.',
+    'suggestions.highDailyCost.title': '일일 비용이 높습니다',
+    'suggestions.highDailyCost.desc': '오늘 총 비용이 {cost}입니다. 예산 한도를 설정하는 것을 권장합니다.',
+    'suggestions.highDailyCost.target': '$10.00 미만',
+    'suggestions.highDailyCost.action': 'Settings 페이지에서 에이전트별 일일 예산 한도를 설정하세요.',
+    'suggestions.toolFail.title': '{name} 도구 실패율이 높습니다',
+    'suggestions.toolFail.desc': '{name} 실패율이 {rate}입니다. 권한 및 경로 설정을 확인하세요.',
+    'suggestions.toolFail.target': '30% 미만',
+    'suggestions.toolFail.action': '{name} 도구의 실행 권한, 경로, 환경 설정을 점검하세요.',
     'insights.kpi.top10Total': 'TOP 10 합계',
     'insights.kpi.avgSessionCost': '평균 세션 비용',
     'insights.kpi.topCause': '주요 원인',
@@ -389,6 +416,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'insights.suggestions.allGood': 'All metrics look good',
     'insights.suggestions.allGood.desc': 'No improvements needed for the current usage pattern.',
     'insights.suggestions.loading': 'Loading...',
+    'insights.suggestions.current': 'Current',
+    'insights.suggestions.targetLabel': 'Target',
+    'insights.suggestions.actionLabel': 'How to improve',
+    'suggestions.lowCacheRate.title': 'Low cache hit rate',
+    'suggestions.lowCacheRate.desc': 'Cache hit rate is {rate}. Adding context hints to CLAUDE.md can improve cache reuse.',
+    'suggestions.lowCacheRate.target': 'Above 50%',
+    'suggestions.lowCacheRate.action': 'Add frequently used context (project structure, coding rules, etc.) to CLAUDE.md.',
+    'suggestions.highToolFail.title': 'High tool failure rate',
+    'suggestions.highToolFail.desc': 'Tool failure rate is {rate}. Check tool settings and permissions.',
+    'suggestions.highToolFail.target': 'Below 15%',
+    'suggestions.highToolFail.action': 'Review permissions and path settings for tools with high failure rates.',
+    'suggestions.expensiveModel.title': 'High expensive model usage',
+    'suggestions.expensiveModel.desc': 'Expensive model (opus) usage ratio is {ratio}. Using sonnet for simple tasks can reduce costs.',
+    'suggestions.expensiveModel.target': 'Below 70%',
+    'suggestions.expensiveModel.action': 'Configure claude-sonnet for repetitive or simple tasks.',
+    'suggestions.highSessionCost.title': 'High average session cost',
+    'suggestions.highSessionCost.desc': 'Average cost per session is {cost}. Writing specific prompts can reduce unnecessary round-trips.',
+    'suggestions.highSessionCost.target': 'Below $2.00',
+    'suggestions.highSessionCost.action': 'Write clear, specific prompts to reduce unnecessary extra requests.',
+    'suggestions.highDailyCost.title': 'High daily cost',
+    'suggestions.highDailyCost.desc': 'Total cost today is {cost}. Consider setting a budget limit.',
+    'suggestions.highDailyCost.target': 'Below $10.00',
+    'suggestions.highDailyCost.action': 'Set daily budget limits per agent in the Settings page.',
+    'suggestions.toolFail.title': '{name} tool has high failure rate',
+    'suggestions.toolFail.desc': '{name} failure rate is {rate}. Check permissions and path settings.',
+    'suggestions.toolFail.target': 'Below 30%',
+    'suggestions.toolFail.action': 'Check execution permissions, paths, and environment settings for {name}.',
     'insights.kpi.top10Total': 'TOP 10 TOTAL',
     'insights.kpi.avgSessionCost': 'AVG SESSION COST',
     'insights.kpi.topCause': 'TOP CAUSE',
@@ -438,8 +492,14 @@ export const setLocale = (locale: Locale) => {
   }
 }
 
-export const t = (key: string, locale: Locale): string => {
-  return translations[locale]?.[key] ?? key
+export const t = (key: string, locale: Locale, params?: Record<string, string>): string => {
+  let result = translations[locale]?.[key] ?? key
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      result = result.replaceAll(`{${k}}`, v)
+    }
+  }
+  return result
 }
 
 export const useLocale = () => {
@@ -462,7 +522,7 @@ export const useLocale = () => {
   }, [])
 
   const translate = useCallback(
-    (key: string) => t(key, locale),
+    (key: string, params?: Record<string, string>) => t(key, locale, params),
     [locale]
   )
 

@@ -80,12 +80,13 @@ type SuggestionsData = {
 
 type SuggestionCardProps = {
   suggestion: Suggestion
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string>) => string
 }
 
 const SuggestionCard = ({ suggestion, t }: SuggestionCardProps) => {
   const cfg = SEVERITY_CONFIG[suggestion.severity]
   const Icon = cfg.icon
+  const p = suggestion.params
   return (
     <div
       className={cn(
@@ -96,7 +97,7 @@ const SuggestionCard = ({ suggestion, t }: SuggestionCardProps) => {
       <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', cfg.iconColor)} />
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold">{suggestion.title}</span>
+          <span className="text-sm font-semibold">{t(suggestion.titleKey, p)}</span>
           <Badge className={cn('text-[10px] px-1.5 py-0 capitalize', cfg.badge)}>
             {suggestion.severity}
           </Badge>
@@ -104,18 +105,18 @@ const SuggestionCard = ({ suggestion, t }: SuggestionCardProps) => {
             {suggestion.category}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+        <p className="text-sm text-muted-foreground">{t(suggestion.descriptionKey, p)}</p>
         <div className="flex flex-wrap gap-4 pt-1 text-xs text-muted-foreground">
           <span>
-            {t('insights.suggestion.current')}: <span className="font-medium text-foreground">{suggestion.metric}</span>
+            {t('insights.suggestions.current')}: <span className="font-medium text-foreground">{suggestion.metric}</span>
           </span>
           <span>
-            {t('insights.suggestion.target')}: <span className="font-medium text-foreground">{suggestion.target}</span>
+            {t('insights.suggestions.targetLabel')}: <span className="font-medium text-foreground">{t(suggestion.targetKey, p)}</span>
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{t('insights.suggestion.action')}: </span>
-          {suggestion.action}
+          <span className="font-medium text-foreground">{t('insights.suggestions.actionLabel')}: </span>
+          {t(suggestion.actionKey, p)}
         </p>
       </div>
     </div>

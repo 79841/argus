@@ -20,8 +20,8 @@ describe('generateSuggestions', () => {
     const cacheSuggestion = result.find(s => s.category === 'cache')
     expect(cacheSuggestion).toBeDefined()
     expect(cacheSuggestion?.id).toBe('low_cache_rate')
-    expect(cacheSuggestion?.title).toBeTruthy()
-    expect(cacheSuggestion?.description).toContain('30%')
+    expect(cacheSuggestion?.titleKey).toBe('suggestions.lowCacheRate.title')
+    expect(cacheSuggestion?.params.rate).toBe('30%')
   })
 
   it('도구 실패율 > 15% 이면 tools 제안을 생성한다', () => {
@@ -30,7 +30,7 @@ describe('generateSuggestions', () => {
     const toolsSuggestion = result.find(s => s.category === 'tools' && s.id === 'high_tool_fail_rate')
     expect(toolsSuggestion).toBeDefined()
     expect(toolsSuggestion?.severity).toBe('warning')
-    expect(toolsSuggestion?.description).toContain('20%')
+    expect(toolsSuggestion?.params.rate).toBe('20%')
   })
 
   it('고가 모델 비율 > 70% 이면 cost 제안을 생성한다', () => {
@@ -39,7 +39,7 @@ describe('generateSuggestions', () => {
     const costSuggestion = result.find(s => s.id === 'high_expensive_model_ratio')
     expect(costSuggestion).toBeDefined()
     expect(costSuggestion?.category).toBe('cost')
-    expect(costSuggestion?.description).toContain('80%')
+    expect(costSuggestion?.params.ratio).toBe('80%')
   })
 
   it('모든 지표가 양호하면 빈 배열을 반환한다', () => {
@@ -87,7 +87,7 @@ describe('generateSuggestions', () => {
     expect(dailyCostSuggestion?.severity).toBe('warning')
   })
 
-  it('특정 도구 실패율 > 30% 이면 해당 도구명이 제안에 포함된다', () => {
+  it('특정 도구 실패율 > 30% 이면 해당 도구명이 params에 포함된다', () => {
     const input: SuggestionInput = {
       ...BASE_INPUT,
       topFailingTools: [{ name: 'bash', failRate: 0.45 }],
@@ -95,7 +95,7 @@ describe('generateSuggestions', () => {
     const result = generateSuggestions(input)
     const toolSuggestion = result.find(s => s.id.startsWith('tool_fail_'))
     expect(toolSuggestion).toBeDefined()
-    expect(toolSuggestion?.description).toContain('bash')
+    expect(toolSuggestion?.params.name).toBe('bash')
   })
 
   it('각 제안이 필수 필드를 모두 갖는다', () => {
@@ -109,11 +109,11 @@ describe('generateSuggestions', () => {
       expect(s.id).toBeTruthy()
       expect(['info', 'warning', 'critical']).toContain(s.severity)
       expect(['cost', 'cache', 'tools', 'performance']).toContain(s.category)
-      expect(s.title).toBeTruthy()
-      expect(s.description).toBeTruthy()
+      expect(s.titleKey).toBeTruthy()
+      expect(s.descriptionKey).toBeTruthy()
       expect(s.metric).toBeTruthy()
-      expect(s.target).toBeTruthy()
-      expect(s.action).toBeTruthy()
+      expect(s.targetKey).toBeTruthy()
+      expect(s.actionKey).toBeTruthy()
     }
   })
 })
