@@ -87,23 +87,29 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-2rem)] flex-col gap-4 p-4">
-        <div className="grid grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
-        <div className="flex-1 animate-pulse rounded-xl bg-muted" />
-        <div className="grid grid-cols-2 gap-4">
-          <div className="h-48 animate-pulse rounded-xl bg-muted" />
-          <div className="h-48 animate-pulse rounded-xl bg-muted" />
+      <div className="flex h-full flex-col">
+        <div className="flex-1 overflow-auto px-4 py-4">
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+              ))}
+            </div>
+            <div className="h-48 animate-pulse rounded-xl bg-muted" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-48 animate-pulse rounded-xl bg-muted" />
+              <div className="h-48 animate-pulse rounded-xl bg-muted" />
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto p-4">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-auto px-4 py-4">
+      <div className="flex flex-col gap-4">
       {/* KPI 카드 4개 */}
       <div className="grid grid-cols-4 gap-3">
         <KpiCard
@@ -222,6 +228,8 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+      </div>
       </div>
     </div>
   )

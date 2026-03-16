@@ -111,14 +111,9 @@ export default function ProjectsPage() {
   }))
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('projects.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('projects.subtitle')}
-        </p>
-      </div>
-
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-auto px-4 py-4">
+      <div className="flex flex-col gap-4">
       {/* KPI 카드 */}
       <div className="grid grid-cols-3 gap-3">
         <KpiCard
@@ -214,6 +209,8 @@ export default function ProjectsPage() {
           />
         </div>
       </ChartCard>
+      </div>
+      </div>
     </div>
   )
 }

@@ -37,7 +37,7 @@ export const NavLayout = ({ children }: { children: React.ReactNode }) => {
           collapsed ? 'ml-14' : 'ml-48'
         )}
       >
-        <main className="flex-1 overflow-auto px-6 py-6">
+        <main className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </main>
         <BottomBar />

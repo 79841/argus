@@ -443,12 +443,7 @@ export default function ToolsPage() {
   }, [fetchData])
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tools</h1>
-        <p className="text-muted-foreground text-sm mt-1">{t('tools.subtitle')}</p>
-      </div>
-
+    <div className="flex h-full flex-col">
       <FilterBar>
         <AgentFilter value={agentType} onChange={setAgentType} />
         <div className="flex items-center gap-1 rounded-md border bg-background p-1">
@@ -468,78 +463,82 @@ export default function ToolsPage() {
         </div>
       </FilterBar>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard
-          label={t('tools.kpi.totalCalls')}
-          value={kpi ? formatNumber(kpi.total_calls) : '—'}
-          loading={loading}
-        />
-        <KpiCard
-          label={t('tools.kpi.successRate')}
-          value={kpi ? formatPercent(kpi.success_rate) : '—'}
-          loading={loading}
-        />
-        <KpiCard
-          label={t('tools.kpi.avgDuration')}
-          value={kpi ? formatDuration(kpi.avg_duration_ms) : '—'}
-          loading={loading}
-        />
-        <KpiCard
-          label={t('tools.kpi.uniqueTools')}
-          value={kpi ? formatNumber(kpi.unique_tools) : '—'}
-          loading={loading}
-        />
+      <div className="flex-1 overflow-auto px-4 py-4">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <KpiCard
+              label={t('tools.kpi.totalCalls')}
+              value={kpi ? formatNumber(kpi.total_calls) : '—'}
+              loading={loading}
+            />
+            <KpiCard
+              label={t('tools.kpi.successRate')}
+              value={kpi ? formatPercent(kpi.success_rate) : '—'}
+              loading={loading}
+            />
+            <KpiCard
+              label={t('tools.kpi.avgDuration')}
+              value={kpi ? formatDuration(kpi.avg_duration_ms) : '—'}
+              loading={loading}
+            />
+            <KpiCard
+              label={t('tools.kpi.uniqueTools')}
+              value={kpi ? formatNumber(kpi.unique_tools) : '—'}
+              loading={loading}
+            />
+          </div>
+
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="mt-4">
+              {loading ? (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
+                  Loading...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <TopToolsChart data={topTools} />
+                  <CategoryTreemap data={tools} />
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="details" className="mt-4 space-y-4">
+              {loading ? (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
+                  Loading...
+                </div>
+              ) : tools.length === 0 ? (
+                <EmptyState title={t('tools.empty') ?? 'No tool data'} />
+              ) : (
+                <>
+                  <ToolDetailTable data={tools} />
+                  <IndividualToolTable data={individual} />
+                  <RegisteredToolsCard />
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="trends" className="mt-4 space-y-4">
+              {loading ? (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <DailyTrendChart data={daily} />
+                  <FailRateTrendChart data={daily} />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-4">
-          {loading ? (
-            <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-              Loading...
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <TopToolsChart data={topTools} />
-              <CategoryTreemap data={tools} />
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="details" className="mt-4 space-y-4">
-          {loading ? (
-            <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-              Loading...
-            </div>
-          ) : tools.length === 0 ? (
-            <EmptyState title={t('tools.empty') ?? 'No tool data'} />
-          ) : (
-            <>
-              <ToolDetailTable data={tools} />
-              <IndividualToolTable data={individual} />
-              <RegisteredToolsCard />
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="trends" className="mt-4 space-y-4">
-          {loading ? (
-            <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-              Loading...
-            </div>
-          ) : (
-            <>
-              <DailyTrendChart data={daily} />
-              <FailRateTrendChart data={daily} />
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

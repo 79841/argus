@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { AgentBadge } from '@/components/ui/agent-badge'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { FilterBar } from '@/components/filter-bar'
 import type { AgentType } from '@/lib/agents'
 import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/queries'
 import type { Suggestion } from '@/lib/suggestions'
@@ -242,14 +243,8 @@ export default function InsightsPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('insights.title')}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t('insights.subtitle')}
-          </p>
-        </div>
+    <div className="flex h-full flex-col">
+      <FilterBar>
         <div className="flex items-center gap-1 rounded-md border bg-background p-1">
           {DATE_OPTIONS.map((opt) => (
             <button
@@ -266,7 +261,10 @@ export default function InsightsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </FilterBar>
+
+      <div className="flex-1 overflow-auto px-4 py-4">
+      <div className="flex flex-col gap-4">
 
       {/* Suggestions */}
       <ChartCard title={t('insights.suggestions')}>
@@ -373,6 +371,8 @@ export default function InsightsPage() {
           />
         )}
       </ChartCard>
+      </div>
+      </div>
     </div>
   )
 }
