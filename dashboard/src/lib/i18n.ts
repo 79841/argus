@@ -112,6 +112,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.detail.promptNum': '프롬프트 #',
     'sessions.detail.toolCalls': '도구 호출',
 
+    // Insights page
+    'insights.date.7': '7일',
+    'insights.date.14': '14일',
+    'insights.date.30': '30일',
+    'insights.date.90': '90일',
+
     // Tools page
     'tools.subtitle': '도구 사용 패턴 분석',
     'tools.date.7': '7일',
@@ -245,6 +251,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.detail.noProject': 'No project',
     'sessions.detail.promptNum': 'Prompt #',
     'sessions.detail.toolCalls': 'tool calls',
+
+    // Insights page
+    'insights.date.7': '7 days',
+    'insights.date.14': '14 days',
+    'insights.date.30': '30 days',
+    'insights.date.90': '90 days',
 
     // Tools page
     'tools.subtitle': 'Tool usage pattern analysis',
