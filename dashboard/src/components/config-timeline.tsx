@@ -71,15 +71,12 @@ const ComparePanel = ({ date }: { date: string }) => {
   return (
     <div className="mt-3 rounded-lg border bg-muted/30 p-3">
       <div className="mb-2 text-xs font-semibold text-muted-foreground">Before vs After (7 days)</div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         {metrics.map((m) => (
-          <div key={m.label} className="space-y-1">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{m.label}</div>
-            <div className="flex justify-between items-baseline gap-2">
-              <div className="text-xs text-muted-foreground">
-                <span className="font-mono">{m.format(m.before)}</span>
-              </div>
-              <span className="text-muted-foreground text-[10px]">{'>'}</span>
+          <div key={m.label} className="min-w-0 space-y-1.5">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">{m.label}</div>
+            <div className="flex flex-col gap-0.5">
+              <div className="font-mono text-xs text-muted-foreground">{m.format(m.before)}</div>
               <ChangeIndicator before={m.before} after={m.after} format={m.format} />
             </div>
           </div>
