@@ -20,14 +20,13 @@ import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
+import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 
 const formatTokens = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
   return String(value)
 }
-
-const formatCost = (value: number): string => `$${value.toFixed(4)}`
 
 const formatDuration = (ms: number): string => {
   if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
@@ -160,7 +159,7 @@ const PromptGroupCard = ({ group, index, t }: PromptGroupCardProps) => {
           </span>
         )}
         <span className="ml-auto shrink-0 text-xs font-medium tabular-nums">
-          {formatCost(group.cost)}
+          {formatCostDetail(group.cost)}
         </span>
         <span className="text-muted-foreground">{expanded ? '▴' : '▾'}</span>
       </button>
@@ -186,7 +185,7 @@ const PromptGroupCard = ({ group, index, t }: PromptGroupCardProps) => {
                           cache: {formatTokens(ev.cache_read_tokens)}
                         </span>
                       )}
-                      <span className="font-medium">{formatCost(ev.cost_usd)}</span>
+                      <span className="font-medium">{formatCostChart(ev.cost_usd)}</span>
                     </>
                   )}
                   {ev.duration_ms > 0 && <span>{formatDuration(ev.duration_ms)}</span>}
@@ -227,7 +226,7 @@ const PromptCostChart = ({ data, title }: CostChartProps) => {
             axisLine={CHART_THEME.axis.axisLine}
           />
           <YAxis
-            tickFormatter={(v: number) => `$${v.toFixed(3)}`}
+            tickFormatter={(v: number) => formatCostDetail(v)}
             tick={{ ...CHART_THEME.axis, fontSize: 10 }}
             tickLine={false}
             axisLine={CHART_THEME.axis.axisLine}
@@ -237,7 +236,7 @@ const PromptCostChart = ({ data, title }: CostChartProps) => {
             contentStyle={CHART_THEME.tooltip.containerStyle}
             labelStyle={CHART_THEME.tooltip.labelStyle}
             itemStyle={CHART_THEME.tooltip.itemStyle}
-            formatter={(value) => [`$${Number(value).toFixed(4)}`, 'Cost']}
+            formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
           />
           <Bar
             dataKey="cost"

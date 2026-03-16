@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AgentDot } from '@/components/ui/agent-dot'
 import { dataClient } from '@/lib/data-client'
+import { formatCost } from '@/lib/format'
 
 type AgentStatus = {
   agent_type: string
@@ -164,7 +165,7 @@ export const BottomBar = () => {
                 {s.model && (
                   <span className="text-muted-foreground">{formatModel(s.model)}</span>
                 )}
-                <span className="text-muted-foreground">${s.cost.toFixed(2)}</span>
+                <span className="text-muted-foreground">{formatCost(s.cost)}</span>
               </div>
             )
           })}
@@ -205,7 +206,7 @@ export const BottomBar = () => {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  {config.name}: ${bar.cost.toFixed(2)} / ${bar.limit.toFixed(2)} daily
+                  {config.name}: {formatCost(bar.cost)} / {formatCost(bar.limit)} daily
                   {bar.exceeded && ' (exceeded)'}
                 </TooltipContent>
               </Tooltip>
@@ -215,7 +216,7 @@ export const BottomBar = () => {
       )}
 
       <div className="ml-auto flex items-center gap-3">
-        <span>Total: ${totals.total_cost.toFixed(2)} / {formatTokensShort(totals.total_tokens)} tokens</span>
+        <span>Total: {formatCost(totals.total_cost)} / {formatTokensShort(totals.total_tokens)} tokens</span>
       </div>
     </footer>
   )

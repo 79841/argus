@@ -26,6 +26,7 @@ import type { DateRange } from '@/components/top-bar-context'
 import type { DailyStats, OverviewStats, ModelUsage, EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
 import type { ConfigChange } from '@/lib/config-tracker'
 import type { ReactNode } from 'react'
+import { formatCost, formatCostChart } from '@/lib/format'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {
@@ -119,8 +120,8 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
-        <KpiCard label="Total Cost" value={`$${totalCost.toFixed(2)}`} delta={delta} deltaInverted />
-        <KpiCard label="Daily Average" value={`$${avgCost.toFixed(2)}`} sub="per day" />
+        <KpiCard label="Total Cost" value={formatCost(totalCost)} delta={delta} deltaInverted />
+        <KpiCard label="Daily Average" value={formatCost(avgCost)} sub="per day" />
         <KpiCard label="Requests" value={(overview?.total_requests ?? 0).toLocaleString()} sub="API requests" />
       </div>
 
@@ -129,8 +130,8 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
           <AreaChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid {...CHART_THEME.grid} />
             <XAxis dataKey="date" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={d => d.slice(5)} />
-            <YAxis tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} width={55} />
-            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, '']} />
+            <YAxis tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} width={55} />
+            <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), '']} />
             <Legend {...CHART_THEME.legend} />
             <Area type="monotone" dataKey="claude" stackId="1" stroke={AGENT_CHART_COLORS.claude} fill={AGENT_CHART_COLORS.claude} fillOpacity={0.15} name="Claude" />
             <Area type="monotone" dataKey="codex" stackId="1" stroke={AGENT_CHART_COLORS.codex} fill={AGENT_CHART_COLORS.codex} fillOpacity={0.15} name="Codex" />
@@ -143,9 +144,9 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         <ChartCard title="Cost by Agent" height={160}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>
-              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} />
+              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} />
               <YAxis type="category" dataKey="agent" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
               <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                 {agentCosts.map((entry) => (
                   <Cell key={entry.agent} fill={AGENT_CHART_COLORS[entry.agentId]} />
@@ -158,9 +159,9 @@ const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         <ChartCard title="Cost by Project" height={160} empty={projectCosts.length === 0} emptyMessage="No project data">
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={projectCosts.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
-              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => `$${v.toFixed(2)}`} />
+              <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} />
               <YAxis type="category" dataKey="project" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
               <Bar dataKey="cost" fill={AGENT_CHART_COLORS.all} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -339,8 +340,8 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
       format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
     },
     { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
-    { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => `$${Number(v).toFixed(4)}` },
-    { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => `$${Number(v).toFixed(4)}` },
+    { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
+    { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
   ]
 
   return (
@@ -373,7 +374,7 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [`$${Number(v).toFixed(4)}`, 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -396,7 +397,7 @@ const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
 
       {totalCost > 0 && (
         <div className="text-xs text-muted-foreground text-right px-1">
-          Total: ${totalCost.toFixed(4)} across {models.length} model{models.length !== 1 ? 's' : ''}
+          Total: {formatCostChart(totalCost)} across {models.length} model{models.length !== 1 ? 's' : ''}
         </div>
       )}
     </div>

@@ -19,6 +19,7 @@ import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
+import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {
@@ -34,8 +35,6 @@ const formatTokens = (value: number): string => {
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
   return String(value)
 }
-
-const formatCost = (value: number): string => `$${value.toFixed(3)}`
 
 const formatDuration = (ms: number): string => {
   if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
@@ -526,7 +525,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
           ({group.events.length}{t('sessions.promptGroup.events')})
         </span>
         <span className="ml-auto shrink-0 text-xs font-medium tabular-nums">
-          {formatCost(group.cost)}
+          {formatCostDetail(group.cost)}
         </span>
         <span className="text-muted-foreground">{expanded ? '▴' : '▾'}</span>
       </button>
@@ -552,7 +551,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
                           cache: {formatTokens(ev.cache_read_tokens)}
                         </span>
                       )}
-                      <span className="font-medium">{formatCost(ev.cost_usd)}</span>
+                      <span className="font-medium">{formatCostChart(ev.cost_usd)}</span>
                     </>
                   )}
                   {ev.duration_ms > 0 && <span>{formatDuration(ev.duration_ms)}</span>}
