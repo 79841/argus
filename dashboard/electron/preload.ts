@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('db:query', name, params),
   mutate: (name: string, body?: unknown) =>
     ipcRenderer.invoke('db:mutate', name, body),
+  captureScreenshot: (savePath: string) =>
+    ipcRenderer.invoke('capture-screenshot', savePath),
 })

@@ -1,5 +1,6 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } from 'electron'
 import path from 'path'
+import fs from 'fs'
 import { spawn, type ChildProcess } from 'child_process'
 import net from 'net'
 import { registerIpcHandlers } from './ipc-handlers'
@@ -163,6 +164,14 @@ const createTray = (): void => {
     }
   })
 }
+
+ipcMain.handle('capture-screenshot', async (_event, savePath: string) => {
+  if (!mainWindow) throw new Error('No window')
+  const image = await mainWindow.webContents.capturePage()
+  const buffer = image.toPNG()
+  fs.writeFileSync(savePath, buffer)
+  return savePath
+})
 
 app.whenReady().then(async () => {
   registerIpcHandlers()
