@@ -20,6 +20,7 @@ import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
+import { FilterBar } from '@/components/filter-bar'
 import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 
 const formatTokens = (value: number): string => {
@@ -296,37 +297,45 @@ export default function SessionDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center text-sm text-muted-foreground">
-        {t('sessions.detail.loading')}
+      <div className="flex h-full flex-col">
+        <FilterBar>
+          <button type="button" onClick={() => router.push('/sessions')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            {t('sessions.detail.back')}
+          </button>
+        </FilterBar>
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          {t('sessions.detail.loading')}
+        </div>
       </div>
     )
   }
 
   if (!summary) {
     return (
-      <div className="space-y-4">
-        <button
-          type="button"
-          onClick={() => router.push('/sessions')}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          {t('sessions.detail.back')}
-        </button>
-        <EmptyState title={t('sessions.empty')} />
+      <div className="flex h-full flex-col">
+        <FilterBar>
+          <button type="button" onClick={() => router.push('/sessions')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            {t('sessions.detail.back')}
+          </button>
+        </FilterBar>
+        <div className="flex flex-1 items-center justify-center">
+          <EmptyState title={t('sessions.empty')} />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Back button */}
-      <button
-        type="button"
-        onClick={() => router.push('/sessions')}
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {t('sessions.detail.back')}
-      </button>
+    <div className="flex h-full flex-col">
+      <FilterBar>
+        <button type="button" onClick={() => router.push('/sessions')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          {t('sessions.detail.back')}
+        </button>
+        <span className="text-sm font-medium">{summary.project_name || t('sessions.detail.noProject')}</span>
+      </FilterBar>
+
+      <div className="flex-1 overflow-auto px-4 py-4">
+      <div className="flex flex-col gap-4">
 
       {/* Header */}
       <div className="flex flex-wrap items-start gap-3">
@@ -399,6 +408,8 @@ export default function SessionDetailPage() {
             ))}
           </div>
         )}
+      </div>
+      </div>
       </div>
     </div>
   )
