@@ -51,20 +51,20 @@ const AGENT_CSS_VARS: Record<Agent, string> = {
 }
 
 const getFileIcon = (filePath: string) => {
-  const name = filePath.split('/').pop() ?? ''
+  const name = filePath.split(/[/\\]/).pop() ?? ''
   if (name === '.mcp.json') return <Plug className="size-3.5 shrink-0 text-muted-foreground" />
   if (name.endsWith('.json') || name.endsWith('.toml'))
     return <Settings className="size-3.5 shrink-0 text-muted-foreground" />
-  if (filePath.includes('/agents/') || filePath.includes('/skills/'))
+  if (/[/\\]agents[/\\]/.test(filePath) || /[/\\]skills[/\\]/.test(filePath))
     return <FolderOpen className="size-3.5 shrink-0 text-muted-foreground" />
   return <FileText className="size-3.5 shrink-0 text-muted-foreground" />
 }
 
 const getFileName = (filePath: string): string => {
-  const parts = filePath.split('/')
+  const parts = filePath.split(/[/\\]/)
   const name = parts[parts.length - 1]
-  if (filePath.includes('/agents/')) return `agent: ${name.replace('.md', '')}`
-  if (filePath.includes('/skills/') && name === 'SKILL.md') {
+  if (/[/\\]agents[/\\]/.test(filePath)) return `agent: ${name.replace('.md', '')}`
+  if (/[/\\]skills[/\\]/.test(filePath) && name === 'SKILL.md') {
     const skillName = parts[parts.length - 2]
     return `skill: ${skillName}`
   }

@@ -15,7 +15,9 @@
     "electron:pack": "pnpm build && pnpm electron:build && electron-builder --dir",
     "electron:dist": "pnpm build && pnpm electron:build && electron-builder",
     "electron:dist:mac": "pnpm build && pnpm electron:build && electron-builder --mac",
-    "electron:dist:win": "pnpm build && pnpm electron:build && electron-builder --win"
+    "electron:dist:win": "pnpm build && pnpm electron:build && electron-builder --win",
+    "electron:rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
@@ -89,7 +91,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "src/app/favicon.ico"
     },
     "nsis": {
       "oneClick": false,

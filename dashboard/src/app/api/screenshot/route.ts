@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { execSync } from 'child_process'
+import os from 'os'
 import path from 'path'
 import fs from 'fs'
+
+const findChrome = (): string | null => {
+  const platform = process.platform
+  const candidates: string[] =
+    platform === 'darwin'
+      ? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']
+      : platform === 'win32'
+        ? [
+            path.join(process.env.PROGRAMFILES || 'C:\\Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          ]
+        : [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+          ]
+  return candidates.find((p) => p && fs.existsSync(p)) ?? null
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,18 +31,18 @@ export async function GET(request: NextRequest) {
     const width = sp.get('width') || '1280'
     const height = sp.get('height') || '800'
 
-    const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    if (!fs.existsSync(chromePath)) {
+    const chromePath = findChrome()
+    if (!chromePath) {
       return NextResponse.json({ error: 'Chrome not found' }, { status: 500 })
     }
 
     const timestamp = Date.now()
-    const screenshotPath = path.join('/tmp', `argus-screenshot-${timestamp}.png`)
+    const screenshotPath = path.join(os.tmpdir(), `argus-screenshot-${timestamp}.png`)
     const url = `http://localhost:3000${pagePath}`
 
     execSync(
-      `"${chromePath}" --headless=new --disable-gpu --window-size=${width},${height} --hide-scrollbars --screenshot="${screenshotPath}" "${url}" 2>/dev/null`,
-      { timeout: 15000 }
+      `"${chromePath}" --headless=new --disable-gpu --window-size=${width},${height} --hide-scrollbars --screenshot="${screenshotPath}" "${url}"`,
+      { timeout: 15000, stdio: 'ignore' }
     )
 
     if (!fs.existsSync(screenshotPath)) {

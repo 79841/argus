@@ -553,7 +553,7 @@ const ImpactTab = ({ dateRange: _dateRange }: ImpactTabProps) => {
       .then((data) => {
         const typedData = data as ConfigChange[]
         const isUserScope = (fp: string) =>
-          fp.startsWith('~') || fp.startsWith('/Users') || fp.startsWith('/home')
+          fp.startsWith('~') || fp.startsWith('/Users') || fp.startsWith('/home') || /^[A-Z]:\\Users\\/i.test(fp)
 
         const filtered = scope === 'all'
           ? typedData

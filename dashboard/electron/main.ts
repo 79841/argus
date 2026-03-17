@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import { spawn, type ChildProcess } from 'child_process'
+import { spawn, exec, type ChildProcess } from 'child_process'
 import net from 'net'
 import { registerIpcHandlers } from './ipc-handlers'
 
@@ -71,6 +71,7 @@ const startNextServer = async (): Promise<void> => {
     cwd,
     stdio: 'pipe',
     env: env as NodeJS.ProcessEnv,
+    shell: process.platform === 'win32',
   })
 
   nextProcess.stdout?.on('data', (data: Buffer) => {
@@ -89,6 +90,8 @@ const startNextServer = async (): Promise<void> => {
   })
 }
 
+const isMac = process.platform === 'darwin'
+
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -96,8 +99,9 @@ const createWindow = (): void => {
     minWidth: 900,
     minHeight: 600,
     title: 'Argus',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
+    ...(isMac
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 16, y: 16 } }
+      : { autoHideMenuBar: true }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -201,10 +205,17 @@ app.on('activate', () => {
   }
 })
 
+const killNextProcess = (): void => {
+  if (!nextProcess) return
+  if (process.platform === 'win32' && nextProcess.pid) {
+    exec(`taskkill /pid ${nextProcess.pid} /T /F`)
+  } else {
+    nextProcess.kill()
+  }
+  nextProcess = null
+}
+
 app.on('before-quit', () => {
   tray = null
-  if (nextProcess) {
-    nextProcess.kill()
-    nextProcess = null
-  }
+  killNextProcess()
 })

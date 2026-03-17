@@ -65,7 +65,7 @@ export const getConfigHistory = async (
 
       if (!logOutput) continue
 
-      const lines = logOutput.split('\n')
+      const lines = logOutput.split(/\r?\n/)
       for (const line of lines) {
         const [hash, date, ...msgParts] = line.split('|')
         const message = msgParts.join('|')

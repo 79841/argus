@@ -1,4 +1,5 @@
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 
 export type RegisteredToolType = 'agent' | 'skill' | 'mcp' | 'hook'
@@ -115,7 +116,7 @@ const scanHooks = (claudeDir: string, scope: RegisteredToolScope): RegisteredToo
 export const scanRegisteredTools = (): RegisteredTool[] => {
   const tools: RegisteredTool[] = []
   const cwd = process.cwd()
-  const home = process.env.HOME || process.env.USERPROFILE || ''
+  const home = os.homedir()
 
   // Project scope: .claude/agents, .claude/skills, .mcp.json, .claude/settings.json hooks
   const projectClaudeDir = path.join(cwd, '.claude')

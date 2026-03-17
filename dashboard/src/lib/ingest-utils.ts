@@ -193,7 +193,7 @@ export const extractProjectFromArgs = (attrs: KeyValue[] | undefined): string =>
   try {
     const parsed = JSON.parse(args) as { workdir?: string }
     if (parsed.workdir) {
-      const parts = parsed.workdir.split('/')
+      const parts = parsed.workdir.split(/[/\\]/)
       return parts[parts.length - 1] || ''
     }
   } catch { /* ignore */ }

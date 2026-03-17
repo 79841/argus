@@ -1,0 +1,17 @@
+# Auto-detect text files and normalise line endings
+* text=auto
+
+# Shell scripts must use LF
+*.sh text eol=lf
+
+# Node.js scripts
+*.mjs text eol=lf
+
+# Config files
+.editorconfig text eol=lf
+.gitattributes text eol=lf
+
+# Windows-specific
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
