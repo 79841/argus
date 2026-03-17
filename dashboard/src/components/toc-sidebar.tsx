@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { RefObject } from 'react'
 import type { Heading } from '@/components/markdown-viewer'
 
@@ -19,6 +19,29 @@ const INDENT_MAP: Record<number, string> = {
 export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
   const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const headingIdsRef = useRef<string[]>([])
+
+  const updateActiveFromScroll = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const ids = headingIdsRef.current
+    let activeIdx = 0
+
+    for (let i = ids.length - 1; i >= 0; i--) {
+      const el = document.getElementById(ids[i])
+      if (!el) continue
+      const containerRect = container.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const relativeTop = elRect.top - containerRect.top
+      if (relativeTop <= 24) {
+        activeIdx = i
+        break
+      }
+    }
+
+    setActiveId(ids[activeIdx] ?? '')
+  }, [containerRef])
 
   useEffect(() => {
     if (headings.length < 3) {
@@ -29,47 +52,21 @@ export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
     const container = containerRef.current
     if (!container) return
 
-    observerRef.current?.disconnect()
+    const ids = headings.map((h) => h.id).filter(Boolean)
+    headingIdsRef.current = ids
 
-    const headingElements = Array.from(
-      container.querySelectorAll<HTMLElement>('h1, h2, h3, h4')
-    )
+    updateActiveFromScroll()
 
-    const visibleHeadings = new Map<string, number>()
+    const handleScroll = () => {
+      requestAnimationFrame(updateActiveFromScroll)
+    }
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const id = (entry.target as HTMLElement).id
-          if (entry.isIntersecting) {
-            visibleHeadings.set(id, entry.boundingClientRect.top)
-          } else {
-            visibleHeadings.delete(id)
-          }
-        })
-
-        if (visibleHeadings.size === 0) return
-
-        const topmost = Array.from(visibleHeadings.entries()).sort(
-          (a, b) => a[1] - b[1]
-        )[0]
-        setActiveId(topmost[0])
-      },
-      {
-        root: container,
-        rootMargin: '0px 0px -80% 0px',
-        threshold: 0,
-      }
-    )
-
-    headingElements.forEach((el) => {
-      if (el.id) observerRef.current?.observe(el)
-    })
+    container.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
-      observerRef.current?.disconnect()
+      container.removeEventListener('scroll', handleScroll)
     }
-  }, [headings, containerRef])
+  }, [headings, containerRef, updateActiveFromScroll])
 
   if (headings.length < 3) return null
 
@@ -88,17 +85,25 @@ export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
     } else {
       element.scrollIntoView({ behavior: 'smooth' })
     }
+
+    setActiveId(id)
   }
+
+  const seenIds = new Map<string, number>()
 
   return (
     <nav className="overflow-y-auto py-2 px-3 border-l">
-      {headings.map((heading) => {
+      {headings.map((heading, idx) => {
         const isActive = activeId === heading.id
         const indent = INDENT_MAP[heading.level] ?? 'ml-0'
 
+        const count = seenIds.get(heading.id) ?? 0
+        seenIds.set(heading.id, count + 1)
+        const uniqueKey = count > 0 ? `${heading.id}-${count}` : (heading.id || `heading-${idx}`)
+
         return (
           <button
-            key={heading.id}
+            key={uniqueKey}
             onClick={() => handleClick(heading.id)}
             className={[
               'block w-full text-left text-xs py-1 leading-snug transition-colors',

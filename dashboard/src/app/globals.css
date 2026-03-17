@@ -232,8 +232,10 @@
 
 /* ─── highlight.js Dark Mode Override ───────────────────────────────────── */
 
+.hljs {
+  background: transparent !important;
+}
 .dark .hljs {
-  background: #0d1117;
   color: #e6edf3;
 }
 .dark .hljs-doctag,

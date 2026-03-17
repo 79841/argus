@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import remarkFrontmatter from 'remark-frontmatter'
 import { Copy, Check, FileText } from 'lucide-react'
 import type { Components } from 'react-markdown'
-import 'highlight.js/styles/github.min.css'
+import 'highlight.js/styles/tokyo-night-light.min.css'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -67,13 +67,16 @@ type MarkdownViewerProps = {
   onHeadingsChange?: (headings: Heading[]) => void
 }
 
-const slugify = (text: string): string =>
-  text
+let headingCounter = 0
+const slugify = (text: string): string => {
+  const slug = text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
+    .replace(/[^\w\s-\u3131-\u318E\uAC00-\uD7A3]/g, '')
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
+  return slug || `heading-${headingCounter++}`
+}
 
 const parseFrontmatter = (content: string): { frontmatter: FrontmatterData | null; body: string } => {
   const match = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/)
