@@ -1,6 +1,6 @@
 ---
-title: Dashboard Pages
-description: Visual overview of all dashboard pages
+title: "Dashboard Pages"
+description: "Visual overview of all dashboard pages"
 ---
 
 Argus has 8 main pages accessible from the sidebar navigation.
@@ -9,37 +9,37 @@ Argus has 8 main pages accessible from the sidebar navigation.
 
 The main dashboard showing today's summary.
 
-![Overview](/argus/screenshots/overview.png)
+![Overview](/screenshots/overview.png)
 
 ## Sessions
 
 Browse and analyze individual coding sessions with detailed event timelines.
 
-![Sessions](/argus/screenshots/sessions.png)
+![Sessions](/screenshots/sessions.png)
 
 ## Usage
 
 Cost, token, model, efficiency, and config impact analysis across 5 tabs.
 
-![Usage](/argus/screenshots/usage.png)
+![Usage](/screenshots/usage.png)
 
 ## Tools
 
 Tool usage statistics, category distribution, and daily trends.
 
-![Tools](/argus/screenshots/tools.png)
+![Tools](/screenshots/tools.png)
 
 ## Projects
 
 Project-level cost comparison and detailed breakdowns.
 
-![Projects](/argus/screenshots/projects.png)
+![Projects](/screenshots/projects.png)
 
 ## Insights
 
 AI-powered suggestions, high-cost session analysis, and budget tracking.
 
-![Insights](/argus/screenshots/insights.png)
+![Insights](/screenshots/insights.png)
 
 ## Rules
 

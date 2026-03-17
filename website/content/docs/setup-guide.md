@@ -1,6 +1,6 @@
 ---
-title: Argus Setup Guide
-description: Argus Setup Guide
+title: "Argus Setup Guide"
+description: "Configure AI coding agents to send telemetry to Argus"
 ---
 
 Argus collects OpenTelemetry (OTLP) telemetry from AI coding agents and visualizes usage in a local dashboard. This guide covers installation and per-agent configuration.

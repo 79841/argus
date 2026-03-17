@@ -1,6 +1,6 @@
 ---
-title: Argus API Reference
-description: Argus API Reference
+title: "Argus API Reference"
+description: "HTTP API endpoints for the Argus dashboard"
 ---
 
 Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints are unauthenticated and intended for local use only.
@@ -395,7 +395,7 @@ Returns detailed events for a specific session. Optionally includes a session su
     "project_name": "argus",
     "started_at": "2026-03-17T10:00:00.000Z"
   },
-  "events": [ ... ]
+  "events": []
 }
 ```
 
@@ -498,7 +498,7 @@ Returns per-agent efficiency metrics (daily breakdown + period comparison).
         "total_duration_ms": 800000
       }
     ],
-    "previous": [ ... ]
+    "previous": []
   }
 }
 ```
@@ -1186,6 +1186,7 @@ Binary PNG image with `Content-Type: image/png`.
 ```json
 { "error": "Chrome not found" }
 ```
+
 ```json
 { "error": "Screenshot capture failed" }
 ```

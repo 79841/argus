@@ -1,22 +1,14 @@
-name: Deploy Docs
+name: Deploy Website
 
 on:
   push:
     branches: [main]
     paths:
       - 'website/**'
-      - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  pull_request:
+    paths:
+      - 'website/**'
 
 jobs:
   build:
@@ -41,17 +33,3 @@ jobs:
       - name: Build
         working-directory: website
         run: pnpm build
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: website/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

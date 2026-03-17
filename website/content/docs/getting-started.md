@@ -1,6 +1,6 @@
 ---
-title: Getting Started
-description: Get Argus up and running in minutes
+title: "Getting Started"
+description: "Get Argus up and running in minutes"
 ---
 
 Argus is a local monitoring dashboard for AI coding agents. It receives OpenTelemetry (OTLP) telemetry from Claude Code, Codex CLI, and Gemini CLI, and visualizes usage in a unified dashboard.
@@ -26,6 +26,6 @@ Claude Code / Codex CLI / Gemini CLI
 
 ## Next Steps
 
-1. [Install Argus](/argus/installation/) — Download the desktop app
-2. [Configure your agents](/argus/setup-guide/) — Set up telemetry for Claude Code, Codex, or Gemini
-3. [Explore the dashboard](/argus/user-guide/) — Learn about each page
+1. [Install Argus](/docs/installation) — Download the desktop app
+2. [Configure your agents](/docs/setup-guide) — Set up telemetry for Claude Code, Codex, or Gemini
+3. [Explore the dashboard](/docs/user-guide) — Learn about each page

@@ -1,6 +1,6 @@
 ---
-title: Argus User Guide
-description: Argus User Guide
+title: "Argus User Guide"
+description: "Learn how to use the Argus dashboard"
 ---
 
 Argus is a personal monitoring dashboard for AI coding agents (Claude Code, Codex CLI, Gemini CLI). It collects OpenTelemetry data from your agents and visualizes usage, cost, and efficiency in a unified local dashboard.
@@ -58,8 +58,6 @@ A persistent footer at the bottom of every page showing:
 
 The landing page provides a snapshot of today's activity across all agents.
 
-<!-- Screenshot: overview-page.png -->
-
 ### KPI Cards (4)
 
 | Card | Description |
@@ -104,8 +102,6 @@ Click any session to navigate to the Sessions page with that session selected.
 ## 2. Sessions (/sessions)
 
 A master-detail view for exploring individual agent sessions.
-
-<!-- Screenshot: sessions-page.png -->
 
 ### Filters
 
@@ -179,8 +175,6 @@ Two view modes via tabs:
 ## 3. Usage (/usage)
 
 A deep-dive analytics page with 5 tabs covering cost, tokens, models, efficiency, and config impact.
-
-<!-- Screenshot: usage-page.png -->
 
 ### Filters
 
@@ -273,8 +267,6 @@ Shows configuration change history and its potential impact on usage.
 
 Analyzes tool usage patterns across your AI coding agents.
 
-<!-- Screenshot: tools-page.png -->
-
 ### Filters
 
 - **Agent Filter** -- Scope to a specific agent.
@@ -317,8 +309,6 @@ Analyzes tool usage patterns across your AI coding agents.
 
 Compare costs and activity across different projects (repositories/workspaces).
 
-<!-- Screenshot: projects-page.png -->
-
 ### KPI Cards (3)
 
 | Card | Description |
@@ -356,8 +346,6 @@ Click any row to navigate to a project detail page.
 ## 6. Insights (/insights)
 
 AI-powered suggestions and cost analysis to help optimize your agent usage.
-
-<!-- Screenshot: insights-page.png -->
 
 ### Filters
 
@@ -430,8 +418,6 @@ Compares cost efficiency across models:
 
 View and edit agent configuration files directly from the dashboard.
 
-<!-- Screenshot: rules-page.png -->
-
 ### File Tree (Left Panel, 35%)
 
 A hierarchical file browser organized by:
@@ -477,8 +463,6 @@ When a file is selected:
 ## 8. Settings (/settings)
 
 Configure the Argus dashboard itself. Organized into 5 sections via a left sidebar.
-
-<!-- Screenshot: settings-page.png -->
 
 ### General
 

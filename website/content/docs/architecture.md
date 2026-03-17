@@ -1,6 +1,6 @@
 ---
-title: Argus Architecture
-description: Argus Architecture
+title: "Argus Architecture"
+description: "Technical architecture and design decisions"
 ---
 
 Argus is a local-only, zero-auth monitoring tool that collects OpenTelemetry data from AI coding agents (Claude Code, Codex CLI, Gemini CLI) and visualizes usage metrics through a unified dashboard.

@@ -1,6 +1,6 @@
 ---
-title: Installation
-description: Download and install Argus
+title: "Installation"
+description: "Download and install Argus"
 ---
 
 ## Desktop App (Recommended)
@@ -61,4 +61,4 @@ pnpm electron:dist:win   # Windows NSIS (x64)
 
 ## Next Steps
 
-After installation, [configure your AI agents](/argus/setup-guide/) to send telemetry to Argus.
+After installation, [configure your AI agents](/docs/setup-guide) to send telemetry to Argus.
