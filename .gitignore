@@ -43,6 +43,9 @@ release/
 CONTEXT.md
 PRD.md
 
+# Claude Code
+.claude/worktrees/
+
 # Misc
 *.tsbuildinfo
 next-env.d.ts
