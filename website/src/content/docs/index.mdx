@@ -1,0 +1,52 @@
+---
+title: Argus
+description: Unified monitoring dashboard for AI coding agents
+template: splash
+hero:
+  title: Monitor your AI coding agents
+  tagline: Track costs, tokens, and sessions across Claude Code, Codex CLI, and Gemini CLI — all in one local dashboard.
+  image:
+    file: ../../assets/logo-dark.svg
+  actions:
+    - text: Download
+      link: /argus/installation/
+      icon: down-caret
+      variant: primary
+    - text: Get Started
+      link: /argus/getting-started/
+      variant: minimal
+    - text: GitHub
+      link: https://github.com/79841/argus
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+  <Card title="Multi-Agent View" icon="list-format">
+    Monitor Claude Code, Codex CLI, and Gemini CLI from a single unified dashboard.
+  </Card>
+  <Card title="Local & Private" icon="approve-check">
+    No auth, no cloud, no tracking. Your data stays on your machine.
+  </Card>
+  <Card title="Cost Insights" icon="warning">
+    AI-powered suggestions to optimize spending. Track high-cost sessions and model efficiency.
+  </Card>
+  <Card title="Desktop App" icon="laptop">
+    Electron tray-resident app for Mac and Windows with background OTLP ingestion.
+  </Card>
+</CardGrid>
+
+## Dashboard Preview
+
+![Argus Dashboard Overview](/argus/screenshots/overview.png)
+
+## Quick Start
+
+1. **Download** the installer for your platform from the [Installation](/argus/installation/) page
+2. **Launch** Argus — it starts as a tray app and opens `http://localhost:3000`
+3. **Configure** your AI agent to send telemetry — see [Agent Setup](/argus/setup-guide/)
+4. **Monitor** costs, tokens, sessions, and more in real-time

@@ -46,3 +46,5 @@ PRD.md
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+website/node_modules/
+website/dist/
