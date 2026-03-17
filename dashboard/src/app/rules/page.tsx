@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -15,9 +15,14 @@ import {
   Eye,
   Pencil,
   Loader2,
+  Search,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
+import { MarkdownViewer } from '@/components/markdown-viewer'
+import type { Heading } from '@/components/markdown-viewer'
+import { TocSidebar } from '@/components/toc-sidebar'
+import { ContentSearch } from '@/components/content-search'
 
 type Scope = 'project' | 'user'
 type Agent = 'claude' | 'codex' | 'gemini'
@@ -95,235 +100,10 @@ const groupFiles = (files: FileEntry[]): GroupedFiles[] => {
   return result.filter((g) => g.agents.length > 0)
 }
 
-type InlineToken = {
-  type: 'code' | 'bold' | 'italic' | 'link'
-  pre: string
-  inner: string
-  full: string
-  href?: string
-}
-
-const applyInlineMarkdown = (text: string, keyPrefix: string): React.ReactNode => {
-  const parts: React.ReactNode[] = []
-  let remaining = text
-  let idx = 0
-
-  while (remaining.length > 0) {
-    // 인라인 코드
-    const codeMatch = remaining.match(/^(.*?)`([^`]+)`/)
-    // 굵은 글씨
-    const boldMatch = remaining.match(/^(.*?)\*\*([^*]+)\*\*/)
-    // 이탤릭
-    const italicMatch = remaining.match(/^(.*?)\*([^*]+)\*/)
-    // 링크
-    const linkMatch = remaining.match(/^(.*?)\[([^\]]+)\]\(([^)]+)\)/)
-
-    const candidates: InlineToken[] = [
-      codeMatch ? { type: 'code', pre: codeMatch[1], inner: codeMatch[2], full: codeMatch[0] } : null,
-      boldMatch ? { type: 'bold', pre: boldMatch[1], inner: boldMatch[2], full: boldMatch[0] } : null,
-      italicMatch ? { type: 'italic', pre: italicMatch[1], inner: italicMatch[2], full: italicMatch[0] } : null,
-      linkMatch ? { type: 'link', pre: linkMatch[1], inner: linkMatch[2], full: linkMatch[0], href: linkMatch[3] } : null,
-    ].filter((c): c is InlineToken => c !== null)
-
-    if (candidates.length === 0) {
-      parts.push(<span key={`${keyPrefix}-${idx++}`}>{remaining}</span>)
-      break
-    }
-
-    // 가장 앞에서 매칭되는 패턴 선택
-    const best = candidates.reduce((a: InlineToken, b: InlineToken) => a.pre.length <= b.pre.length ? a : b)
-
-    if (best.pre.length > 0) {
-      parts.push(<span key={`${keyPrefix}-${idx++}`}>{best.pre}</span>)
-    }
-
-    if (best.type === 'code') {
-      parts.push(
-        <code key={`${keyPrefix}-${idx++}`} className="bg-muted px-1 py-0.5 rounded text-xs font-mono">
-          {best.inner}
-        </code>
-      )
-    } else if (best.type === 'bold') {
-      parts.push(
-        <strong key={`${keyPrefix}-${idx++}`} className="font-semibold">
-          {best.inner}
-        </strong>
-      )
-    } else if (best.type === 'italic') {
-      parts.push(
-        <em key={`${keyPrefix}-${idx++}`} className="italic">
-          {best.inner}
-        </em>
-      )
-    } else if (best.type === 'link') {
-      parts.push(
-        <a
-          key={`${keyPrefix}-${idx++}`}
-          href={best.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary underline underline-offset-2"
-        >
-          {best.inner}
-        </a>
-      )
-    }
-
-    remaining = remaining.slice(best.full.length)
-  }
-
-  return <>{parts}</>
-}
-
-const MarkdownRenderer = ({ content }: { content: string }) => {
-  const lines = content.split('\n')
-  const elements: React.ReactNode[] = []
-  let i = 0
-  let ek = 0
-
-  while (i < lines.length) {
-    const line = lines[i]
-
-    // 코드 블록 시작
-    if (line.startsWith('```')) {
-      const lang = line.slice(3).trim()
-      const codeLines: string[] = []
-      i++
-      while (i < lines.length && !lines[i].startsWith('```')) {
-        codeLines.push(lines[i])
-        i++
-      }
-      elements.push(
-        <div key={ek++} className="my-2">
-          {lang && (
-            <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-t border border-b-0 font-mono">
-              {lang}
-            </div>
-          )}
-          <pre className={`bg-muted text-xs font-mono p-3 whitespace-pre-wrap break-words leading-relaxed border ${lang ? 'rounded-b' : 'rounded'}`}>
-            {codeLines.join('\n')}
-          </pre>
-        </div>
-      )
-      i++
-      continue
-    }
-
-    // 수평선
-    if (line.match(/^---+$/) || line.match(/^\*\*\*+$/) || line.match(/^___+$/)) {
-      elements.push(<hr key={ek++} className="border-t my-3" />)
-      i++
-      continue
-    }
-
-    // 테이블
-    if (line.includes('|') && lines[i + 1]?.match(/^\|?[\s-|]+\|?$/)) {
-      const tableLines: string[] = []
-      while (i < lines.length && lines[i].includes('|')) {
-        tableLines.push(lines[i])
-        i++
-      }
-      const [headerLine, , ...bodyLines] = tableLines
-      const parseRow = (row: string) =>
-        row
-          .split('|')
-          .map((c) => c.trim())
-          .filter((c) => c.length > 0)
-
-      elements.push(
-        <div key={ek++} className="my-2 overflow-x-auto">
-          <table className="text-xs border-collapse w-full">
-            <thead>
-              <tr>
-                {parseRow(headerLine).map((cell, ci) => (
-                  <th key={ci} className="border px-3 py-1.5 text-left font-semibold bg-muted">
-                    {applyInlineMarkdown(cell, `th-${i}-${ci}`)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {bodyLines.map((row, ri) => (
-                <tr key={ri} className="hover:bg-muted/50">
-                  {parseRow(row).map((cell, ci) => (
-                    <td key={ci} className="border px-3 py-1.5">
-                      {applyInlineMarkdown(cell, `td-${i}-${ri}-${ci}`)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-      continue
-    }
-
-    if (line.startsWith('# ')) {
-      elements.push(
-        <h1 key={ek++} className="text-2xl font-bold mt-4 mb-2">
-          {applyInlineMarkdown(line.slice(2), `h1-${i}`)}
-        </h1>
-      )
-    } else if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={ek++} className="text-xl font-semibold mt-3 mb-1">
-          {applyInlineMarkdown(line.slice(3), `h2-${i}`)}
-        </h2>
-      )
-    } else if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={ek++} className="text-base font-semibold mt-2 mb-1">
-          {applyInlineMarkdown(line.slice(4), `h3-${i}`)}
-        </h3>
-      )
-    } else if (line.startsWith('#### ')) {
-      elements.push(
-        <h4 key={ek++} className="text-sm font-semibold mt-2 mb-1">
-          {applyInlineMarkdown(line.slice(5), `h4-${i}`)}
-        </h4>
-      )
-    } else if (line.match(/^(\s*)(- |\* |\d+\. )/)) {
-      const indentMatch = line.match(/^(\s*)/)
-      const indent = indentMatch ? indentMatch[1].length : 0
-      const text = line.replace(/^\s*(- |\* |\d+\. )/, '')
-      const isOrdered = /^\s*\d+\. /.test(line)
-      elements.push(
-        <div key={ek++} className="flex gap-1.5 text-sm leading-relaxed" style={{ paddingLeft: `${indent * 0.5 + 1}rem` }}>
-          <span className="shrink-0 text-muted-foreground mt-0.5">{isOrdered ? line.match(/\d+/)?.[0] + '.' : '•'}</span>
-          <span>{applyInlineMarkdown(text, `li-${i}`)}</span>
-        </div>
-      )
-    } else if (line.startsWith('> ')) {
-      elements.push(
-        <blockquote
-          key={ek++}
-          className="border-l-2 border-muted-foreground pl-3 text-sm text-muted-foreground italic my-1"
-        >
-          {applyInlineMarkdown(line.slice(2), `bq-${i}`)}
-        </blockquote>
-      )
-    } else if (line === '') {
-      elements.push(<div key={ek++} className="h-2" />)
-    } else {
-      elements.push(
-        <p key={ek++} className="text-sm leading-relaxed">
-          {applyInlineMarkdown(line, `p-${i}`)}
-        </p>
-      )
-    }
-
-    i++
-  }
-
-  return <div className="space-y-0.5">{elements}</div>
-}
-
 const highlightJson = (json: string): React.ReactNode[] => {
   const tokens = json.split(/(\"(?:[^"\\]|\\.)*\"(?:\s*:)?|true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],:])/g)
   return tokens.map((token, i) => {
     if (!token) return null
-    // 키 (문자열 다음에 콜론)
     if (/^".*":$/.test(token)) {
       const key = token.slice(0, -1)
       return (
@@ -333,19 +113,15 @@ const highlightJson = (json: string): React.ReactNode[] => {
         </span>
       )
     }
-    // 문자열 값
     if (/^".*"$/.test(token)) {
       return <span key={i} className="text-green-600 dark:text-green-400">{token}</span>
     }
-    // 숫자
     if (/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(token)) {
       return <span key={i} className="text-orange-600 dark:text-orange-400">{token}</span>
     }
-    // boolean / null
     if (token === 'true' || token === 'false' || token === 'null') {
       return <span key={i} className="text-purple-600 dark:text-purple-400">{token}</span>
     }
-    // 구분자
     if (/^[{}[\],]$/.test(token)) {
       return <span key={i} className="text-muted-foreground">{token}</span>
     }
@@ -369,7 +145,6 @@ const JsonHighlight = ({ content }: { content: string }) => {
 
 const highlightToml = (content: string): React.ReactNode[] => {
   return content.split('\n').map((line, i) => {
-    // 주석
     if (/^\s*#/.test(line)) {
       return (
         <span key={i} className="text-muted-foreground italic">
@@ -377,7 +152,6 @@ const highlightToml = (content: string): React.ReactNode[] => {
         </span>
       )
     }
-    // 섹션 헤더 [[...]] 또는 [...]
     if (/^\s*\[/.test(line)) {
       return (
         <span key={i} className="text-blue-600 dark:text-blue-400 font-semibold">
@@ -385,13 +159,11 @@ const highlightToml = (content: string): React.ReactNode[] => {
         </span>
       )
     }
-    // 키-값 쌍
     const kvMatch = line.match(/^(\s*)([^=\s][^=]*?)\s*(=)\s*(.*)$/)
     if (kvMatch) {
       const [, indent, key, eq, val] = kvMatch
       let valueNode: React.ReactNode
 
-      // 인라인 주석 분리
       const commentIdx = val.search(/#(?=(?:[^"]*"[^"]*")*[^"]*$)/)
       const valueStr = commentIdx >= 0 ? val.slice(0, commentIdx).trimEnd() : val
       const commentStr = commentIdx >= 0 ? val.slice(commentIdx) : ''
@@ -440,6 +212,9 @@ export default function RulesPage() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const [headings, setHeadings] = useState<Heading[]>([])
+  const [searchOpen, setSearchOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -460,6 +235,8 @@ export default function RulesPage() {
     setViewMode('preview')
     setContentLoading(true)
     setSaveSuccess(false)
+    setHeadings([])
+    setSearchOpen(false)
     try {
       const data = await dataClient.query('config', { path: file.path }) as { content?: string }
       const content = data.content ?? ''
@@ -499,7 +276,21 @@ export default function RulesPage() {
     })
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        if (selectedFile && viewMode === 'preview' && !contentLoading) {
+          e.preventDefault()
+          setSearchOpen(true)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedFile, viewMode, contentLoading])
+
   const grouped = groupFiles(files)
+  const showToc = viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
 
   return (
     <div className="flex h-full">
@@ -611,6 +402,16 @@ export default function RulesPage() {
                 </Badge>
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                {viewMode === 'preview' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setSearchOpen((v) => !v)}
+                  >
+                    <Search className="size-3" />
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant={viewMode === 'preview' ? 'default' : 'ghost'}
@@ -652,29 +453,46 @@ export default function RulesPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-auto p-4">
-              {contentLoading ? (
-                <div className="flex items-center justify-center h-32 text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  {t('rules.file.loading')}
-                </div>
-              ) : viewMode === 'edit' ? (
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full h-full min-h-[400px] font-mono text-xs bg-transparent border rounded p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                  spellCheck={false}
+            <div className="flex-1 flex overflow-hidden">
+              <div ref={contentRef} className="flex-1 overflow-auto p-4 relative">
+                <ContentSearch
+                  containerRef={contentRef}
+                  open={searchOpen}
+                  onOpenChange={setSearchOpen}
                 />
-              ) : isMarkdown(selectedFile.path) ? (
-                <MarkdownRenderer content={fileContent} />
-              ) : isJson(selectedFile.path) ? (
-                <JsonHighlight content={fileContent} />
-              ) : isToml(selectedFile.path) ? (
-                <TomlHighlight content={fileContent} />
-              ) : (
-                <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed">
-                  {fileContent}
-                </pre>
+                {contentLoading ? (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                    {t('rules.file.loading')}
+                  </div>
+                ) : viewMode === 'edit' ? (
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full h-full min-h-[400px] font-mono text-xs bg-transparent border rounded p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    spellCheck={false}
+                  />
+                ) : isMarkdown(selectedFile.path) ? (
+                  <MarkdownViewer
+                    content={fileContent}
+                    className="space-y-0.5"
+                    onHeadingsChange={setHeadings}
+                  />
+                ) : isJson(selectedFile.path) ? (
+                  <JsonHighlight content={fileContent} />
+                ) : isToml(selectedFile.path) ? (
+                  <TomlHighlight content={fileContent} />
+                ) : (
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed">
+                    {fileContent}
+                  </pre>
+                )}
+              </div>
+
+              {showToc && (
+                <div className="w-48 shrink-0 overflow-y-auto">
+                  <TocSidebar headings={headings} containerRef={contentRef} />
+                </div>
               )}
             </div>
           </>
