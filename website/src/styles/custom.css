@@ -1,0 +1,63 @@
+:root {
+	--sl-color-accent-low: #1a1040;
+	--sl-color-accent: #8b5cf6;
+	--sl-color-accent-high: #c4b5fd;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #eceef2;
+	--sl-color-gray-2: #c0c2c7;
+	--sl-color-gray-3: #888b96;
+	--sl-color-gray-4: #545861;
+	--sl-color-gray-5: #353841;
+	--sl-color-gray-6: #24272f;
+	--sl-color-black: #17181c;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #1e1145;
+	--sl-color-accent: #a78bfa;
+	--sl-color-accent-high: #ddd6fe;
+}
+
+.hero-image img {
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.download-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 1.5rem;
+	margin: 2rem 0;
+}
+
+.download-card {
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 12px;
+	padding: 2rem;
+	text-align: center;
+	transition: border-color 0.2s;
+}
+
+.download-card:hover {
+	border-color: var(--sl-color-accent);
+}
+
+.download-card h3 {
+	margin-top: 1rem;
+}
+
+.download-btn {
+	display: inline-block;
+	margin-top: 1rem;
+	padding: 0.75rem 2rem;
+	background: var(--sl-color-accent);
+	color: var(--sl-color-white);
+	border-radius: 8px;
+	text-decoration: none;
+	font-weight: 600;
+	transition: opacity 0.2s;
+}
+
+.download-btn:hover {
+	opacity: 0.9;
+}
