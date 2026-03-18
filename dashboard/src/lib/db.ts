@@ -109,39 +109,64 @@ export const initSchema = (db: Database.Database) => {
 }
 
 const migrate = (db: Database.Database) => {
-  const cols = db.prepare("PRAGMA table_info(agent_logs)").all() as Array<{ name: string }>
-  const colNames = new Set(cols.map((c) => c.name))
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version INTEGER PRIMARY KEY,
+      applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    )
+  `)
 
-  if (!colNames.has('reasoning_tokens')) {
-    db.exec("ALTER TABLE agent_logs ADD COLUMN reasoning_tokens INTEGER NOT NULL DEFAULT 0")
+  const appliedVersions = new Set(
+    (db.prepare('SELECT version FROM schema_version').all() as Array<{ version: number }>).map(r => r.version)
+  )
+
+  const run = (version: number, fn: () => void) => {
+    if (appliedVersions.has(version)) return
+    fn()
+    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(version)
   }
 
-  if (!colNames.has('project_name')) {
-    db.exec("ALTER TABLE agent_logs ADD COLUMN project_name TEXT NOT NULL DEFAULT ''")
-    db.exec("CREATE INDEX IF NOT EXISTS idx_agent_logs_project ON agent_logs(project_name)")
-  }
+  run(1, () => {
+    const cols = db.prepare("PRAGMA table_info(agent_logs)").all() as Array<{ name: string }>
+    const colNames = new Set(cols.map((c) => c.name))
+    if (!colNames.has('reasoning_tokens')) {
+      db.exec("ALTER TABLE agent_logs ADD COLUMN reasoning_tokens INTEGER NOT NULL DEFAULT 0")
+    }
+  })
 
-  const tdCols = db.prepare("PRAGMA table_info(tool_details)").all() as Array<{ name: string }>
-  const tdColNames = new Set(tdCols.map((c) => c.name))
+  run(2, () => {
+    const cols = db.prepare("PRAGMA table_info(agent_logs)").all() as Array<{ name: string }>
+    const colNames = new Set(cols.map((c) => c.name))
+    if (!colNames.has('project_name')) {
+      db.exec("ALTER TABLE agent_logs ADD COLUMN project_name TEXT NOT NULL DEFAULT ''")
+      db.exec("CREATE INDEX IF NOT EXISTS idx_agent_logs_project ON agent_logs(project_name)")
+    }
+  })
 
-  if (!tdColNames.has('agent_type')) {
-    db.exec("ALTER TABLE tool_details ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'claude'")
-    db.exec("UPDATE tool_details SET agent_type = 'codex' WHERE detail_type = 'codex-tool'")
-    db.exec("UPDATE tool_details SET agent_type = 'gemini' WHERE detail_type = 'gemini-tool'")
-  }
+  run(3, () => {
+    const tdCols = db.prepare("PRAGMA table_info(tool_details)").all() as Array<{ name: string }>
+    const tdColNames = new Set(tdCols.map((c) => c.name))
+    if (!tdColNames.has('agent_type')) {
+      db.exec("ALTER TABLE tool_details ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'claude'")
+      db.exec("UPDATE tool_details SET agent_type = 'codex' WHERE detail_type = 'codex-tool'")
+      db.exec("UPDATE tool_details SET agent_type = 'gemini' WHERE detail_type = 'gemini-tool'")
+    }
+  })
 
-  // Clean up metric events that were incorrectly stored in agent_logs (PER-35)
-  db.exec(`DELETE FROM agent_logs WHERE event_name NOT IN (
-    'api_request', 'user_prompt', 'tool_result', 'tool_decision',
-    'session_start', 'api_error',
-    'lines_of_code', 'commit_count', 'pull_request_count', 'active_time'
-  )`)
+  run(4, () => {
+    db.exec(`DELETE FROM agent_logs WHERE event_name NOT IN (
+      'api_request', 'user_prompt', 'tool_result', 'tool_decision',
+      'session_start', 'api_error',
+      'lines_of_code', 'commit_count', 'pull_request_count', 'active_time'
+    )`)
+  })
 
-  // Clean up stale built-in tool entries and normalize detail_type values
-  db.exec("DELETE FROM tool_details WHERE detail_type IN ('codex-tool', 'gemini-tool', 'tool-search')")
-  db.exec("UPDATE tool_details SET detail_type = 'agent' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name = 'Agent'")
-  db.exec("UPDATE tool_details SET detail_type = 'skill' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name = 'Skill'")
-  db.exec("UPDATE tool_details SET detail_type = 'mcp' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name LIKE 'mcp:%'")
+  run(5, () => {
+    db.exec("DELETE FROM tool_details WHERE detail_type IN ('codex-tool', 'gemini-tool', 'tool-search')")
+    db.exec("UPDATE tool_details SET detail_type = 'agent' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name = 'Agent'")
+    db.exec("UPDATE tool_details SET detail_type = 'skill' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name = 'Skill'")
+    db.exec("UPDATE tool_details SET detail_type = 'mcp' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name LIKE 'mcp:%'")
+  })
 }
 
 export const seedPricing = (db: Database.Database) => {
