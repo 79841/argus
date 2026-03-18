@@ -2,8 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { HighlightedCode } from './highlighted-code'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MDXComponents = Record<string, React.ComponentType<any>>
+type MDXComponents = Record<string, React.ComponentType<Record<string, unknown>>>
 
 export function getMdxComponents(): MDXComponents {
   return {

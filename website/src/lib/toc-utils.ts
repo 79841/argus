@@ -8,8 +8,15 @@ export function extractTocItems(content: string): TocItem[] {
   const lines = content.split('\n')
   const items: TocItem[] = []
   const seen = new Map<string, number>()
+  let inCodeBlock = false
 
   for (const line of lines) {
+    if (line.startsWith('```')) {
+      inCodeBlock = !inCodeBlock
+      continue
+    }
+    if (inCodeBlock) continue
+
     const h2Match = line.match(/^## (.+)$/)
     const h3Match = line.match(/^### (.+)$/)
 

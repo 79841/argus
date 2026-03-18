@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import type { DocMeta } from '@/lib/docs'
 
@@ -56,6 +56,15 @@ function SidebarContent({ sidebar, onItemClick }: { sidebar: SidebarItem[]; onIt
 export function DocSidebar({ sidebar }: DocSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  useEffect(() => {
+    if (!mobileOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [mobileOpen])
+
   return (
     <>
       {/* Mobile toggle button */}
@@ -63,6 +72,7 @@ export function DocSidebar({ sidebar }: DocSidebarProps) {
         className="flex items-center gap-2 rounded-md border border-surface-200 px-3 py-2 text-sm font-medium text-surface-700 dark:border-surface-700 dark:text-surface-300 lg:hidden"
         onClick={() => setMobileOpen(true)}
         aria-label="Open navigation"
+        aria-expanded={mobileOpen}
       >
         <Menu size={16} />
         Navigation

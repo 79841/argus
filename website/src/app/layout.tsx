@@ -1,28 +1,26 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
+import './globals.css'
+import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://79841.github.io/argus'),
   title: {
-    default: "Argus — AI Coding Agent Monitor",
-    template: "%s | Argus",
+    default: 'Argus - AI Coding Agent Monitor',
+    template: '%s | Argus',
   },
-  description:
-    "Track costs, tokens, and sessions across Claude Code, Codex CLI, and Gemini CLI — all in one local dashboard.",
+  description: 'Monitor and visualize AI coding agent usage across Claude Code, Codex CLI, and Gemini CLI.',
   openGraph: {
-    title: "Argus — AI Coding Agent Monitor",
-    description:
-      "Unified monitoring dashboard for AI coding agents. Local, private, no auth required.",
-    images: ["/screenshots/overview.png"],
+    type: 'website',
+    siteName: 'Argus',
+    title: 'Argus - AI Coding Agent Monitor',
+    description: 'Monitor and visualize AI coding agent usage across Claude Code, Codex CLI, and Gemini CLI.',
+    images: ['/screenshots/overview.png'],
   },
-};
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
@@ -31,5 +29,5 @@ export default function RootLayout({
         <Footer />
       </body>
     </html>
-  );
+  )
 }

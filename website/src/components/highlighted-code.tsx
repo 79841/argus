@@ -12,7 +12,7 @@ export function HighlightedCode({ html, code, children }: HighlightedCodeProps) 
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(code)
+    await navigator.clipboard.writeText(code).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
