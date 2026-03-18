@@ -34,11 +34,22 @@ type FileEntry = {
   agent: Agent
   scope: Scope
   exists: boolean
+  projectRoot: string
+  projectName: string
+}
+
+type ProjectGroup = {
+  projectRoot: string
+  projectName: string
+  agents: {
+    agent: Agent
+    files: FileEntry[]
+  }[]
 }
 
 type GroupedFiles = {
-  scope: Scope
-  agents: {
+  projects: ProjectGroup[]
+  userAgents: {
     agent: Agent
     files: FileEntry[]
   }[]
@@ -81,7 +92,7 @@ const isMarkdown = (filePath: string) => filePath.endsWith('.md')
 const isJson = (filePath: string) => filePath.endsWith('.json')
 const isToml = (filePath: string) => filePath.endsWith('.toml')
 
-const groupFiles = (files: FileEntry[]): GroupedFiles[] => {
+const groupFiles = (files: FileEntry[]): GroupedFiles => {
   const projectFiles = files.filter((f) => f.scope === 'project')
   const userFiles = files.filter((f) => f.scope === 'user')
 
@@ -94,12 +105,28 @@ const groupFiles = (files: FileEntry[]): GroupedFiles[] => {
     return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
   }
 
-  const result: GroupedFiles[] = [
-    { scope: 'project' as const, agents: groupByAgent(projectFiles) },
-    { scope: 'user' as const, agents: groupByAgent(userFiles) },
-  ]
-  return result.filter((g) => g.agents.length > 0)
+  // Group project files by projectRoot
+  const projectMap = new Map<string, FileEntry[]>()
+  for (const f of projectFiles) {
+    if (!projectMap.has(f.projectRoot)) projectMap.set(f.projectRoot, [])
+    projectMap.get(f.projectRoot)!.push(f)
+  }
+
+  const projects: ProjectGroup[] = Array.from(projectMap.entries()).map(
+    ([projectRoot, files]) => ({
+      projectRoot,
+      projectName: files[0].projectName,
+      agents: groupByAgent(files),
+    })
+  )
+
+  return {
+    projects,
+    userAgents: groupByAgent(userFiles),
+  }
 }
+
+const fileKey = (file: FileEntry) => `${file.projectRoot}:${file.path}`
 
 export default function RulesPage() {
   const { t } = useLocale()
@@ -120,7 +147,7 @@ export default function RulesPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await dataClient.query('config') as { files?: FileEntry[] }
+        const data = (await dataClient.query('config')) as { files?: FileEntry[] }
         setFiles(data.files ?? [])
       } catch {
         setFiles([])
@@ -139,7 +166,9 @@ export default function RulesPage() {
     setHeadings([])
     setSearchOpen(false)
     try {
-      const data = await dataClient.query('config', { path: file.path }) as { content?: string }
+      const params: Record<string, string> = { path: file.path }
+      if (file.projectRoot) params.projectRoot = file.projectRoot
+      const data = (await dataClient.query('config', params)) as { content?: string }
       const content = data.content ?? ''
       setFileContent(content)
       setEditContent(content)
@@ -156,7 +185,11 @@ export default function RulesPage() {
     setSaving(true)
     setSaveSuccess(false)
     try {
-      await dataClient.mutate('config', { path: selectedFile.path, content: editContent })
+      await dataClient.mutate('config', {
+        path: selectedFile.path,
+        content: editContent,
+        projectRoot: selectedFile.projectRoot || undefined,
+      })
       setFileContent(editContent)
       setSaveSuccess(true)
       setViewMode('preview')
@@ -191,7 +224,8 @@ export default function RulesPage() {
   }, [selectedFile, viewMode, contentLoading])
 
   const grouped = groupFiles(files)
-  const showToc = viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
+  const showToc =
+    viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
 
   return (
     <div className="flex h-full">
@@ -209,31 +243,29 @@ export default function RulesPage() {
           </div>
         ) : (
           <nav className="p-2 space-y-1">
-            {grouped.map((group) => {
-              const scopeKey = group.scope
-              const scopeCollapsed = collapsedGroups.has(scopeKey)
-              const scopeLabel =
-                group.scope === 'project'
-                  ? `Project: ${getProjectName()}`
-                  : t('rules.scope.user')
+            {/* Project groups */}
+            {grouped.projects.map((project) => {
+              const projectKey = `project:${project.projectRoot}`
+              const projectCollapsed = collapsedGroups.has(projectKey)
 
               return (
-                <div key={group.scope}>
+                <div key={project.projectRoot}>
                   <button
-                    onClick={() => toggleGroup(scopeKey)}
+                    onClick={() => toggleGroup(projectKey)}
                     className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   >
-                    {scopeCollapsed ? (
+                    {projectCollapsed ? (
                       <ChevronRight className="size-3" />
                     ) : (
                       <ChevronDown className="size-3" />
                     )}
-                    {scopeLabel}
+                    <FolderOpen className="size-3" />
+                    <span className="truncate">{project.projectName}</span>
                   </button>
 
-                  {!scopeCollapsed &&
-                    group.agents.map(({ agent, files: agentFiles }) => {
-                      const agentKey = `${group.scope}-${agent}`
+                  {!projectCollapsed &&
+                    project.agents.map(({ agent, files: agentFiles }) => {
+                      const agentKey = `${projectKey}-${agent}`
                       const agentCollapsed = collapsedGroups.has(agentKey)
                       return (
                         <div key={agent} className="ml-3">
@@ -257,7 +289,7 @@ export default function RulesPage() {
                                 onClick={() => loadFile(file)}
                                 className={cn(
                                   'flex w-full items-center gap-2 px-2 py-1.5 ml-3 rounded text-xs transition-colors text-left',
-                                  selectedFile?.path === file.path
+                                  selectedFile && fileKey(selectedFile) === fileKey(file)
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                 )}
@@ -273,10 +305,64 @@ export default function RulesPage() {
               )
             })}
 
-            {grouped.length === 0 && (
-              <p className="text-xs text-muted-foreground px-2 py-4">
-                {t('rules.empty')}
-              </p>
+            {/* User scope */}
+            {grouped.userAgents.length > 0 && (
+              <div>
+                <button
+                  onClick={() => toggleGroup('user')}
+                  className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  {collapsedGroups.has('user') ? (
+                    <ChevronRight className="size-3" />
+                  ) : (
+                    <ChevronDown className="size-3" />
+                  )}
+                  {t('rules.scope.user')}
+                </button>
+
+                {!collapsedGroups.has('user') &&
+                  grouped.userAgents.map(({ agent, files: agentFiles }) => {
+                    const agentKey = `user-${agent}`
+                    const agentCollapsed = collapsedGroups.has(agentKey)
+                    return (
+                      <div key={agent} className="ml-3">
+                        <button
+                          onClick={() => toggleGroup(agentKey)}
+                          className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium hover:bg-muted transition-colors"
+                          style={{ color: AGENT_CSS_VARS[agent] }}
+                        >
+                          {agentCollapsed ? (
+                            <ChevronRight className="size-3" />
+                          ) : (
+                            <ChevronDown className="size-3" />
+                          )}
+                          {AGENT_LABELS[agent]}
+                        </button>
+
+                        {!agentCollapsed &&
+                          agentFiles.map((file) => (
+                            <button
+                              key={file.path}
+                              onClick={() => loadFile(file)}
+                              className={cn(
+                                'flex w-full items-center gap-2 px-2 py-1.5 ml-3 rounded text-xs transition-colors text-left',
+                                selectedFile && fileKey(selectedFile) === fileKey(file)
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              )}
+                            >
+                              {getFileIcon(file.path)}
+                              <span className="truncate">{getFileName(file.path)}</span>
+                            </button>
+                          ))}
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
+
+            {grouped.projects.length === 0 && grouped.userAgents.length === 0 && (
+              <p className="text-xs text-muted-foreground px-2 py-4">{t('rules.empty')}</p>
             )}
           </nav>
         )}
@@ -296,10 +382,14 @@ export default function RulesPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs font-mono text-muted-foreground truncate">
-                  {selectedFile.path}
+                  {selectedFile.projectName
+                    ? `${selectedFile.projectName}/${selectedFile.path}`
+                    : selectedFile.path}
                 </span>
                 <Badge variant="outline" className="text-xs shrink-0">
-                  {selectedFile.scope === 'project' ? 'Project' : 'User'}
+                  {selectedFile.scope === 'project'
+                    ? selectedFile.projectName || 'Project'
+                    : 'User'}
                 </Badge>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -348,7 +438,9 @@ export default function RulesPage() {
                   </Button>
                 )}
                 {saveSuccess && (
-                  <span className="text-xs text-emerald-500 font-medium">{t('rules.btn.saved')}</span>
+                  <span className="text-xs text-emerald-500 font-medium">
+                    {t('rules.btn.saved')}
+                  </span>
                 )}
               </div>
             </div>
@@ -401,10 +493,4 @@ export default function RulesPage() {
       </div>
     </div>
   )
-}
-
-function getProjectName(): string {
-  if (typeof window === 'undefined') return 'project'
-  const parts = window.location.hostname.split('.')
-  return parts[0] === 'localhost' ? 'argus' : parts[0]
 }
