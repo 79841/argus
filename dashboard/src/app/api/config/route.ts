@@ -69,69 +69,15 @@ const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> 
   return dynamic
 }
 
-/** Decode ~/.claude/projects/ directory name back to filesystem path */
-const decodeCloudeProjectDir = (encoded: string): string | null => {
-  const parts = encoded.slice(1).split('-')
+type RegistryRow = { project_name: string; project_path: string }
 
-  const tryPath = (idx: number, current: string): string | null => {
-    if (idx >= parts.length) {
-      try { return fs.statSync(current).isDirectory() ? current : null } catch { return null }
-    }
-    // Try as hyphenated segment first (more specific)
-    const withHyphen = tryPath(idx + 1, current + '-' + parts[idx])
-    if (withHyphen) return withHyphen
-    // Try as new path segment
-    const withSlash = tryPath(idx + 1, current + '/' + parts[idx])
-    if (withSlash) return withSlash
-    return null
-  }
-
-  return tryPath(1, '/' + parts[0])
-}
-
-/** Get registered project names from DB */
-const getRegisteredProjects = (): string[] => {
+const getRegisteredProjects = (): RegistryRow[] => {
   try {
     const db = getDb()
-    const rows = db.prepare(
-      "SELECT DISTINCT project_name FROM agent_logs WHERE project_name != '' ORDER BY project_name"
-    ).all() as Array<{ project_name: string }>
-    return rows.map((r) => r.project_name)
+    return db.prepare('SELECT project_name, project_path FROM project_registry ORDER BY project_name').all() as RegistryRow[]
   } catch {
     return []
   }
-}
-
-/** Build map: projectName → filesystem path using ~/.claude/projects/ */
-const buildProjectPathMap = (): Map<string, string> => {
-  const result = new Map<string, string>()
-  const projectNames = getRegisteredProjects()
-  if (projectNames.length === 0) return result
-
-  const claudeProjectsDir = path.join(getUserHome(), '.claude', 'projects')
-  if (!fs.existsSync(claudeProjectsDir)) return result
-
-  let dirs: string[]
-  try {
-    dirs = fs.readdirSync(claudeProjectsDir).filter((d) => d.startsWith('-'))
-  } catch {
-    return result
-  }
-
-  for (const projectName of projectNames) {
-    const encoded = projectName.replace(/\//g, '-')
-    const matching = dirs.filter((d) => d.endsWith('-' + encoded))
-
-    for (const match of matching) {
-      const decoded = decodeCloudeProjectDir(match)
-      if (decoded) {
-        result.set(projectName, decoded)
-        break
-      }
-    }
-  }
-
-  return result
 }
 
 const getProjectFiles = (projectRoot: string, projectName: string) => {
@@ -166,10 +112,10 @@ export async function GET(request: NextRequest) {
     const projectRoot = request.nextUrl.searchParams.get('projectRoot')
 
     if (!filePath) {
-      const projectPathMap = buildProjectPathMap()
+      const registered = getRegisteredProjects()
 
-      const allProjectFiles = Array.from(projectPathMap.entries()).flatMap(
-        ([name, root]) => getProjectFiles(root, name)
+      const allProjectFiles = registered.flatMap(({ project_name, project_path }) =>
+        getProjectFiles(project_path, project_name)
       )
 
       const userFiles = USER_STATIC_FILES

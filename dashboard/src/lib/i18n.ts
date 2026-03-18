@@ -148,6 +148,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'rules.btn.edit': '편집',
     'rules.btn.save': '저장',
     'rules.btn.saved': '저장됨',
+    'rules.load': '불러오기',
+    'rules.load.placeholder': '프로젝트 경로를 입력하세요',
+    'rules.load.btn': '불러오기',
+    'rules.load.cancel': '취소',
+    'rules.unload': '해제',
+    'rules.notLoaded': '경로를 지정하면 rule 파일이 표시됩니다',
 
     // Projects page
     'projects.title': 'Projects',
@@ -382,6 +388,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'rules.btn.edit': 'Edit',
     'rules.btn.save': 'Save',
     'rules.btn.saved': 'Saved',
+    'rules.load': 'Load',
+    'rules.load.placeholder': 'Enter project path',
+    'rules.load.btn': 'Load',
+    'rules.load.cancel': 'Cancel',
+    'rules.unload': 'Unload',
+    'rules.notLoaded': 'Specify path to view rule files',
 
     // Projects page
     'projects.title': 'Projects',

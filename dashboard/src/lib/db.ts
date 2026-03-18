@@ -103,6 +103,12 @@ export const initSchema = (db: Database.Database) => {
       monthly_cost_limit REAL NOT NULL DEFAULT 0
     );
 
+    CREATE TABLE IF NOT EXISTS project_registry (
+      project_name TEXT PRIMARY KEY,
+      project_path TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+
     CREATE TABLE IF NOT EXISTS prompt_texts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),

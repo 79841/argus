@@ -16,6 +16,8 @@ import {
   Pencil,
   Loader2,
   Search,
+  FolderInput,
+  X,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
@@ -38,21 +40,22 @@ type FileEntry = {
   projectName: string
 }
 
-type ProjectGroup = {
-  projectRoot: string
-  projectName: string
-  agents: {
-    agent: Agent
-    files: FileEntry[]
-  }[]
+type RegistryEntry = {
+  project_name: string
+  project_path: string
 }
 
-type GroupedFiles = {
-  projects: ProjectGroup[]
-  userAgents: {
-    agent: Agent
-    files: FileEntry[]
-  }[]
+type DbProject = {
+  project_name: string
+  loaded: boolean
+  project_path: string
+}
+
+type ProjectGroup = {
+  projectName: string
+  projectRoot: string
+  loaded: boolean
+  agents: { agent: Agent; files: FileEntry[] }[]
 }
 
 const AGENT_LABELS: Record<Agent, string> = {
@@ -88,48 +91,24 @@ const getFileName = (filePath: string): string => {
   return filePath.startsWith('~/') ? filePath : name
 }
 
-const isMarkdown = (filePath: string) => filePath.endsWith('.md')
-const isJson = (filePath: string) => filePath.endsWith('.json')
-const isToml = (filePath: string) => filePath.endsWith('.toml')
-
-const groupFiles = (files: FileEntry[]): GroupedFiles => {
-  const projectFiles = files.filter((f) => f.scope === 'project')
-  const userFiles = files.filter((f) => f.scope === 'user')
-
-  const groupByAgent = (list: FileEntry[]) => {
-    const map = new Map<Agent, FileEntry[]>()
-    for (const f of list) {
-      if (!map.has(f.agent)) map.set(f.agent, [])
-      map.get(f.agent)!.push(f)
-    }
-    return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
-  }
-
-  // Group project files by projectRoot
-  const projectMap = new Map<string, FileEntry[]>()
-  for (const f of projectFiles) {
-    if (!projectMap.has(f.projectRoot)) projectMap.set(f.projectRoot, [])
-    projectMap.get(f.projectRoot)!.push(f)
-  }
-
-  const projects: ProjectGroup[] = Array.from(projectMap.entries()).map(
-    ([projectRoot, files]) => ({
-      projectRoot,
-      projectName: files[0].projectName,
-      agents: groupByAgent(files),
-    })
-  )
-
-  return {
-    projects,
-    userAgents: groupByAgent(userFiles),
-  }
-}
+const isMarkdown = (p: string) => p.endsWith('.md')
+const isJson = (p: string) => p.endsWith('.json')
+const isToml = (p: string) => p.endsWith('.toml')
 
 const fileKey = (file: FileEntry) => `${file.projectRoot}:${file.path}`
 
+const groupByAgent = (list: FileEntry[]) => {
+  const map = new Map<Agent, FileEntry[]>()
+  for (const f of list) {
+    if (!map.has(f.agent)) map.set(f.agent, [])
+    map.get(f.agent)!.push(f)
+  }
+  return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
+}
+
 export default function RulesPage() {
   const { t } = useLocale()
+  const [dbProjects, setDbProjects] = useState<DbProject[]>([])
   const [files, setFiles] = useState<FileEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedFile, setSelectedFile] = useState<FileEntry | null>(null)
@@ -142,21 +121,81 @@ export default function RulesPage() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
+  const [loadingProject, setLoadingProject] = useState<string | null>(null)
+  const [pathInput, setPathInput] = useState('')
   const contentRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = (await dataClient.query('config')) as { files?: FileEntry[] }
-        setFiles(data.files ?? [])
-      } catch {
-        setFiles([])
-      } finally {
-        setLoading(false)
-      }
+  // Load DB projects + registry + config files
+  const loadAll = useCallback(async () => {
+    try {
+      const [projectsRes, registryRes, configRes] = await Promise.all([
+        dataClient.query('projects') as Promise<{ project_name: string }[] | { projects?: { project_name: string }[] }>,
+        dataClient.query('projects/registry') as Promise<{ projects?: RegistryEntry[] }>,
+        dataClient.query('config') as Promise<{ files?: FileEntry[] }>,
+      ])
+
+      const projectsList = Array.isArray(projectsRes)
+        ? projectsRes
+        : (projectsRes as { projects?: { project_name: string }[] }).projects ?? []
+      const dbNames = projectsList.map((p) => p.project_name)
+      const registry = new Map(
+        (registryRes.projects ?? []).map((r) => [r.project_name, r.project_path])
+      )
+
+      setDbProjects(
+        dbNames.map((name) => ({
+          project_name: name,
+          loaded: registry.has(name),
+          project_path: registry.get(name) ?? '',
+        }))
+      )
+      setFiles(configRes.files ?? [])
+    } catch {
+      setDbProjects([])
+      setFiles([])
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [])
+
+  useEffect(() => {
+    loadAll()
+  }, [loadAll])
+
+  const handleLoad = async (projectName: string) => {
+    if (!pathInput.trim()) return
+    try {
+      await dataClient.mutate('projects/registry', {
+        name: projectName,
+        path: pathInput.trim(),
+      })
+      setLoadingProject(null)
+      setPathInput('')
+      setLoading(true)
+      await loadAll()
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleUnload = async (projectName: string) => {
+    try {
+      const res = await fetch(`/api/projects/registry?name=${encodeURIComponent(projectName)}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) return
+      setLoading(true)
+      // Clear selected file if it belongs to this project
+      if (selectedFile?.projectName === projectName) {
+        setSelectedFile(null)
+        setFileContent('')
+        setEditContent('')
+      }
+      await loadAll()
+    } catch {
+      // ignore
+    }
+  }
 
   const loadFile = useCallback(async (file: FileEntry) => {
     setSelectedFile(file)
@@ -223,7 +262,22 @@ export default function RulesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
 
-  const grouped = groupFiles(files)
+  // Build project groups from loaded files
+  const projectGroups: ProjectGroup[] = dbProjects.map((dp) => {
+    const projectFiles = files.filter(
+      (f) => f.scope === 'project' && f.projectName === dp.project_name
+    )
+    return {
+      projectName: dp.project_name,
+      projectRoot: dp.project_path,
+      loaded: dp.loaded,
+      agents: dp.loaded ? groupByAgent(projectFiles) : [],
+    }
+  })
+
+  const userFiles = files.filter((f) => f.scope === 'user')
+  const userAgents = groupByAgent(userFiles)
+
   const showToc =
     viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
 
@@ -242,28 +296,101 @@ export default function RulesPage() {
             {t('rules.loading')}
           </div>
         ) : (
-          <nav className="p-2 space-y-1">
+          <nav className="p-2 space-y-0.5">
             {/* Project groups */}
-            {grouped.projects.map((project) => {
-              const projectKey = `project:${project.projectRoot}`
+            {projectGroups.map((project) => {
+              const projectKey = `project:${project.projectName}`
               const projectCollapsed = collapsedGroups.has(projectKey)
+              const isEditing = loadingProject === project.projectName
 
               return (
-                <div key={project.projectRoot}>
-                  <button
-                    onClick={() => toggleGroup(projectKey)}
-                    className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    {projectCollapsed ? (
-                      <ChevronRight className="size-3" />
-                    ) : (
-                      <ChevronDown className="size-3" />
-                    )}
-                    <FolderOpen className="size-3" />
-                    <span className="truncate">{project.projectName}</span>
-                  </button>
+                <div key={project.projectName}>
+                  {/* Project header */}
+                  <div className="flex items-center gap-1 group">
+                    <button
+                      onClick={() => project.loaded && toggleGroup(projectKey)}
+                      className={cn(
+                        'flex flex-1 items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors min-w-0',
+                        project.loaded
+                          ? 'text-foreground hover:bg-muted'
+                          : 'text-muted-foreground/50'
+                      )}
+                      disabled={!project.loaded}
+                    >
+                      {project.loaded ? (
+                        projectCollapsed ? (
+                          <ChevronRight className="size-3 shrink-0" />
+                        ) : (
+                          <ChevronDown className="size-3 shrink-0" />
+                        )
+                      ) : (
+                        <FolderOpen className="size-3 shrink-0 opacity-40" />
+                      )}
+                      <span className="truncate">{project.projectName}</span>
+                      {!project.loaded && (
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 ml-1 opacity-50 shrink-0">
+                          unloaded
+                        </Badge>
+                      )}
+                    </button>
 
-                  {!projectCollapsed &&
+                    {/* Load / Unload button */}
+                    {project.loaded ? (
+                      <button
+                        onClick={() => handleUnload(project.projectName)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-muted transition-all shrink-0"
+                        title={t('rules.unload')}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setLoadingProject(
+                            isEditing ? null : project.projectName
+                          )
+                          setPathInput('')
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all shrink-0"
+                        title={t('rules.load')}
+                      >
+                        <FolderInput className="size-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Path input for loading */}
+                  {isEditing && (
+                    <div className="ml-5 mr-1 mt-1 mb-2 flex gap-1">
+                      <input
+                        type="text"
+                        value={pathInput}
+                        onChange={(e) => setPathInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleLoad(project.projectName)
+                          if (e.key === 'Escape') {
+                            setLoadingProject(null)
+                            setPathInput('')
+                          }
+                        }}
+                        placeholder={t('rules.load.placeholder')}
+                        className="flex-1 text-xs px-2 py-1 rounded border bg-background focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => handleLoad(project.projectName)}
+                        disabled={!pathInput.trim()}
+                      >
+                        {t('rules.load.btn')}
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Agent/file tree for loaded projects */}
+                  {project.loaded &&
+                    !projectCollapsed &&
                     project.agents.map(({ agent, files: agentFiles }) => {
                       const agentKey = `${projectKey}-${agent}`
                       const agentCollapsed = collapsedGroups.has(agentKey)
@@ -306,7 +433,7 @@ export default function RulesPage() {
             })}
 
             {/* User scope */}
-            {grouped.userAgents.length > 0 && (
+            {userAgents.length > 0 && (
               <div>
                 <button
                   onClick={() => toggleGroup('user')}
@@ -321,7 +448,7 @@ export default function RulesPage() {
                 </button>
 
                 {!collapsedGroups.has('user') &&
-                  grouped.userAgents.map(({ agent, files: agentFiles }) => {
+                  userAgents.map(({ agent, files: agentFiles }) => {
                     const agentKey = `user-${agent}`
                     const agentCollapsed = collapsedGroups.has(agentKey)
                     return (
@@ -361,7 +488,7 @@ export default function RulesPage() {
               </div>
             )}
 
-            {grouped.projects.length === 0 && grouped.userAgents.length === 0 && (
+            {projectGroups.length === 0 && userAgents.length === 0 && (
               <p className="text-xs text-muted-foreground px-2 py-4">{t('rules.empty')}</p>
             )}
           </nav>
