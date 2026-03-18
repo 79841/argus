@@ -18,6 +18,7 @@ import {
   Search,
   FolderInput,
   X,
+  Folder,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
@@ -72,12 +73,12 @@ const AGENT_CSS_VARS: Record<Agent, string> = {
 
 const getFileIcon = (filePath: string) => {
   const name = filePath.split(/[/\\]/).pop() ?? ''
-  if (name === '.mcp.json') return <Plug className="size-3.5 shrink-0 text-muted-foreground" />
+  if (name === '.mcp.json') return <Plug className="size-4 shrink-0 text-muted-foreground" />
   if (name.endsWith('.json') || name.endsWith('.toml'))
-    return <Settings className="size-3.5 shrink-0 text-muted-foreground" />
+    return <Settings className="size-4 shrink-0 text-muted-foreground" />
   if (/[/\\]agents[/\\]/.test(filePath) || /[/\\]skills[/\\]/.test(filePath))
-    return <FolderOpen className="size-3.5 shrink-0 text-muted-foreground" />
-  return <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+    return <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
+  return <FileText className="size-4 shrink-0 text-muted-foreground" />
 }
 
 const getFileName = (filePath: string): string => {
@@ -106,6 +107,16 @@ const groupByAgent = (list: FileEntry[]) => {
   return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
 }
 
+const isElectron = () =>
+  typeof window !== 'undefined' && window.electronAPI !== undefined
+
+const selectFolderNative = async (): Promise<string | null> => {
+  if (isElectron() && window.electronAPI?.selectFolder) {
+    return window.electronAPI.selectFolder('Select Project Folder')
+  }
+  return null
+}
+
 export default function RulesPage() {
   const { t } = useLocale()
   const [dbProjects, setDbProjects] = useState<DbProject[]>([])
@@ -123,13 +134,15 @@ export default function RulesPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [loadingProject, setLoadingProject] = useState<string | null>(null)
   const [pathInput, setPathInput] = useState('')
+  const [loadError, setLoadError] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // Load DB projects + registry + config files
   const loadAll = useCallback(async () => {
     try {
       const [projectsRes, registryRes, configRes] = await Promise.all([
-        dataClient.query('projects') as Promise<{ project_name: string }[] | { projects?: { project_name: string }[] }>,
+        dataClient.query('projects') as Promise<
+          { project_name: string }[] | { projects?: { project_name: string }[] }
+        >,
         dataClient.query('projects/registry') as Promise<{ projects?: RegistryEntry[] }>,
         dataClient.query('config') as Promise<{ files?: FileEntry[] }>,
       ])
@@ -162,19 +175,32 @@ export default function RulesPage() {
     loadAll()
   }, [loadAll])
 
-  const handleLoad = async (projectName: string) => {
-    if (!pathInput.trim()) return
+  const handleLoad = async (projectName: string, folderPath: string) => {
+    if (!folderPath.trim()) return
+    setLoadError(null)
     try {
-      await dataClient.mutate('projects/registry', {
+      const res = await dataClient.mutate('projects/registry', {
         name: projectName,
-        path: pathInput.trim(),
-      })
+        path: folderPath.trim(),
+      }) as { error?: string }
+      if (res.error) {
+        setLoadError(res.error)
+        return
+      }
       setLoadingProject(null)
       setPathInput('')
       setLoading(true)
       await loadAll()
     } catch {
-      // ignore
+      setLoadError('Failed to load project')
+    }
+  }
+
+  const handleBrowse = async (projectName: string) => {
+    const folder = await selectFolderNative()
+    if (folder) {
+      setPathInput(folder)
+      await handleLoad(projectName, folder)
     }
   }
 
@@ -185,7 +211,6 @@ export default function RulesPage() {
       })
       if (!res.ok) return
       setLoading(true)
-      // Clear selected file if it belongs to this project
       if (selectedFile?.projectName === projectName) {
         setSelectedFile(null)
         setFileContent('')
@@ -262,7 +287,6 @@ export default function RulesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
 
-  // Build project groups from loaded files
   const projectGroups: ProjectGroup[] = dbProjects.map((dp) => {
     const projectFiles = files.filter(
       (f) => f.scope === 'project' && f.projectName === dp.project_name
@@ -283,7 +307,7 @@ export default function RulesPage() {
 
   return (
     <div className="flex h-full">
-      {/* Left: File Tree 35% */}
+      {/* Left: File Tree */}
       <div className="w-[35%] border-r flex flex-col overflow-auto">
         <div className="px-4 py-3 border-b">
           <h2 className="text-sm font-semibold">Rules</h2>
@@ -306,11 +330,11 @@ export default function RulesPage() {
               return (
                 <div key={project.projectName}>
                   {/* Project header */}
-                  <div className="flex items-center gap-1 group">
+                  <div className="flex items-center group">
                     <button
                       onClick={() => project.loaded && toggleGroup(projectKey)}
                       className={cn(
-                        'flex flex-1 items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors min-w-0',
+                        'flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium transition-colors min-w-0',
                         project.loaded
                           ? 'text-foreground hover:bg-muted'
                           : 'text-muted-foreground/50'
@@ -319,72 +343,111 @@ export default function RulesPage() {
                     >
                       {project.loaded ? (
                         projectCollapsed ? (
-                          <ChevronRight className="size-3 shrink-0" />
+                          <ChevronRight className="size-3.5 shrink-0" />
                         ) : (
-                          <ChevronDown className="size-3 shrink-0" />
+                          <ChevronDown className="size-3.5 shrink-0" />
                         )
                       ) : (
-                        <FolderOpen className="size-3 shrink-0 opacity-40" />
+                        <Folder className="size-3.5 shrink-0 opacity-40" />
                       )}
                       <span className="truncate">{project.projectName}</span>
-                      {!project.loaded && (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 ml-1 opacity-50 shrink-0">
-                          unloaded
-                        </Badge>
-                      )}
                     </button>
 
-                    {/* Load / Unload button */}
+                    {/* Load / Unload action */}
                     {project.loaded ? (
                       <button
                         onClick={() => handleUnload(project.projectName)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-muted transition-all shrink-0"
+                        className="opacity-0 group-hover:opacity-100 p-1 mr-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
                         title={t('rules.unload')}
                       >
-                        <X className="size-3" />
+                        <X className="size-3.5" />
                       </button>
                     ) : (
                       <button
                         onClick={() => {
-                          setLoadingProject(
-                            isEditing ? null : project.projectName
-                          )
-                          setPathInput('')
+                          if (isEditing) {
+                            setLoadingProject(null)
+                            setPathInput('')
+                            setLoadError(null)
+                          } else {
+                            setLoadingProject(project.projectName)
+                            setPathInput('')
+                            setLoadError(null)
+                          }
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all shrink-0"
+                        className={cn(
+                          'p-1 mr-1 rounded transition-all shrink-0',
+                          isEditing
+                            ? 'opacity-100 text-foreground bg-muted'
+                            : 'opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted'
+                        )}
                         title={t('rules.load')}
                       >
-                        <FolderInput className="size-3" />
+                        <FolderInput className="size-3.5" />
                       </button>
                     )}
                   </div>
 
-                  {/* Path input for loading */}
+                  {/* Load project panel */}
                   {isEditing && (
-                    <div className="ml-5 mr-1 mt-1 mb-2 flex gap-1">
-                      <input
-                        type="text"
-                        value={pathInput}
-                        onChange={(e) => setPathInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleLoad(project.projectName)
-                          if (e.key === 'Escape') {
+                    <div className="mx-2 mt-1 mb-2 p-3 rounded-lg border bg-muted/30 space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        {t('rules.load.placeholder')}
+                      </p>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={pathInput}
+                          onChange={(e) => {
+                            setPathInput(e.target.value)
+                            setLoadError(null)
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleLoad(project.projectName, pathInput)
+                            if (e.key === 'Escape') {
+                              setLoadingProject(null)
+                              setPathInput('')
+                              setLoadError(null)
+                            }
+                          }}
+                          placeholder="/Users/..."
+                          className="flex-1 text-xs px-2.5 py-1.5 rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+                          autoFocus
+                        />
+                        {isElectron() ? (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            onClick={() => handleBrowse(project.projectName)}
+                            title="Browse"
+                          >
+                            <Folder className="size-3" />
+                          </Button>
+                        ) : null}
+                      </div>
+                      {loadError && (
+                        <p className="text-xs text-destructive">{loadError}</p>
+                      )}
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => {
                             setLoadingProject(null)
                             setPathInput('')
-                          }
-                        }}
-                        placeholder={t('rules.load.placeholder')}
-                        className="flex-1 text-xs px-2 py-1 rounded border bg-background focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-                        autoFocus
-                      />
-                      <Button
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        onClick={() => handleLoad(project.projectName)}
-                        disabled={!pathInput.trim()}
-                      >
-                        {t('rules.load.btn')}
-                      </Button>
+                            setLoadError(null)
+                          }}
+                        >
+                          {t('rules.load.cancel')}
+                        </Button>
+                        <Button
+                          size="xs"
+                          onClick={() => handleLoad(project.projectName, pathInput)}
+                          disabled={!pathInput.trim()}
+                        >
+                          {t('rules.load.btn')}
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -395,16 +458,16 @@ export default function RulesPage() {
                       const agentKey = `${projectKey}-${agent}`
                       const agentCollapsed = collapsedGroups.has(agentKey)
                       return (
-                        <div key={agent} className="ml-3">
+                        <div key={agent} className="ml-4">
                           <button
                             onClick={() => toggleGroup(agentKey)}
-                            className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium hover:bg-muted transition-colors"
+                            className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium hover:bg-muted transition-colors"
                             style={{ color: AGENT_CSS_VARS[agent] }}
                           >
                             {agentCollapsed ? (
-                              <ChevronRight className="size-3" />
+                              <ChevronRight className="size-3.5" />
                             ) : (
-                              <ChevronDown className="size-3" />
+                              <ChevronDown className="size-3.5" />
                             )}
                             {AGENT_LABELS[agent]}
                           </button>
@@ -415,7 +478,7 @@ export default function RulesPage() {
                                 key={file.path}
                                 onClick={() => loadFile(file)}
                                 className={cn(
-                                  'flex w-full items-center gap-2 px-2 py-1.5 ml-3 rounded text-xs transition-colors text-left',
+                                  'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-[13px] transition-colors text-left',
                                   selectedFile && fileKey(selectedFile) === fileKey(file)
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -437,12 +500,12 @@ export default function RulesPage() {
               <div>
                 <button
                   onClick={() => toggleGroup('user')}
-                  className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   {collapsedGroups.has('user') ? (
-                    <ChevronRight className="size-3" />
+                    <ChevronRight className="size-3.5" />
                   ) : (
-                    <ChevronDown className="size-3" />
+                    <ChevronDown className="size-3.5" />
                   )}
                   {t('rules.scope.user')}
                 </button>
@@ -452,16 +515,16 @@ export default function RulesPage() {
                     const agentKey = `user-${agent}`
                     const agentCollapsed = collapsedGroups.has(agentKey)
                     return (
-                      <div key={agent} className="ml-3">
+                      <div key={agent} className="ml-4">
                         <button
                           onClick={() => toggleGroup(agentKey)}
-                          className="flex w-full items-center gap-1 px-2 py-1 rounded text-xs font-medium hover:bg-muted transition-colors"
+                          className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium hover:bg-muted transition-colors"
                           style={{ color: AGENT_CSS_VARS[agent] }}
                         >
                           {agentCollapsed ? (
-                            <ChevronRight className="size-3" />
+                            <ChevronRight className="size-3.5" />
                           ) : (
-                            <ChevronDown className="size-3" />
+                            <ChevronDown className="size-3.5" />
                           )}
                           {AGENT_LABELS[agent]}
                         </button>
@@ -472,7 +535,7 @@ export default function RulesPage() {
                               key={file.path}
                               onClick={() => loadFile(file)}
                               className={cn(
-                                'flex w-full items-center gap-2 px-2 py-1.5 ml-3 rounded text-xs transition-colors text-left',
+                                'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-[13px] transition-colors text-left',
                                 selectedFile && fileKey(selectedFile) === fileKey(file)
                                   ? 'bg-primary text-primary-foreground'
                                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -489,13 +552,13 @@ export default function RulesPage() {
             )}
 
             {projectGroups.length === 0 && userAgents.length === 0 && (
-              <p className="text-xs text-muted-foreground px-2 py-4">{t('rules.empty')}</p>
+              <p className="text-sm text-muted-foreground px-2 py-4">{t('rules.empty')}</p>
             )}
           </nav>
         )}
       </div>
 
-      {/* Right: File Viewer/Editor 65% */}
+      {/* Right: File Viewer/Editor */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {!selectedFile ? (
           <div className="flex flex-col items-center justify-center flex-1 text-center text-muted-foreground px-8">

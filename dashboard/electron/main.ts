@@ -177,6 +177,16 @@ ipcMain.handle('capture-screenshot', async (_event, savePath: string) => {
   return savePath
 })
 
+ipcMain.handle('select-folder', async (_event, title?: string) => {
+  const { dialog } = await import('electron')
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: title || 'Select Folder',
+    properties: ['openDirectory'],
+  })
+  if (result.canceled || result.filePaths.length === 0) return null
+  return result.filePaths[0]
+})
+
 app.whenReady().then(async () => {
   registerIpcHandlers()
   createTray()

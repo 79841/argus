@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('db:mutate', name, body),
   captureScreenshot: (savePath: string) =>
     ipcRenderer.invoke('capture-screenshot', savePath),
+  selectFolder: (title?: string) =>
+    ipcRenderer.invoke('select-folder', title),
 })
