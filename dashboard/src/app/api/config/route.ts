@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { getDb } from '@/lib/db'
 
 const getUserHome = () => os.homedir()
 
@@ -68,56 +69,69 @@ const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> 
   return dynamic
 }
 
-const discoverProjects = (): Array<{ projectRoot: string; projectName: string }> => {
-  const home = getUserHome()
-  const scanRoots = [
-    path.join(home, 'Desktop', 'code'),
-    path.join(home, 'Documents', 'code'),
-    path.join(home, 'projects'),
-    path.join(home, 'dev'),
-    path.join(home, 'workspace'),
-  ]
+/** Decode ~/.claude/projects/ directory name back to filesystem path */
+const decodeCloudeProjectDir = (encoded: string): string | null => {
+  const parts = encoded.slice(1).split('-')
 
-  const projects = new Map<string, string>()
-
-  const scanDir = (dir: string, depth: number) => {
-    if (depth > 4 || !fs.existsSync(dir)) return
-    try {
-      const stat = fs.statSync(dir)
-      if (!stat.isDirectory()) return
-    } catch {
-      return
+  const tryPath = (idx: number, current: string): string | null => {
+    if (idx >= parts.length) {
+      try { return fs.statSync(current).isDirectory() ? current : null } catch { return null }
     }
+    // Try as hyphenated segment first (more specific)
+    const withHyphen = tryPath(idx + 1, current + '-' + parts[idx])
+    if (withHyphen) return withHyphen
+    // Try as new path segment
+    const withSlash = tryPath(idx + 1, current + '/' + parts[idx])
+    if (withSlash) return withSlash
+    return null
+  }
 
-    const hasConfig = CONFIG_FILE_PATTERNS.some(({ file }) =>
-      fs.existsSync(path.join(dir, file))
-    )
-    const hasClaudeDir = fs.existsSync(path.join(dir, '.claude'))
+  return tryPath(1, '/' + parts[0])
+}
 
-    if (hasConfig || hasClaudeDir) {
-      const name = path.basename(dir)
-      projects.set(dir, name)
-    }
+/** Get registered project names from DB */
+const getRegisteredProjects = (): string[] => {
+  try {
+    const db = getDb()
+    const rows = db.prepare(
+      "SELECT DISTINCT project_name FROM agent_logs WHERE project_name != '' ORDER BY project_name"
+    ).all() as Array<{ project_name: string }>
+    return rows.map((r) => r.project_name)
+  } catch {
+    return []
+  }
+}
 
-    if (depth < 4) {
-      try {
-        for (const entry of fs.readdirSync(dir)) {
-          if (entry.startsWith('.') || entry === 'node_modules' || entry === 'dist' || entry === 'build') continue
-          scanDir(path.join(dir, entry), depth + 1)
-        }
-      } catch {
-        // ignore permission errors
+/** Build map: projectName → filesystem path using ~/.claude/projects/ */
+const buildProjectPathMap = (): Map<string, string> => {
+  const result = new Map<string, string>()
+  const projectNames = getRegisteredProjects()
+  if (projectNames.length === 0) return result
+
+  const claudeProjectsDir = path.join(getUserHome(), '.claude', 'projects')
+  if (!fs.existsSync(claudeProjectsDir)) return result
+
+  let dirs: string[]
+  try {
+    dirs = fs.readdirSync(claudeProjectsDir).filter((d) => d.startsWith('-'))
+  } catch {
+    return result
+  }
+
+  for (const projectName of projectNames) {
+    const encoded = projectName.replace(/\//g, '-')
+    const matching = dirs.filter((d) => d.endsWith('-' + encoded))
+
+    for (const match of matching) {
+      const decoded = decodeCloudeProjectDir(match)
+      if (decoded) {
+        result.set(projectName, decoded)
+        break
       }
     }
   }
 
-  for (const root of scanRoots) {
-    scanDir(root, 0)
-  }
-
-  return Array.from(projects.entries())
-    .map(([projectRoot, projectName]) => ({ projectRoot, projectName }))
-    .sort((a, b) => a.projectName.localeCompare(b.projectName))
+  return result
 }
 
 const getProjectFiles = (projectRoot: string, projectName: string) => {
@@ -152,9 +166,10 @@ export async function GET(request: NextRequest) {
     const projectRoot = request.nextUrl.searchParams.get('projectRoot')
 
     if (!filePath) {
-      const projects = discoverProjects()
-      const allProjectFiles = projects.flatMap(({ projectRoot: root, projectName }) =>
-        getProjectFiles(root, projectName)
+      const projectPathMap = buildProjectPathMap()
+
+      const allProjectFiles = Array.from(projectPathMap.entries()).flatMap(
+        ([name, root]) => getProjectFiles(root, name)
       )
 
       const userFiles = USER_STATIC_FILES
