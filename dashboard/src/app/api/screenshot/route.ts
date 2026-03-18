@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import os from 'os'
 import path from 'path'
 import fs from 'fs'
+
+const ALLOWED_PATHS = new Set(['/', '/sessions', '/usage', '/tools', '/insights', '/settings', '/rules', '/projects'])
 
 const findChrome = (): string | null => {
   const platform = process.platform
@@ -31,6 +33,19 @@ export async function GET(request: NextRequest) {
     const width = sp.get('width') || '1280'
     const height = sp.get('height') || '800'
 
+    if (!ALLOWED_PATHS.has(pagePath)) {
+      return NextResponse.json({ error: 'Invalid path' }, { status: 400 })
+    }
+
+    const parsedWidth = parseInt(width, 10)
+    const parsedHeight = parseInt(height, 10)
+    if (
+      isNaN(parsedWidth) || parsedWidth < 320 || parsedWidth > 3840 ||
+      isNaN(parsedHeight) || parsedHeight < 320 || parsedHeight > 3840
+    ) {
+      return NextResponse.json({ error: 'Invalid dimensions' }, { status: 400 })
+    }
+
     const chromePath = findChrome()
     if (!chromePath) {
       return NextResponse.json({ error: 'Chrome not found' }, { status: 500 })
@@ -40,8 +55,16 @@ export async function GET(request: NextRequest) {
     const screenshotPath = path.join(os.tmpdir(), `argus-screenshot-${timestamp}.png`)
     const url = `http://localhost:3000${pagePath}`
 
-    execSync(
-      `"${chromePath}" --headless=new --disable-gpu --window-size=${width},${height} --hide-scrollbars --screenshot="${screenshotPath}" "${url}"`,
+    execFileSync(
+      chromePath,
+      [
+        '--headless=new',
+        '--disable-gpu',
+        `--window-size=${parsedWidth},${parsedHeight}`,
+        '--hide-scrollbars',
+        `--screenshot=${screenshotPath}`,
+        url,
+      ],
       { timeout: 15000, stdio: 'ignore' }
     )
 

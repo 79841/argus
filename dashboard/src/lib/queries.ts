@@ -8,6 +8,11 @@ import type { SuggestionInput } from './suggestions'
 
 const API_REQUEST_FILTER = "event_name = 'api_request'"
 
+const VALID_AGENT_TYPES = new Set(['all', 'claude', 'codex', 'gemini'])
+
+const sanitizeAgentType = (agentType: string): string =>
+  VALID_AGENT_TYPES.has(agentType) ? agentType : 'all'
+
 const agentFilter = (agentType: string) =>
   agentType !== 'all' ? `AND agent_type = ?` : ''
 
@@ -160,11 +165,14 @@ export type DailyStats = {
 
 export const getDailyStats = async (agentType: string, days: number = 30, project: string = 'all', from?: string, to?: string): Promise<DailyStats[]> => {
   const db = getDb()
-  const agentSelect = agentType === 'all' ? 'agent_type' : `'${agentType}' as agent_type`
-  const agentGroupBy = agentType === 'all' ? ', agent_type' : ''
+  const safeAgentType = sanitizeAgentType(agentType)
+  const agentSelect = safeAgentType === 'all' ? 'agent_type' : `? as agent_type`
+  const agentGroupBy = safeAgentType === 'all' ? ', agent_type' : ''
   const useDate = from && to
   const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
   const dateParams = useDate ? [from, to] : [days]
+
+  const selectParams = safeAgentType === 'all' ? [] : [safeAgentType]
 
   return db.prepare(`
     SELECT
@@ -178,11 +186,11 @@ export const getDailyStats = async (agentType: string, days: number = 30, projec
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       ${dateClause}
-      ${agentFilter(agentType)}
+      ${agentFilter(safeAgentType)}
       ${projectFilter(project)}
     GROUP BY date${agentGroupBy}
     ORDER BY date ASC
-  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as DailyStats[]
+  `).all(...selectParams, ...dateParams, ...agentParams(safeAgentType), ...projectParams(project)) as DailyStats[]
 }
 
 export type SessionRow = {

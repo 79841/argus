@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 
 export type ConfigChange = {
   date: string
@@ -56,10 +56,13 @@ export const getConfigHistory = async (
   sinceDate.setDate(sinceDate.getDate() - days)
   const since = sinceDate.toISOString().split('T')[0]
 
+  const HASH_PATTERN = /^[0-9a-f]{40}$/
+
   for (const filePath of PROJECT_FILES) {
     try {
-      const logOutput = execSync(
-        `git log --since="${since}" --format="%H|%aI|%s" --follow -- "${filePath}"`,
+      const logOutput = execFileSync(
+        'git',
+        ['log', `--since=${since}`, '--format=%H|%aI|%s', '--follow', '--', filePath],
         { cwd: repoPath, encoding: 'utf-8', timeout: 5000 }
       ).trim()
 
@@ -71,20 +74,22 @@ export const getConfigHistory = async (
         const message = msgParts.join('|')
         const agentType = detectAgentType(filePath)
 
+        if (!HASH_PATTERN.test(hash)) continue
+
         let diff = ''
         try {
-          diff = execSync(`git diff ${hash}~1..${hash} -- "${filePath}"`, {
-            cwd: repoPath,
-            encoding: 'utf-8',
-            timeout: 5000,
-          }).trim()
+          diff = execFileSync(
+            'git',
+            ['diff', `${hash}~1..${hash}`, '--', filePath],
+            { cwd: repoPath, encoding: 'utf-8', timeout: 5000 }
+          ).trim()
         } catch {
           try {
-            diff = execSync(`git show ${hash}:"${filePath}"`, {
-              cwd: repoPath,
-              encoding: 'utf-8',
-              timeout: 5000,
-            }).substring(0, 500)
+            diff = execFileSync(
+              'git',
+              ['show', `${hash}:${filePath}`],
+              { cwd: repoPath, encoding: 'utf-8', timeout: 5000 }
+            ).substring(0, 500)
           } catch {
             /* ignore */
           }

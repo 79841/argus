@@ -35,11 +35,11 @@ const isPathSafe = (filePath: string): boolean => {
   if (filePath.startsWith('~/')) {
     const resolved = path.resolve(resolvePath(filePath))
     const home = getUserHome()
-    return resolved.startsWith(home) && !filePath.includes('..')
+    return resolved.startsWith(home + path.sep) || resolved === home
   }
-  const resolved = path.resolve(getProjectRoot(), filePath)
   const root = getProjectRoot()
-  return resolved.startsWith(root) && !filePath.includes('..')
+  const resolved = path.resolve(root, filePath)
+  return resolved.startsWith(root + path.sep) || resolved === root
 }
 
 const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> => {
