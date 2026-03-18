@@ -7,7 +7,6 @@ import {
   extractProjectFromArgs,
 } from '@/lib/ingest-utils'
 import type { OtlpLogsRequest } from '@/lib/ingest-utils'
-import { sanitizePrompt, analyzePrompt } from '@/lib/prompt-sanitizer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,13 +30,6 @@ export async function POST(request: NextRequest) {
         timestamp, session_id, tool_name, detail_name, detail_type,
         duration_ms, success, project_name, metadata, agent_type
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '{}', ?)
-    `)
-
-    const insertPromptText = db.prepare(`
-      INSERT INTO prompt_texts (
-        timestamp, session_id, prompt_id, agent_type, project_name,
-        prompt_text, prompt_length, word_count, has_code, masked_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     let count = 0
@@ -113,23 +105,6 @@ export async function POST(request: NextRequest) {
               attrsToJson(attrs)
             )
 
-            if (eventName === 'user_prompt') {
-              const rawText = getAttr(attrs, 'prompt_text') || (logRecord.body ? getVal(logRecord.body) : '')
-              const { text: sanitizedText, maskedCount } = sanitizePrompt(rawText)
-              const analysis = analyzePrompt(rawText)
-              insertPromptText.run(
-                timestamp,
-                sessionId,
-                getAttr(attrs, 'prompt.id') || getAttr(attrs, 'prompt_id'),
-                agentType,
-                resolvedProject,
-                sanitizedText,
-                analysis.length,
-                analysis.wordCount,
-                analysis.hasCode,
-                maskedCount
-              )
-            }
 
             // Auto-extract orchestration tool details from Claude Code
             if (agentType === 'claude' && eventName === 'tool_result' && toolName) {

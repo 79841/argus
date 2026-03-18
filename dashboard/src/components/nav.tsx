@@ -14,8 +14,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  BrainCircuit,
-  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocale } from '@/lib/i18n'
@@ -37,8 +35,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
   { href: '/rules', labelKey: 'nav.rules', icon: FileText },
   { href: '/insights', labelKey: 'nav.insights', icon: Lightbulb },
-  { href: '/prompt-analysis', labelKey: 'nav.promptAnalysis', icon: BrainCircuit },
-  { href: '/prompt-insights', labelKey: 'nav.promptInsights', icon: Sparkles },
 ]
 
 const SETTINGS_ITEM: NavItem = {

@@ -21,12 +21,3 @@ export { getHighCostSessions, getModelCostEfficiency, getBudgetStatus, getSugges
 
 export type { ConfigComparePeriod, ConfigCompareResult } from './config-history'
 export { getConfigCompareStats } from './config-history'
-
-export type { PromptSearchResult, PromptSearchFilters, SecurityStats, PromptRow } from './prompts'
-export { searchPrompts, getSecurityStats, getPromptsBySession } from './prompts'
-
-export type { ComplexityCostRow, CategoryDistRow, FailedSessionRow, EffectivenessPatternRow } from './prompt-analysis'
-export { getComplexityCostCorrelation, getCategoryDistribution, getFailedSessions, getEffectivenessPatterns } from './prompt-analysis'
-
-export type { SessionNarrativeRow, RepetitionClusterRow, PromptEvolutionResult, CodeAreaRow } from './prompt-visualization'
-export { getSessionNarratives, getRepetitionClusters, getSessionEvolution, getCodeAreaHeatmap } from './prompt-visualization'

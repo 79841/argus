@@ -19,8 +19,6 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.projects': '프로젝트',
     'nav.collapse': '접기',
     'nav.expand': '펼치기',
-    'nav.promptAnalysis': '프롬프트 분석',
-    'nav.promptInsights': '프롬프트 인사이트',
 
     // Settings categories
     'settings.title': '설정',
@@ -259,8 +257,6 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.projects': 'Projects',
     'nav.collapse': 'Collapse',
     'nav.expand': 'Expand',
-    'nav.promptAnalysis': 'Prompt Analysis',
-    'nav.promptInsights': 'Prompt Insights',
 
     // Settings categories
     'settings.title': 'Settings',

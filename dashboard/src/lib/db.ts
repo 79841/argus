@@ -109,23 +109,6 @@ export const initSchema = (db: Database.Database) => {
       created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
     );
 
-    CREATE TABLE IF NOT EXISTS prompt_texts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-      session_id TEXT NOT NULL DEFAULT '',
-      prompt_id TEXT NOT NULL DEFAULT '',
-      agent_type TEXT NOT NULL DEFAULT 'claude',
-      project_name TEXT NOT NULL DEFAULT '',
-      prompt_text TEXT NOT NULL DEFAULT '',
-      prompt_length INTEGER NOT NULL DEFAULT 0,
-      word_count INTEGER NOT NULL DEFAULT 0,
-      has_code INTEGER NOT NULL DEFAULT 0,
-      masked_count INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_prompt_texts_session ON prompt_texts(session_id);
-    CREATE INDEX IF NOT EXISTS idx_prompt_texts_timestamp ON prompt_texts(timestamp);
-    CREATE INDEX IF NOT EXISTS idx_prompt_texts_project ON prompt_texts(project_name);
   `)
 
   migrate(db)
@@ -192,39 +175,6 @@ const migrate = (db: Database.Database) => {
     db.exec("UPDATE tool_details SET detail_type = 'mcp' WHERE detail_type NOT IN ('agent', 'skill', 'mcp') AND tool_name LIKE 'mcp:%'")
   })
 
-  run(6, () => {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS prompt_texts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-        session_id TEXT NOT NULL DEFAULT '',
-        prompt_id TEXT NOT NULL DEFAULT '',
-        agent_type TEXT NOT NULL DEFAULT 'claude',
-        project_name TEXT NOT NULL DEFAULT '',
-        prompt_text TEXT NOT NULL DEFAULT '',
-        prompt_length INTEGER NOT NULL DEFAULT 0,
-        word_count INTEGER NOT NULL DEFAULT 0,
-        has_code INTEGER NOT NULL DEFAULT 0,
-        masked_count INTEGER NOT NULL DEFAULT 0
-      );
-      CREATE INDEX IF NOT EXISTS idx_prompt_texts_session ON prompt_texts(session_id);
-      CREATE INDEX IF NOT EXISTS idx_prompt_texts_timestamp ON prompt_texts(timestamp);
-      CREATE INDEX IF NOT EXISTS idx_prompt_texts_project ON prompt_texts(project_name);
-
-      CREATE VIRTUAL TABLE IF NOT EXISTS prompt_texts_fts USING fts5(
-        prompt_text,
-        content='prompt_texts',
-        content_rowid='id'
-      );
-
-      CREATE TRIGGER IF NOT EXISTS prompt_texts_ai AFTER INSERT ON prompt_texts BEGIN
-        INSERT INTO prompt_texts_fts(rowid, prompt_text) VALUES (new.id, new.prompt_text);
-      END;
-      CREATE TRIGGER IF NOT EXISTS prompt_texts_ad AFTER DELETE ON prompt_texts BEGIN
-        INSERT INTO prompt_texts_fts(prompt_texts_fts, rowid, prompt_text) VALUES('delete', old.id, old.prompt_text);
-      END;
-    `)
-  })
 }
 
 export const seedPricing = (db: Database.Database) => {
