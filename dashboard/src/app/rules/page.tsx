@@ -310,8 +310,8 @@ export default function RulesPage() {
       {/* Left: File Tree */}
       <div className="w-[35%] border-r flex flex-col overflow-auto">
         <div className="px-4 py-3 border-b">
-          <h2 className="text-sm font-semibold">Rules</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{t('rules.subtitle')}</p>
+          <h2 className="text-base font-semibold">Rules</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('rules.subtitle')}</p>
         </div>
 
         {loading ? (
@@ -334,7 +334,7 @@ export default function RulesPage() {
                     <button
                       onClick={() => project.loaded && toggleGroup(projectKey)}
                       className={cn(
-                        'flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium transition-colors min-w-0',
+                        'flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium transition-colors min-w-0',
                         project.loaded
                           ? 'text-foreground hover:bg-muted'
                           : 'text-muted-foreground/50'
@@ -369,6 +369,8 @@ export default function RulesPage() {
                             setLoadingProject(null)
                             setPathInput('')
                             setLoadError(null)
+                          } else if (isElectron()) {
+                            handleBrowse(project.projectName)
                           } else {
                             setLoadingProject(project.projectName)
                             setPathInput('')
@@ -460,7 +462,7 @@ export default function RulesPage() {
                         <div key={agent} className="ml-4">
                           <button
                             onClick={() => toggleGroup(agentKey)}
-                            className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium hover:bg-muted transition-colors"
+                            className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium hover:bg-muted transition-colors"
                             style={{ color: AGENT_CSS_VARS[agent] }}
                           >
                             {agentCollapsed ? (
@@ -477,7 +479,7 @@ export default function RulesPage() {
                                 key={file.path}
                                 onClick={() => loadFile(file)}
                                 className={cn(
-                                  'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-[13px] transition-colors text-left',
+                                  'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-sm transition-colors text-left',
                                   selectedFile && fileKey(selectedFile) === fileKey(file)
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -499,7 +501,7 @@ export default function RulesPage() {
               <div>
                 <button
                   onClick={() => toggleGroup('user')}
-                  className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   {collapsedGroups.has('user') ? (
                     <ChevronRight className="size-3.5" />
@@ -517,7 +519,7 @@ export default function RulesPage() {
                       <div key={agent} className="ml-4">
                         <button
                           onClick={() => toggleGroup(agentKey)}
-                          className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-[13px] font-medium hover:bg-muted transition-colors"
+                          className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium hover:bg-muted transition-colors"
                           style={{ color: AGENT_CSS_VARS[agent] }}
                         >
                           {agentCollapsed ? (
@@ -534,7 +536,7 @@ export default function RulesPage() {
                               key={file.path}
                               onClick={() => loadFile(file)}
                               className={cn(
-                                'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-[13px] transition-colors text-left',
+                                'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-sm transition-colors text-left',
                                 selectedFile && fileKey(selectedFile) === fileKey(file)
                                   ? 'bg-primary text-primary-foreground'
                                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
