@@ -21,3 +21,6 @@ export { getHighCostSessions, getModelCostEfficiency, getBudgetStatus, getSugges
 
 export type { ConfigComparePeriod, ConfigCompareResult } from './config-history'
 export { getConfigCompareStats } from './config-history'
+
+export type { PromptSearchResult, PromptSearchFilters, SecurityStats, PromptRow } from './prompts'
+export { searchPrompts, getSecurityStats, getPromptsBySession } from './prompts'
