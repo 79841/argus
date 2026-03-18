@@ -31,6 +31,7 @@ import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { AgentType } from '@/lib/agents'
 import { dataClient } from '@/lib/data-client'
+import { formatDuration } from '@/lib/format'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -90,12 +91,6 @@ const TOOL_COLORS: Record<string, string> = {
 const DEFAULT_COLORS = ['#64748b', '#94a3b8', '#78716c', '#a8a29e', '#71717a']
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const formatDuration = (ms: number): string => {
-  if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
-  if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
-  return `${Math.round(ms)}ms`
-}
 
 const formatNumber = (n: number): string => n.toLocaleString()
 

@@ -7,3 +7,31 @@ export const formatCostDetail = (v: number): string => {
 }
 
 export const formatCostChart = (v: number): string => `$${v.toFixed(4)}`
+
+export const formatTokens = (value: number): string => {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+  return String(value)
+}
+
+export const formatDuration = (ms: number): string => {
+  if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
+  if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
+  return `${Math.round(ms)}ms`
+}
+
+export const shortenModel = (model: string): string =>
+  model
+    .replace(/^claude-/, '')
+    .replace(/^models\//, '')
+    .replace(/-\d{8}$/, '')
+
+export const parseModels = (model: string): string[] => {
+  if (!model) return ['unknown']
+  return model.split(',').map((m) => m.trim()).filter(Boolean)
+}
+
+export const formatTime = (ts: string): string => {
+  const d = new Date(ts)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}

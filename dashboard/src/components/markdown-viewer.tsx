@@ -67,15 +67,14 @@ type MarkdownViewerProps = {
   onHeadingsChange?: (headings: Heading[]) => void
 }
 
-let headingCounter = 0
-const slugify = (text: string): string => {
+const makeSlugify = (counterRef: { current: number }) => (text: string): string => {
   const slug = text
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-\u3131-\u318E\uAC00-\uD7A3]/g, '')
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
-  return slug || `heading-${headingCounter++}`
+  return slug || `heading-${counterRef.current++}`
 }
 
 const parseFrontmatter = (content: string): { frontmatter: FrontmatterData | null; body: string } => {
@@ -207,7 +206,13 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
 
 export const MarkdownViewer = ({ content, className, onHeadingsChange }: MarkdownViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { frontmatter, body } = useMemo(() => parseFrontmatter(content), [content])
+  const headingCounterRef = useRef(0)
+  const { frontmatter, body } = useMemo(() => {
+    headingCounterRef.current = 0
+    return parseFrontmatter(content)
+  }, [content])
+
+  const slugify = useMemo(() => makeSlugify(headingCounterRef), [])
 
   const extractHeadings = useCallback(() => {
     if (!containerRef.current || !onHeadingsChange) return

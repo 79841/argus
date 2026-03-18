@@ -21,35 +21,7 @@ import { CHART_THEME } from '@/lib/chart-theme'
 import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import { FilterBar } from '@/components/filter-bar'
-import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
-
-const formatTokens = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return String(value)
-}
-
-const formatDuration = (ms: number): string => {
-  if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
-  if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
-  return `${ms}ms`
-}
-
-const shortenModel = (model: string): string =>
-  model
-    .replace(/^claude-/, '')
-    .replace(/^models\//, '')
-    .replace(/-\d{8}$/, '')
-
-const parseModels = (model: string): string[] => {
-  if (!model) return ['unknown']
-  return model.split(',').map((m) => m.trim()).filter(Boolean)
-}
-
-const formatTime = (ts: string): string => {
-  const d = new Date(ts)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-}
+import { formatCost, formatCostDetail, formatCostChart, formatTokens, formatDuration, shortenModel, parseModels, formatTime } from '@/lib/format'
 
 type PromptGroup = {
   promptId: string

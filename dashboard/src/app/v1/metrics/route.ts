@@ -4,43 +4,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { detectAgentType } from '@/lib/ingest-utils'
-
-type AnyValue = {
-  stringValue?: string
-  intValue?: string | number
-  doubleValue?: number
-  boolValue?: boolean
-}
-
-type KeyValue = {
-  key: string
-  value: AnyValue
-}
-
-const getVal = (kv: AnyValue | undefined): string => {
-  if (!kv) return ''
-  if (kv.stringValue !== undefined) return kv.stringValue
-  if (kv.intValue !== undefined) return String(kv.intValue)
-  if (kv.doubleValue !== undefined) return String(kv.doubleValue)
-  if (kv.boolValue !== undefined) return String(kv.boolValue)
-  return ''
-}
-
-const getAttr = (attrs: KeyValue[] | undefined, key: string): string => {
-  const kv = attrs?.find((a) => a.key === key)
-  return kv ? getVal(kv.value) : ''
-}
-
-const getNumAttr = (attrs: KeyValue[] | undefined, key: string): number => {
-  const val = getAttr(attrs, key)
-  return val ? Number(val) : 0
-}
-
-const attrsToJson = (attrs: KeyValue[] | undefined): string => {
-  if (!attrs || attrs.length === 0) return '{}'
-  return JSON.stringify(Object.fromEntries(attrs.map((a) => [a.key, getVal(a.value)])))
-}
+import { detectAgentType, getAttr, attrsToJson } from '@/lib/ingest-utils'
+import type { AnyValue, KeyValue } from '@/lib/ingest-utils'
 
 type DataPoint = {
   attributes?: Record<string, unknown> | KeyValue[]

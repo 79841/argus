@@ -112,12 +112,14 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
           existing.agents.add(d.agent_type)
         }
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
-        const prevInput = existing.cacheHitRate >= 0
-          ? existing.cacheHitRate * 100
-          : 0
-        existing.cacheHitRate = totalInput > 0
-          ? ((d.cache_read_tokens ?? 0) + prevInput) / (totalInput + (prevInput > 0 ? prevInput / existing.cacheHitRate : 0))
-          : existing.cacheHitRate
+        if (totalInput > 0) {
+          const newRate = (d.cache_read_tokens ?? 0) / totalInput
+          if (existing.cacheHitRate < 0) {
+            existing.cacheHitRate = newRate
+          } else {
+            existing.cacheHitRate = (existing.cacheHitRate + newRate) / 2
+          }
+        }
       } else {
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
         const agents = new Set<string>()

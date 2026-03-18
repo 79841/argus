@@ -9,31 +9,14 @@ import {
   type WaterfallGroup,
   type TimeScale,
 } from '@/lib/trace-waterfall'
+import { formatDuration, formatTime, shortenModel } from '@/lib/format'
 
 type TraceWaterfallProps = {
   events: SessionDetailEvent[]
 }
 
-const formatDuration = (ms: number): string => {
-  if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
-  if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
-  if (ms > 0) return `${ms}ms`
-  return '-'
-}
-
 const formatCost = (value: number): string =>
   value > 0 ? `$${value.toFixed(3)}` : '-'
-
-const formatTime = (ts: string): string => {
-  const d = new Date(ts)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-}
-
-const shortenModel = (model: string): string =>
-  model
-    .replace(/^claude-/, '')
-    .replace(/^models\//, '')
-    .replace(/-\d{8}$/, '')
 
 const EVENT_BAR_COLOR: Record<string, string> = {
   api_request: 'bg-blue-500',

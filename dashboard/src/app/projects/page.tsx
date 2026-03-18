@@ -190,24 +190,13 @@ export default function ProjectsPage() {
         empty={!loading && projects.length === 0}
         emptyMessage={t('projects.chart.noData')}
       >
-        <div
-          className="cursor-pointer"
-          onClick={(e) => {
-            const row = (e.target as HTMLElement).closest('tr[data-row]')
-            if (row) {
-              const name = row.getAttribute('data-row')
-              if (name) router.push(`/projects/${encodeURIComponent(name)}`)
-            }
+        <DataTableClickable
+          columns={columns}
+          data={projects as unknown as Record<string, unknown>[]}
+          onRowClick={(row) => {
+            router.push(`/projects/${encodeURIComponent(row.project_name as string)}`)
           }}
-        >
-          <DataTableClickable
-            columns={columns}
-            data={projects as unknown as Record<string, unknown>[]}
-            onRowClick={(row) => {
-              router.push(`/projects/${encodeURIComponent(row.project_name as string)}`)
-            }}
-          />
-        </div>
+        />
       </ChartCard>
       </div>
       </div>

@@ -4,6 +4,7 @@ import type { ToolDetailRow } from '@/lib/queries'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatTokens, formatDuration } from '@/lib/format'
 
 type ToolDetailTableProps = {
   data: ToolDetailRow[]
@@ -15,19 +16,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string
   'MCP': { label: 'MCP', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900' },
 }
 
-const formatTokens = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return String(value)
-}
-
 const formatCost = (value: number): string => `$${value.toFixed(4)}`
-
-const formatDuration = (ms: number): string => {
-  if (ms >= 60_000) return `${(ms / 60_000).toFixed(1)}m`
-  if (ms >= 1_000) return `${(ms / 1_000).toFixed(1)}s`
-  return `${Math.round(ms)}ms`
-}
 
 const formatToolName = (name: string): string => {
   if (name.startsWith('mcp__')) {
