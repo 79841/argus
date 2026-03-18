@@ -110,7 +110,7 @@ const groupByAgent = (list: FileEntry[]) => {
 const isElectron = () =>
   typeof window !== 'undefined' && window.electronAPI !== undefined
 
-const selectFolderNative = async (): Promise<string | null> => {
+const selectFolder = async (): Promise<string | null> => {
   if (isElectron() && window.electronAPI?.selectFolder) {
     return window.electronAPI.selectFolder('Select Project Folder')
   }
@@ -197,7 +197,7 @@ export default function RulesPage() {
   }
 
   const handleBrowse = async (projectName: string) => {
-    const folder = await selectFolderNative()
+    const folder = await selectFolder()
     if (folder) {
       setPathInput(folder)
       await handleLoad(projectName, folder)
@@ -364,10 +364,8 @@ export default function RulesPage() {
                       </button>
                     ) : (
                       <button
-                        onClick={async () => {
-                          if (isElectron()) {
-                            await handleBrowse(project.projectName)
-                          } else if (isEditing) {
+                        onClick={() => {
+                          if (isEditing) {
                             setLoadingProject(null)
                             setPathInput('')
                             setLoadError(null)
@@ -390,8 +388,8 @@ export default function RulesPage() {
                     )}
                   </div>
 
-                  {/* Load project panel (web only — Electron opens native picker directly) */}
-                  {isEditing && !isElectron() && (
+                  {/* Load project panel */}
+                  {isEditing && (
                     <div className="mx-2 mt-1 mb-2 p-3 rounded-lg border bg-muted/30 space-y-2">
                       <p className="text-xs text-muted-foreground">
                         {t('rules.load.placeholder')}
@@ -416,6 +414,15 @@ export default function RulesPage() {
                           className="flex-1 text-xs px-2.5 py-1.5 rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-ring font-mono"
                           autoFocus
                         />
+                        {isElectron() && (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            onClick={() => handleBrowse(project.projectName)}
+                          >
+                            <Folder className="size-3" />
+                          </Button>
+                        )}
                       </div>
                       {loadError && (
                         <p className="text-xs text-destructive">{loadError}</p>
