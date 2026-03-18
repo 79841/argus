@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProjects, getProjectCosts, getProjectComparison } from '@/lib/queries'
+import { parseAgentType } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (agentType !== null || from || to) {
-      const data = await getProjectCosts(agentType ?? 'all', from, to)
+      const data = await getProjectCosts(parseAgentType(agentType), from, to)
       return NextResponse.json(data)
     }
 

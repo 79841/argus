@@ -55,8 +55,7 @@ export async function POST(request: NextRequest) {
       })
       return ingestPOST(jsonRequest)
     } catch {
-      const msg = protoErr instanceof Error ? protoErr.message : String(protoErr)
-      return NextResponse.json({ error: msg }, { status: 400 })
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   }
 }

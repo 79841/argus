@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToolUsageStats, getToolDetailStats, getDailyToolStats, getIndividualToolStats } from '@/lib/queries'
+import { parseAgentType, parseDays } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams
-    const agentType = sp.get('agent_type') || 'all'
-    const rawDays = parseInt(sp.get('days') || '7', 10)
-    const days = isNaN(rawDays) || rawDays < 1 ? 7 : rawDays
+    const agentType = parseAgentType(sp.get('agent_type'))
+    const days = parseDays(sp.get('days'), 7)
     const project = sp.get('project') || 'all'
     const detail = sp.get('detail') === 'true'
     const from = sp.get('from') || undefined

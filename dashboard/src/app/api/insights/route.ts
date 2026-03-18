@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/lib/queries'
+import { parseDays, parseLimit } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams
-    const days = parseInt(sp.get('days') || '7', 10)
-    const limit = parseInt(sp.get('limit') || '10', 10)
+    const days = parseDays(sp.get('days'), 7)
+    const limit = parseLimit(sp.get('limit'), 10)
 
     const [highCostSessions, modelEfficiency, budgetStatus] = await Promise.all([
       getHighCostSessions(days, limit),

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEfficiencyStats, getEfficiencyComparison } from '@/lib/queries'
+import { parseDays } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams
-    const days = parseInt(sp.get('days') || '7', 10)
+    const days = parseDays(sp.get('days'), 7)
     const project = sp.get('project') || 'all'
     const from = sp.get('from') || undefined
     const to = sp.get('to') || undefined

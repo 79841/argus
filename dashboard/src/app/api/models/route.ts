@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getModelUsage } from '@/lib/queries'
+import { parseAgentType } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams
-    const agentType = sp.get('agent_type') || 'all'
+    const agentType = parseAgentType(sp.get('agent_type'))
     const project = sp.get('project') || 'all'
     const from = sp.get('from') || undefined
     const to = sp.get('to') || undefined

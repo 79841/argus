@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { scanRegisteredTools } from '@/lib/registered-tools'
 
 export async function GET() {
-  const tools = scanRegisteredTools()
-  return NextResponse.json({ tools })
+  try {
+    const tools = scanRegisteredTools()
+    return NextResponse.json({ tools })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

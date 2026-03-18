@@ -63,6 +63,7 @@ const AGENT_CONFIGS: AgentSeedConfig[] = [
 ]
 
 export async function POST() {
+  try {
   const db = getDb()
 
   const insert = db.prepare(`
@@ -216,4 +217,7 @@ export async function POST() {
   tx()
 
   return NextResponse.json({ seeded: count })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

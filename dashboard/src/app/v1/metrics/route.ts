@@ -123,9 +123,8 @@ export async function POST(request: NextRequest) {
           enums: String,
           defaults: true,
         }) as OtlpMetricsRequest
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e)
-        return NextResponse.json({ error: msg }, { status: 400 })
+      } catch {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
       }
     }
 
@@ -255,8 +254,7 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ accepted: count })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 400 })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
