@@ -51,3 +51,4 @@ PRD.md
 next-env.d.ts
 website/node_modules/
 website/dist/
+package-lock.json

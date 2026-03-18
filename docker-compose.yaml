@@ -1,4 +1,18 @@
 services:
+  # TODO: dashboard/Dockerfile 생성 후 아래 주석 해제
+  # dashboard:
+  #   build:
+  #     context: ./dashboard
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./argus.db:/app/argus.db
+  #   environment:
+  #     - ARGUS_DB_PATH=/app/argus.db
+  #   depends_on:
+  #     - otel-collector
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: argus-otel-collector
@@ -8,3 +22,8 @@ services:
       - "4317:4317"   # OTLP gRPC
       - "4318:4318"   # OTLP HTTP
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

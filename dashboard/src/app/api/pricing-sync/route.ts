@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { syncPricingFromLiteLLM } from '@/lib/pricing-sync'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     const db = getDb()

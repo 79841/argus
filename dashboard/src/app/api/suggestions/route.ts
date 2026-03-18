@@ -3,6 +3,8 @@ import { getSuggestionMetrics } from '@/lib/queries'
 import { generateSuggestions } from '@/lib/suggestions'
 import { parseDays } from '@/lib/api-utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams

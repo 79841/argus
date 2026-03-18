@@ -63,6 +63,10 @@ const AGENT_CONFIGS: AgentSeedConfig[] = [
 ]
 
 export async function POST() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
+  }
+
   try {
   const db = getDb()
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessions } from '@/lib/queries'
 import { parseAgentType, parseLimit } from '@/lib/api-utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams

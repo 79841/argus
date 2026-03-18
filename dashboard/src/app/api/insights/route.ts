@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/lib/queries'
 import { parseDays, parseLimit } from '@/lib/api-utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams

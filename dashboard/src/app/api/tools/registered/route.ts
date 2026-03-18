@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { scanRegisteredTools } from '@/lib/registered-tools'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const tools = scanRegisteredTools()
