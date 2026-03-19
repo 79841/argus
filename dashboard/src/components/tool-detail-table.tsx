@@ -99,7 +99,7 @@ export const ToolDetailTable = ({ data }: ToolDetailTableProps) => {
                         <tr
                           key={row.tool_name}
                           className={cn(
-                            'border-b border-border/50 last:border-0',
+                            'border-b border-[var(--border-subtle)] last:border-0',
                             isHighFailRate && 'bg-red-50 dark:bg-red-950/30',
                           )}
                         >

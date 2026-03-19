@@ -81,7 +81,7 @@ export const RegisteredToolsCard = () => {
                   const typeConfig = TYPE_CONFIG[tool.type] ?? { label: tool.type, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
                   const scopeConfig = SCOPE_CONFIG[tool.scope] ?? { label: tool.scope, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
                   return (
-                    <tr key={`${tool.name}-${tool.type}-${tool.scope}`} className="border-b border-border/50 last:border-0">
+                    <tr key={`${tool.name}-${tool.type}-${tool.scope}`} className="border-b border-[var(--border-subtle)] last:border-0">
                       <td className="py-2.5 pr-4 max-w-0">
                         <Tooltip>
                           <TooltipTrigger className="block w-full truncate text-left font-mono text-xs font-medium">

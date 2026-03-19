@@ -137,8 +137,8 @@ export default function SessionsPage() {
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">
         {/* Left Panel: Session List (35%) */}
-        <div className="flex w-[35%] flex-col border-r">
-          <div className="flex items-center justify-between border-b px-4 py-2">
+        <div className="flex w-[35%] flex-col bg-[var(--bg-sunken)]">
+          <div className="flex items-center justify-between px-4 py-2">
             <span className="text-xs text-muted-foreground">
               {loading ? t('sessions.loading') : `${sortedSessions.length}${t('sessions.count')}`}
             </span>
@@ -160,7 +160,7 @@ export default function SessionsPage() {
                 return (
                   <div
                     key={s.session_id}
-                    className={`group relative border-b transition-colors hover:bg-muted/50 ${
+                    className={`group relative border-b border-[var(--border-subtle)] transition-colors hover:bg-muted/50 ${
                       selectedId === s.session_id ? 'bg-muted ring-1 ring-inset ring-muted-foreground/20' : ''
                     }`}
                   >

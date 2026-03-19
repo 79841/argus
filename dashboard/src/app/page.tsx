@@ -155,7 +155,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={agentId}
-                  className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg bg-[var(--bg-raised)] px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
                     <AgentDot agent={agentId} size="md" />

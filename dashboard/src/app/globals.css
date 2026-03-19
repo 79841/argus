@@ -117,7 +117,7 @@
 
   --radius: 0.5rem;
 
-  --sidebar: var(--bg-base);
+  --sidebar: var(--bg-sunken);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: var(--text-primary);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -195,7 +195,7 @@
   --input: oklch(1 0 0 / 15%);
   --ring: var(--text-tertiary);
 
-  --sidebar: var(--bg-base);
+  --sidebar: var(--bg-sunken);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: oklch(0.87 0 0);
   --sidebar-primary-foreground: oklch(0.175 0 0);

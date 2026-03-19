@@ -34,7 +34,7 @@ export const SessionModelCostChart = ({ events }: SessionModelCostChartProps) =>
 
   if (breakdown.length === 1) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border p-4">
+      <div className="flex items-center gap-2 rounded-lg p-4">
         <span className="text-xs text-muted-foreground">Single model:</span>
         <Badge variant="secondary" className="text-xs font-mono">
           {shortenModel(breakdown[0].model)}
@@ -53,7 +53,7 @@ export const SessionModelCostChart = ({ events }: SessionModelCostChartProps) =>
   }))
 
   return (
-    <div className="rounded-lg border p-4">
+    <div className="rounded-lg p-4">
       <h3 className="mb-3 text-sm font-semibold">Model Cost Breakdown</h3>
       <div className="flex gap-4">
         {/* Donut Chart */}

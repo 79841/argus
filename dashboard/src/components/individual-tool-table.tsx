@@ -158,7 +158,7 @@ export const IndividualToolTable = ({ data }: IndividualToolTableProps) => {
                       const agent = AGENT_STYLE[row.agent_type] ?? { label: row.agent_type, color: 'bg-gray-500' }
                       const displayName = formatMcpName(row.detail_name)
                       return (
-                        <tr key={`${row.tool_name}-${row.detail_name}-${row.agent_type}`} className="border-b border-border/50 last:border-0">
+                        <tr key={`${row.tool_name}-${row.detail_name}-${row.agent_type}`} className="border-b border-[var(--border-subtle)] last:border-0">
                           <td className="py-2.5 pr-4 max-w-0">
                             <Tooltip>
                               <TooltipTrigger className="block w-full truncate text-left font-mono text-xs font-medium">

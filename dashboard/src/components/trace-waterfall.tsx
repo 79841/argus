@@ -72,7 +72,7 @@ const WaterfallRow = ({ event, scale, indent = false, onHover }: WaterfallRowPro
 
   return (
     <div
-      className="group flex items-center gap-2 border-b border-border/40 px-3 py-1 text-xs hover:bg-muted/30 last:border-b-0"
+      className="group flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-1 text-xs hover:bg-muted/30 last:border-b-0"
       onMouseEnter={(e) => onHover({ event, x: e.clientX, y: e.clientY }, e)}
       onMouseMove={(e) => onHover({ event, x: e.clientX, y: e.clientY }, e)}
       onMouseLeave={() => onHover(null)}
@@ -143,7 +143,7 @@ const WaterfallGroupRow = ({ group, index, scale, onHover }: WaterfallGroupRowPr
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 border-b border-border/60 bg-muted/20 px-3 py-1.5 text-xs hover:bg-muted/40"
+        className="flex w-full items-center gap-2 border-b border-[var(--border-subtle)] bg-muted/20 px-3 py-1.5 text-xs hover:bg-muted/40"
       >
         <div className="w-[180px] shrink-0 truncate font-semibold text-foreground">
           <span className="font-mono text-muted-foreground">#{index + 1}</span>
@@ -242,7 +242,7 @@ export const TraceWaterfall = ({ events }: TraceWaterfallProps) => {
   return (
     <div className="relative">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b px-3 py-1 text-xs font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-1 text-xs font-medium text-muted-foreground">
         <div className="w-[180px] shrink-0">Name</div>
         <div className="min-w-0 flex-1 text-center">Timeline</div>
         <div className="w-[52px] shrink-0 text-right">Duration</div>
@@ -251,7 +251,7 @@ export const TraceWaterfall = ({ events }: TraceWaterfallProps) => {
       </div>
 
       {/* Groups */}
-      <div className="rounded-b-lg border-x border-b">
+      <div className="rounded-b-lg">
         {groups.map((group, idx) => (
           <WaterfallGroupRow
             key={group.promptId}

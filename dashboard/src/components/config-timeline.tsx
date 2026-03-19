@@ -69,7 +69,7 @@ const ComparePanel = ({ date }: { date: string }) => {
   ]
 
   return (
-    <div className="mt-3 rounded-lg border bg-muted/30 p-3">
+    <div className="mt-3 rounded-lg bg-muted/30 p-3">
       <div className="mb-2 text-xs font-semibold text-muted-foreground">Before vs After (7 days)</div>
       <div className="grid grid-cols-3 gap-4">
         {metrics.map((m) => (
@@ -107,7 +107,7 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
       {/* Left: Timeline */}
       <div className="relative ml-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-        <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+        <div className="absolute left-0 top-0 bottom-0 w-px bg-[var(--border-subtle)]" />
 
         {data.map((change, index) => {
           const agentHex = getAgentColor(change.agent_type)
@@ -131,8 +131,8 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
                 type="button"
                 onClick={() => setSelectedIndex(isSelected ? null : index)}
                 className={cn(
-                  'w-full text-left cursor-pointer rounded-lg border p-3 transition-colors hover:bg-muted/50',
-                  isSelected && 'border-primary bg-muted/50 ring-1 ring-primary'
+                  'w-full text-left cursor-pointer rounded-lg p-3 transition-colors hover:bg-muted/50',
+                  isSelected && 'bg-muted/50 ring-1 ring-primary'
                 )}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -182,7 +182,7 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
         <CardContent className="flex-1 overflow-hidden">
           {selected ? (
             selected.diff ? (
-              <pre className="overflow-auto h-full rounded-md border bg-muted/30 p-4 text-xs font-mono leading-5">
+              <pre className="overflow-auto h-full rounded-md bg-muted/30 p-4 text-xs font-mono leading-5">
                 {selected.diff.split('\n').map((line, i) => (
                   <DiffLine key={i} line={line} />
                 ))}

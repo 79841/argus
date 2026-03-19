@@ -60,7 +60,7 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
       </Tooltip>
 
       {/* 구분선 */}
-      <div className="h-4 w-px bg-border/50" />
+      <div className="h-4 w-px bg-[var(--border-subtle)]" />
 
       {/* 페이지별 필터 콘텐츠 (portal target) */}
       <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3" />
