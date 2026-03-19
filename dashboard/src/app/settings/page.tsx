@@ -642,7 +642,7 @@ export default function SettingsPage() {
       <FilterBar><span className="text-sm font-semibold">{t('settings.title')}</span></FilterBar>
       <div className="flex flex-1 min-h-0">
       {/* Left sidebar */}
-      <nav className="w-48 shrink-0 bg-[var(--bg-sunken)] overflow-y-auto py-4 px-2">
+      <nav className="w-48 shrink-0 border-r border-[var(--border-subtle)] overflow-y-auto py-4 px-2">
         <ul className="space-y-0.5">
           {categories.map((cat) => (
             <li key={cat.key}>
