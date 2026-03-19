@@ -423,7 +423,8 @@ const SetupSection = () => {
             <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000`}</code></pre>
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step2')}</h3>
