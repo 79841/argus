@@ -311,7 +311,7 @@ export default function RulesPage() {
       <FilterBar><span className="text-sm font-semibold">Rules</span><span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span></FilterBar>
       <div className="flex flex-1 min-h-0">
       {/* Left: File Tree */}
-      <div className="w-[35%] border-r border-[var(--border-subtle)] bg-[var(--bg-sunken)] flex flex-col overflow-auto">
+      <div className="w-[35%] bg-[var(--bg-sunken)] rounded-tr-xl flex flex-col overflow-auto">
 
         {loading ? (
           <div className="flex items-center justify-center flex-1 text-muted-foreground text-sm">

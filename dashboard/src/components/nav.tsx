@@ -62,7 +62,7 @@ export const Nav = () => {
   return (
     <aside
       className={cn(
-        'flex flex-shrink-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sunken)] transition-[width] duration-200',
+        'flex flex-shrink-0 flex-col transition-[width] duration-200',
         collapsed ? 'w-14' : 'w-48'
       )}
     >
