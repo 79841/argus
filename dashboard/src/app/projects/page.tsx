@@ -15,6 +15,7 @@ import { dataClient } from '@/lib/data-client'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { ProjectComparisonRow } from '@/lib/queries'
@@ -219,48 +220,46 @@ const DataTableClickable = ({ columns, data, onRowClick }: DataTableClickablePro
   }
 
   return (
-    <div className="w-full overflow-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-[var(--bg-sunken)]">
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-[var(--bg-sunken)]">
+          {columns.map((col) => (
+            <TableHead
+              key={col.key}
+              className={[
+                'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
+                col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+              ].join(' ')}
+              style={col.width ? { width: col.width } : undefined}
+            >
+              {col.label}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((row, rowIndex) => (
+          <TableRow
+            key={rowIndex}
+            onClick={() => onRowClick(row)}
+            className="cursor-pointer"
+          >
             {columns.map((col) => (
-              <th
+              <TableCell
                 key={col.key}
                 className={[
-                  'px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
+                  'tabular-nums',
                   col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                 ].join(' ')}
-                style={col.width ? { width: col.width } : undefined}
               >
-                {col.label}
-              </th>
+                {col.format
+                  ? col.format(row[col.key], row)
+                  : (row[col.key] as string | number | null | undefined) ?? '—'}
+              </TableCell>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              onClick={() => onRowClick(row)}
-              className="border-b border-[var(--border-subtle)] hover:bg-[var(--fill-hover)] cursor-pointer transition-colors"
-            >
-              {columns.map((col) => (
-                <td
-                  key={col.key}
-                  className={[
-                    'px-4 py-2 tabular-nums',
-                    col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-                  ].join(' ')}
-                >
-                  {col.format
-                    ? col.format(row[col.key], row)
-                    : (row[col.key] as string | number | null | undefined) ?? '—'}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }

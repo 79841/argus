@@ -1,5 +1,14 @@
 import type { ReactNode } from 'react'
 import { EmptyState } from '@/components/ui/empty-state'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 type Column = {
   key: string
@@ -15,6 +24,7 @@ type DataTableProps = {
   emptyMessage?: string
   highlightOnHover?: boolean
   stickyHeader?: boolean
+  onRowClick?: (row: Record<string, unknown>) => void
 }
 
 const alignClass = {
@@ -29,56 +39,58 @@ export const DataTable = ({
   emptyMessage,
   highlightOnHover = true,
   stickyHeader = false,
+  onRowClick,
 }: DataTableProps) => {
   if (data.length === 0) {
     return <EmptyState title={emptyMessage ?? 'No data'} />
   }
 
   return (
-    <div className="w-full overflow-auto">
-      <table className="w-full text-sm">
-        <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
-          <tr className="bg-[var(--bg-sunken)]">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={[
-                  'px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
-                  alignClass[col.align ?? 'left'],
-                ].join(' ')}
-                style={col.width ? { width: col.width } : undefined}
-              >
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={[
-                'border-b border-[var(--border-subtle)]',
-                highlightOnHover ? 'hover:bg-[var(--fill-hover)]' : '',
-              ].join(' ')}
+    <Table>
+      <TableHeader className={stickyHeader ? 'sticky top-0 z-10' : ''}>
+        <TableRow className="hover:bg-transparent">
+          {columns.map((col) => (
+            <TableHead
+              key={col.key}
+              className={cn(
+                'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
+                alignClass[col.align ?? 'left']
+              )}
+              style={col.width ? { width: col.width } : undefined}
             >
-              {columns.map((col) => (
-                <td
-                  key={col.key}
-                  className={[
-                    'px-4 py-2 tabular-nums',
-                    alignClass[col.align ?? 'left'],
-                  ].join(' ')}
-                >
-                  {col.format
-                    ? col.format(row[col.key], row)
-                    : (row[col.key] as string | number | null | undefined) ?? '—'}
-                </td>
-              ))}
-            </tr>
+              {col.label}
+            </TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((row, rowIndex) => (
+          <TableRow
+            key={rowIndex}
+            className={cn(
+              !highlightOnHover && 'hover:bg-transparent',
+              onRowClick && 'cursor-pointer'
+            )}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+          >
+            {columns.map((col) => (
+              <TableCell
+                key={col.key}
+                className={cn(
+                  'tabular-nums',
+                  alignClass[col.align ?? 'left']
+                )}
+              >
+                {col.format
+                  ? col.format(row[col.key], row)
+                  : (row[col.key] as string | number | null | undefined) ?? '—'}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }
+
+export type { Column, DataTableProps }

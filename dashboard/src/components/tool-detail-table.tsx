@@ -2,6 +2,7 @@
 
 import type { ToolDetailRow } from '@/lib/queries'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { formatTokens, formatDuration } from '@/lib/format'
@@ -72,85 +73,82 @@ export const ToolDetailTable = ({ data }: ToolDetailTableProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-xs text-muted-foreground">
-                      <th className="pb-2 pr-4 font-medium">Tool</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Calls</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Success</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Fail</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Fail Rate</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Avg Duration</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Total Duration</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Prompts</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Tokens</th>
-                      <th className="pb-2 pr-4 font-medium text-right">Cost</th>
-                      <th className="pb-2 font-medium text-right">Cost %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => {
-                      const failRate = getFailRate(row)
-                      const isHighFailRate = failRate >= FAIL_RATE_THRESHOLD
-                      const costShare = totalCost > 0 ? row.total_cost / totalCost : 0
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-xs text-muted-foreground">
+                    <TableHead>Tool</TableHead>
+                    <TableHead className="text-right">Calls</TableHead>
+                    <TableHead className="text-right">Success</TableHead>
+                    <TableHead className="text-right">Fail</TableHead>
+                    <TableHead className="text-right">Fail Rate</TableHead>
+                    <TableHead className="text-right">Avg Duration</TableHead>
+                    <TableHead className="text-right">Total Duration</TableHead>
+                    <TableHead className="text-right">Prompts</TableHead>
+                    <TableHead className="text-right">Tokens</TableHead>
+                    <TableHead className="text-right">Cost</TableHead>
+                    <TableHead className="text-right">Cost %</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((row) => {
+                    const failRate = getFailRate(row)
+                    const isHighFailRate = failRate >= FAIL_RATE_THRESHOLD
+                    const costShare = totalCost > 0 ? row.total_cost / totalCost : 0
 
-                      return (
-                        <tr
-                          key={row.tool_name}
-                          className={cn(
-                            'border-b border-[var(--border-subtle)] last:border-0',
-                            isHighFailRate && 'bg-red-50 dark:bg-red-950/30',
-                          )}
-                        >
-                          <td className="py-2.5 pr-4 font-mono text-xs">
-                            <span className="flex items-center gap-1.5">
-                              {isHighFailRate && (
-                                <span className="text-red-500" title="High failure rate">!</span>
-                              )}
-                              {formatToolName(row.tool_name)}
-                            </span>
-                          </td>
-                          <td className="py-2.5 pr-4 text-right font-medium">
-                            {row.invocation_count}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right text-green-600 dark:text-green-400">
-                            {row.success_count}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right">
-                            {row.fail_count > 0 ? (
-                              <span className="text-red-600 dark:text-red-400">{row.fail_count}</span>
-                            ) : (
-                              <span className="text-muted-foreground">0</span>
+                    return (
+                      <TableRow
+                        key={row.tool_name}
+                        className={cn(
+                          isHighFailRate && 'bg-red-50 dark:bg-red-950/30',
+                        )}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          <span className="flex items-center gap-1.5">
+                            {isHighFailRate && (
+                              <span className="text-red-500" title="High failure rate">!</span>
                             )}
-                          </td>
-                          <td className={cn('py-2.5 pr-4 text-right', getFailRateColor(failRate))}>
-                            {formatPercent(failRate)}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right text-muted-foreground">
-                            {formatDuration(row.avg_duration_ms)}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right text-muted-foreground">
-                            {formatDuration(row.total_duration_ms)}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right text-muted-foreground">
-                            {row.prompt_count}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right">
-                            {formatTokens(row.total_tokens)}
-                          </td>
-                          <td className="py-2.5 pr-4 text-right font-medium">
-                            {formatCost(row.total_cost)}
-                          </td>
-                          <td className="py-2.5 text-right text-muted-foreground">
-                            {formatPercent(costShare)}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            {formatToolName(row.tool_name)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {row.invocation_count}
+                        </TableCell>
+                        <TableCell className="text-right text-green-600 dark:text-green-400">
+                          {row.success_count}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {row.fail_count > 0 ? (
+                            <span className="text-red-600 dark:text-red-400">{row.fail_count}</span>
+                          ) : (
+                            <span className="text-muted-foreground">0</span>
+                          )}
+                        </TableCell>
+                        <TableCell className={cn('text-right', getFailRateColor(failRate))}>
+                          {formatPercent(failRate)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatDuration(row.avg_duration_ms)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatDuration(row.total_duration_ms)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {row.prompt_count}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatTokens(row.total_tokens)}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCost(row.total_cost)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatPercent(costShare)}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )
