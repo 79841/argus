@@ -12,6 +12,7 @@ import { useLocale } from '@/lib/i18n'
 import type { Locale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { dataClient } from '@/lib/data-client'
+import { FilterBar } from '@/components/filter-bar'
 
 type Theme = 'light' | 'dark' | 'system'
 type AgentTheme = 'claude' | 'codex' | 'gemini'
@@ -423,7 +424,7 @@ const SetupSection = () => {
             <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
           </div>
           <div>
@@ -474,7 +475,7 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
               {t('settings.setup.codex.step1.desc')}
             </p>
             <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
-exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }`}</code></pre>
+exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol = "json" } }`}</code></pre>
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step2')}</h3>
@@ -508,14 +509,14 @@ exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol 
   "telemetry": {
     "enabled": true,
     "target": "local",
-    "otlpEndpoint": "http://localhost:3000",
+    "otlpEndpoint": "http://localhost:9845",
     "otlpProtocol": "http"
   }
 }`}</code></pre>
             <p className="text-sm text-muted-foreground mt-2">{t('settings.setup.gemini.step1.note')}</p>
             <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
 export GEMINI_TELEMETRY_TARGET=local
-export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
           </div>
           <div>
@@ -637,10 +638,11 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col">
+      <FilterBar><span className="text-sm font-semibold">{t('settings.title')}</span></FilterBar>
+      <div className="flex flex-1 min-h-0">
       {/* Left sidebar */}
       <nav className="w-48 shrink-0 border-r overflow-y-auto py-4 pr-2">
-        <h1 className="px-3 mb-4 text-lg font-bold tracking-tight">{t('settings.title')}</h1>
         <ul className="space-y-0.5">
           {categories.map((cat) => (
             <li key={cat.key}>
@@ -665,6 +667,7 @@ export default function SettingsPage() {
       <main className="flex-1 p-6 overflow-y-auto">
         <ActiveSection />
       </main>
+      </div>
     </div>
   )
 }

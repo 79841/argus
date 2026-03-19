@@ -12,8 +12,6 @@ import {
   Lightbulb,
   FolderKanban,
   Settings,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocale } from '@/lib/i18n'
@@ -53,75 +51,23 @@ export const Nav = () => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored !== null) {
-        setCollapsed(JSON.parse(stored))
-      }
-    } catch {
-      // ignore
-    }
-  }, [])
+      if (stored !== null) setCollapsed(JSON.parse(stored))
+    } catch {}
 
-  const toggleCollapsed = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      window.dispatchEvent(new CustomEvent('argus-nav-toggle', { detail: next }))
-    } catch {
-      // ignore
-    }
-  }
+    const handler = (e: Event) => setCollapsed((e as CustomEvent<boolean>).detail)
+    window.addEventListener('argus-nav-toggle', handler)
+    return () => window.removeEventListener('argus-nav-toggle', handler)
+  }, [])
 
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-background transition-[width] duration-200',
+        'flex flex-shrink-0 flex-col border-r bg-background transition-[width] duration-200',
         collapsed ? 'w-14' : 'w-48'
       )}
-      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      {/* Header */}
-      <div
-        className={cn(
-          'flex h-14 items-center pt-10',
-          collapsed ? 'justify-center px-2' : 'justify-between px-4'
-        )}
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      >
-        {collapsed ? (
-          <Tooltip>
-            <TooltipTrigger
-              onClick={toggleCollapsed}
-              className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <ChevronRight className="size-5" />
-            </TooltipTrigger>
-            <TooltipContent side="right">{t('nav.expand')}</TooltipContent>
-          </Tooltip>
-        ) : (
-          <>
-            <Link
-              href="/"
-              className="text-lg font-bold tracking-tight"
-            >
-              Argus
-            </Link>
-            <button
-              onClick={toggleCollapsed}
-              className="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-          </>
-        )}
-      </div>
-
       {/* Navigation */}
-      <nav
-        className="flex-1 space-y-0.5 px-2 py-3 overflow-y-auto"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      >
+      <nav className="flex-1 space-y-0.5 px-2 py-2 overflow-y-auto">
         {NAV_ITEMS.map((item) =>
           collapsed ? (
             <Tooltip key={item.href}>
@@ -160,11 +106,8 @@ export const Nav = () => {
         )}
       </nav>
 
-      {/* Bottom section: Settings */}
-      <div
-        className="border-t px-2 py-2 space-y-1"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      >
+      {/* Settings */}
+      <div className="border-t px-2 py-2">
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger
@@ -198,7 +141,6 @@ export const Nav = () => {
             {t(SETTINGS_ITEM.labelKey)}
           </Link>
         )}
-
       </div>
     </aside>
   )

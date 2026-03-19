@@ -11,6 +11,7 @@ import { KpiCard } from '@/components/ui/kpi-card'
 import { AgentDot } from '@/components/ui/agent-dot'
 import { EmptyState } from '@/components/ui/empty-state'
 import { UsageHeatmap } from '@/components/usage-heatmap'
+import { FilterBar } from '@/components/filter-bar'
 import { formatCost } from '@/lib/format'
 
 const formatRelativeTime = (iso: string): string => {
@@ -88,6 +89,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex h-full flex-col">
+        <FilterBar><span className="text-sm font-semibold">Dashboard</span></FilterBar>
         <div className="flex-1 overflow-auto px-4 py-4">
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-4 gap-3">
@@ -108,6 +110,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-full flex-col">
+      <FilterBar><span className="text-sm font-semibold">Dashboard</span></FilterBar>
       <div className="flex-1 overflow-auto px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 4개 */}

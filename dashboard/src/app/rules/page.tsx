@@ -27,6 +27,7 @@ import type { Heading } from '@/components/markdown-viewer'
 import { TocSidebar } from '@/components/toc-sidebar'
 import { ContentSearch } from '@/components/content-search'
 import { JsonHighlight, TomlHighlight } from '@/components/syntax-highlight'
+import { FilterBar } from '@/components/filter-bar'
 
 type Scope = 'project' | 'user'
 type Agent = 'claude' | 'codex' | 'gemini'
@@ -306,13 +307,11 @@ export default function RulesPage() {
     viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col">
+      <FilterBar><span className="text-sm font-semibold">Rules</span><span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span></FilterBar>
+      <div className="flex flex-1 min-h-0">
       {/* Left: File Tree */}
       <div className="w-[35%] border-r flex flex-col overflow-auto">
-        <div className="px-4 py-3 border-b">
-          <h2 className="text-base font-semibold">Rules</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">{t('rules.subtitle')}</p>
-        </div>
 
         {loading ? (
           <div className="flex items-center justify-center flex-1 text-muted-foreground text-sm">
@@ -681,6 +680,7 @@ export default function RulesPage() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   )

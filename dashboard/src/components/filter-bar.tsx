@@ -1,13 +1,22 @@
-import type { ReactNode } from 'react'
+'use client'
+
+import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useTopBarPortal } from '@/components/top-bar-portal'
 
 type FilterBarProps = {
   children: ReactNode
 }
 
 export const FilterBar = ({ children }: FilterBarProps) => {
-  return (
-    <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b bg-[var(--bg-base)] px-4 py-2.5">
+  const { target } = useTopBarPortal()
+
+  if (!target) return null
+
+  return createPortal(
+    <div className="flex flex-wrap items-center gap-3 [&_button]:[-webkit-app-region:no-drag] [&_input]:[-webkit-app-region:no-drag] [&_select]:[-webkit-app-region:no-drag] [&_a]:[-webkit-app-region:no-drag] [&_[role=combobox]]:[-webkit-app-region:no-drag]">
       {children}
-    </div>
+    </div>,
+    target
   )
 }

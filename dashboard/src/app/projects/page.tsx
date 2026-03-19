@@ -19,6 +19,7 @@ import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { ProjectComparisonRow } from '@/lib/queries'
 import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
+import { FilterBar } from '@/components/filter-bar'
 
 const formatDate = (iso: string) => {
   if (!iso) return '—'
@@ -112,6 +113,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="flex h-full flex-col">
+      <FilterBar><span className="text-sm font-semibold">{t('projects.title')}</span></FilterBar>
       <div className="flex-1 overflow-auto px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 */}

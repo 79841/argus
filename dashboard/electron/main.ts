@@ -5,7 +5,7 @@ import { spawn, exec, type ChildProcess } from 'child_process'
 import net from 'net'
 import { registerIpcHandlers } from './ipc-handlers'
 
-const PORT = 3000
+const PORT = 9845
 const DEV_URL = `http://localhost:${PORT}`
 
 let mainWindow: BrowserWindow | null = null
@@ -100,8 +100,8 @@ const createWindow = (): void => {
     minHeight: 600,
     title: 'Argus',
     ...(isMac
-      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 16, y: 16 } }
-      : { autoHideMenuBar: true }),
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 18 } }
+      : { frame: false }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -114,6 +114,13 @@ const createWindow = (): void => {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow?.webContents.send('fullscreen-change', true)
+  })
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow?.webContents.send('fullscreen-change', false)
   })
 
   mainWindow.on('close', (event) => {
@@ -186,6 +193,13 @@ ipcMain.handle('select-folder', async (_event, title?: string) => {
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
 })
+
+ipcMain.on('window-minimize', () => mainWindow?.minimize())
+ipcMain.on('window-maximize', () => {
+  if (mainWindow?.isMaximized()) mainWindow.unmaximize()
+  else mainWindow?.maximize()
+})
+ipcMain.on('window-close', () => mainWindow?.close())
 
 app.whenReady().then(async () => {
   registerIpcHandlers()
