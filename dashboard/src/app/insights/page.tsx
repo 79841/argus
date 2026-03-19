@@ -291,7 +291,7 @@ export default function InsightsPage() {
       </ChartCard>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <KpiCard
           label={t('insights.kpi.top10Total')}
           value={formatCost(totalHighCost)}

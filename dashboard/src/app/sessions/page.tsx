@@ -137,7 +137,7 @@ export default function SessionsPage() {
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">
         {/* Left Panel: Session List (35%) */}
-        <div className="flex w-[35%] flex-col bg-[var(--bg-sunken)]">
+        <div className="flex w-[35%] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sunken)]">
           <div className="flex items-center justify-between px-4 py-2">
             <span className="text-xs text-muted-foreground">
               {loading ? t('sessions.loading') : `${sortedSessions.length}${t('sessions.count')}`}

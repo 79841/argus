@@ -117,7 +117,7 @@ export default function ProjectsPage() {
       <div className="flex-1 overflow-auto px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <KpiCard
           label={t('projects.kpi.totalProjects')}
           value={loading ? '—' : projects.length.toLocaleString()}
