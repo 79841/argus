@@ -28,6 +28,7 @@ export type SessionDetailEvent = {
   duration_ms: number
   tool_name: string
   tool_success: number | null
+  body: string
 }
 
 export type SessionSummary = {
@@ -97,7 +98,8 @@ export const getSessionDetail = (sessionId: string, dbOverride?: Database.Databa
       cost_usd,
       duration_ms,
       tool_name,
-      tool_success
+      tool_success,
+      body
     FROM agent_logs
     WHERE session_id = ?
     ORDER BY timestamp ASC

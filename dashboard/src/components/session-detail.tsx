@@ -161,6 +161,11 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
               <span className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${eventDotColor(ev)}`} />
               <div className="min-w-0 flex-1">
                 <div className="font-medium">{eventLabel(ev)}</div>
+                {ev.event_name === 'user_prompt' && ev.body && (
+                  <p className="mt-1 whitespace-pre-wrap break-words rounded bg-violet-50 px-2 py-1.5 text-xs text-foreground dark:bg-violet-950/30">
+                    {ev.body}
+                  </p>
+                )}
                 <div className="mt-0.5 flex flex-wrap gap-x-3 text-muted-foreground">
                   <span>{formatTime(ev.timestamp)}</span>
                   {ev.event_name === 'api_request' && (

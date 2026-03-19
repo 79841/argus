@@ -215,6 +215,11 @@ const WaterfallTooltip = ({ data }: TooltipProps) => {
         {event.event_name === 'tool_result' && event.tool_name && (
           <div>Tool: {event.tool_name}</div>
         )}
+        {event.event_name === 'user_prompt' && event.body && (
+          <div className="mt-1 max-h-20 overflow-hidden whitespace-pre-wrap break-words text-foreground">
+            {event.body.length > 150 ? event.body.slice(0, 150) + '...' : event.body}
+          </div>
+        )}
       </div>
     </div>
   )
