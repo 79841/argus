@@ -38,31 +38,31 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
   return (
     <div
       className={cn(
-        'flex h-[52px] flex-shrink-0 items-center gap-2 px-2',
-        isMacInset ? 'pl-20' : 'pl-2'
+        'flex h-[52px] flex-shrink-0 items-center',
+        isMacInset ? 'pl-20' : ''
       )}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       {platform === 'windows' && (
-        <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none mr-1">Argus</span>
+        <span className="pl-3 text-xs font-bold tracking-tight text-muted-foreground/30 select-none">Argus</span>
       )}
 
-      <Tooltip>
-        <TooltipTrigger
-          onClick={onToggleNav}
-          className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors [-webkit-app-region:no-drag]"
-        >
-          <PanelLeft className="size-4" />
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Toggle sidebar</TooltipContent>
-      </Tooltip>
+      <div className="flex w-14 shrink-0 items-center justify-center">
+        <Tooltip>
+          <TooltipTrigger
+            onClick={onToggleNav}
+            className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors [-webkit-app-region:no-drag]"
+          >
+            <PanelLeft className="size-5" />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Toggle sidebar</TooltipContent>
+        </Tooltip>
+      </div>
 
-      <div className="h-4 w-px bg-[var(--border-subtle)]" />
-
-      <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3" />
+      <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3 px-2" />
 
       {platform !== 'windows' && (
-        <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none ml-2">Argus</span>
+        <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3">Argus</span>
       )}
 
       <WindowControls />
