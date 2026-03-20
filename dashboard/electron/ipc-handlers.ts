@@ -54,8 +54,8 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
     return getSessionDetail(id)
   }
 
-  // projects/{name} 패턴 처리
-  if (name.startsWith('projects/')) {
+  // projects/{name} 패턴 처리 (projects/registry 등 예약 경로 제외)
+  if (name.startsWith('projects/') && !name.startsWith('projects/registry')) {
     const projectName = decodeURIComponent(name.slice('projects/'.length))
     const [stats, daily] = await Promise.all([
       getProjectDetailStats(projectName),
