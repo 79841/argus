@@ -134,7 +134,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
   const [expanded, setExpanded] = useState(index === 0)
 
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -152,11 +152,11 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
       </button>
 
       {expanded && (
-        <div className="border-t">
+        <div>
           {group.events.map((ev, i) => (
             <div
               key={`${ev.timestamp}-${i}`}
-              className={`flex items-start gap-3 border-b border-l-2 px-4 py-2 text-xs last:border-b-0 ${eventBgColor(ev)}`}
+              className={`flex items-start gap-3 border-b border-[var(--border-subtle)] border-l-2 px-4 py-2 text-xs last:border-b-0 ${eventBgColor(ev)}`}
             >
               <span className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${eventDotColor(ev)}`} />
               <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
       </div>
 
       {/* Summary Grid */}
-      <div className="grid grid-cols-3 gap-3 rounded-lg border p-4 text-sm sm:grid-cols-6">
+      <div className="grid grid-cols-3 gap-3 rounded-lg p-4 text-sm sm:grid-cols-6">
         <div>
           <div className="text-xs text-muted-foreground">{t('sessions.detail.cost')}</div>
           <div className="font-semibold tabular-nums">{formatCost(summary.totalCost)}</div>

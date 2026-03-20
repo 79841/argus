@@ -114,9 +114,9 @@ const FrontmatterCard = ({ data }: { data: FrontmatterData }) => {
   const entries = Object.entries(data).filter(([k]) => k !== 'title' && k !== 'name')
 
   return (
-    <div className="mb-4 rounded-lg border bg-muted/30 overflow-hidden">
+    <div className="mb-4 rounded-lg bg-muted/30 overflow-hidden">
       {title && (
-        <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/50">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-muted/50">
           <FileText className="size-4 text-muted-foreground shrink-0" />
           <span className="text-sm font-semibold">{title}</span>
         </div>
@@ -171,8 +171,8 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   }
 
   return (
-    <div className="my-2 rounded border overflow-hidden">
-      <div className="flex items-center justify-between bg-muted px-3 py-1 border-b">
+    <div className="my-2 rounded overflow-hidden">
+      <div className="flex items-center justify-between bg-muted px-3 py-1 border-b border-[var(--border-subtle)]">
         {language ? (
           <span className="text-xs text-muted-foreground font-mono">{language}</span>
         ) : (

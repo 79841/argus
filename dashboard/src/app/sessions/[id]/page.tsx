@@ -113,7 +113,7 @@ const PromptGroupCard = ({ group, index, t }: PromptGroupCardProps) => {
   const [expanded, setExpanded] = useState(index === 0)
 
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -138,11 +138,11 @@ const PromptGroupCard = ({ group, index, t }: PromptGroupCardProps) => {
       </button>
 
       {expanded && (
-        <div className="border-t">
+        <div>
           {group.events.map((ev, i) => (
             <div
               key={`${ev.timestamp}-${i}`}
-              className={`flex items-start gap-3 border-b border-l-2 px-4 py-2 text-xs last:border-b-0 ${eventBorderColor(ev)}`}
+              className={`flex items-start gap-3 border-b border-[var(--border-subtle)] border-l-2 px-4 py-2 text-xs last:border-b-0 ${eventBorderColor(ev)}`}
             >
               <span className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${eventDotColor(ev)}`} />
               <div className="min-w-0 flex-1">
@@ -192,7 +192,7 @@ const PromptCostChart = ({ data, title }: CostChartProps) => {
   if (data.length === 0) return null
 
   return (
-    <div className="rounded-lg border p-4">
+    <div className="rounded-lg p-4">
       <h3 className="mb-4 text-sm font-semibold">{title}</h3>
       <ResponsiveContainer width="100%" height={180}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
@@ -338,7 +338,7 @@ export default function SessionDetailPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           label={t('sessions.detail.cost')}
           value={formatCost(summary.total_cost)}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, Save } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -276,59 +277,57 @@ const AgentsSection = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="pb-2 pr-4 font-medium w-[30%]">Agent</th>
-                  <th className="pb-2 pr-4 font-medium w-[35%]">Daily Limit ($)</th>
-                  <th className="pb-2 font-medium w-[35%]">Monthly Limit ($)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {LIMIT_AGENT_TYPES.map((agent) => {
-                  const limit = limits.find((l) => l.agent_type === agent.id)
-                  return (
-                    <tr key={agent.id} className="border-b border-border/50 last:border-0">
-                      <td className="py-3 pr-4">
-                        <span className="inline-flex items-center gap-2 text-sm font-medium">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: `var(--agent-${agent.id})` }}
-                          />
-                          {agent.label}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          disabled
-                          value={limit?.daily_cost_limit ?? '0'}
-                          onChange={(e) => handleChange(agent.id, 'daily_cost_limit', e.target.value)}
-                          className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
-                          placeholder="0.00"
+          <Table>
+            <TableHeader>
+              <TableRow className="text-xs text-muted-foreground">
+                <TableHead className="w-[30%]">Agent</TableHead>
+                <TableHead className="w-[35%]">Daily Limit ($)</TableHead>
+                <TableHead className="w-[35%]">Monthly Limit ($)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {LIMIT_AGENT_TYPES.map((agent) => {
+                const limit = limits.find((l) => l.agent_type === agent.id)
+                return (
+                  <TableRow key={agent.id}>
+                    <TableCell>
+                      <span className="inline-flex items-center gap-2 text-sm font-medium">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: `var(--agent-${agent.id})` }}
                         />
-                      </td>
-                      <td className="py-3">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          disabled
-                          value={limit?.monthly_cost_limit ?? '0'}
-                          onChange={(e) => handleChange(agent.id, 'monthly_cost_limit', e.target.value)}
-                          className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
-                          placeholder="0.00"
-                        />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {agent.label}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        disabled
+                        value={limit?.daily_cost_limit ?? '0'}
+                        onChange={(e) => handleChange(agent.id, 'daily_cost_limit', e.target.value)}
+                        className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
+                        placeholder="0.00"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        disabled
+                        value={limit?.monthly_cost_limit ?? '0'}
+                        onChange={(e) => handleChange(agent.id, 'monthly_cost_limit', e.target.value)}
+                        className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
+                        placeholder="0.00"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} disabled variant="outline" size="sm">
               <Save className="size-4" />
@@ -642,7 +641,7 @@ export default function SettingsPage() {
       <FilterBar><span className="text-sm font-semibold">{t('settings.title')}</span></FilterBar>
       <div className="flex flex-1 min-h-0">
       {/* Left sidebar */}
-      <nav className="w-48 shrink-0 border-r overflow-y-auto py-4 pr-2">
+      <nav className="w-48 shrink-0 border-r border-[var(--border-subtle)] overflow-y-auto py-4 px-2">
         <ul className="space-y-0.5">
           {categories.map((cat) => (
             <li key={cat.key}>

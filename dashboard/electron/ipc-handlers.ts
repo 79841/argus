@@ -54,8 +54,8 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
     return getSessionDetail(id)
   }
 
-  // projects/{name} 패턴 처리
-  if (name.startsWith('projects/')) {
+  // projects/{name} 패턴 처리 (projects/registry 등 예약 경로 제외)
+  if (name.startsWith('projects/') && !name.startsWith('projects/registry')) {
     const projectName = decodeURIComponent(name.slice('projects/'.length))
     const [stats, daily] = await Promise.all([
       getProjectDetailStats(projectName),
@@ -210,9 +210,15 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
       return { limits: rows }
     }
 
+    case 'projects/registry': {
+      const db = getDb()
+      const rows = db.prepare('SELECT * FROM project_registry ORDER BY project_name').all()
+      return { projects: rows }
+    }
+
     case 'config': {
       const filePath = params?.path ? str(params.path) : null
-      return handleConfigGet(filePath)
+      return handleConfigGet(filePath, params)
     }
 
     default:
@@ -262,6 +268,30 @@ const handleMutate = async (name: string, body?: unknown): Promise<unknown> => {
       }
       fs.writeFileSync(fullPath, content, 'utf-8')
       return { success: true, path: filePath }
+    }
+
+    case 'projects/registry/delete': {
+      const { name: deleteName } = body as { name: string }
+      if (!deleteName) throw new Error('name is required')
+      const deleteDb = getDb()
+      deleteDb.prepare('DELETE FROM project_registry WHERE project_name = ?').run(deleteName)
+      return { success: true }
+    }
+
+    case 'projects/registry': {
+      const { name: projectName, path: projectPath } = body as { name: string; path: string }
+      if (!projectName || !projectPath) {
+        throw new Error('name and path are required')
+      }
+      const resolved = path.resolve(projectPath)
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+        throw new Error('Directory not found')
+      }
+      const db = getDb()
+      db.prepare(
+        'INSERT OR REPLACE INTO project_registry (project_name, project_path) VALUES (?, ?)'
+      ).run(projectName, resolved)
+      return { success: true, name: projectName, path: resolved }
     }
 
     default:
@@ -344,20 +374,50 @@ const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> 
   return dynamic
 }
 
-const handleConfigGet = (filePath: string | null): unknown => {
-  if (!filePath) {
-    const root = getProjectRoot()
-    const dynamicFiles = scanDynamicFiles(root)
-    const allProjectFiles = [...PROJECT_STATIC_FILES, ...dynamicFiles]
+type RegistryRow = { project_name: string; project_path: string }
 
-    const projectFiles = allProjectFiles
-      .filter((f) => fs.existsSync(path.join(root, f.path)))
-      .map((f) => ({
-        path: f.path,
-        agent: f.agent,
-        scope: 'project' as const,
-        exists: true,
-      }))
+const getRegisteredProjects = (): RegistryRow[] => {
+  try {
+    const db = getDb()
+    return db.prepare('SELECT project_name, project_path FROM project_registry ORDER BY project_name').all() as RegistryRow[]
+  } catch {
+    return []
+  }
+}
+
+const getProjectFiles = (projectRoot: string, projectName: string) => {
+  const staticFiles = PROJECT_STATIC_FILES
+    .filter(({ path: p }) => fs.existsSync(path.join(projectRoot, p)))
+    .map(({ agent, path: p }) => ({
+      path: p,
+      agent,
+      scope: 'project' as const,
+      exists: true,
+      projectRoot,
+      projectName,
+    }))
+
+  const dynamicFiles = scanDynamicFiles(projectRoot)
+    .filter((f) => fs.existsSync(path.join(projectRoot, f.path)))
+    .map((f) => ({
+      path: f.path,
+      agent: f.agent,
+      scope: 'project' as const,
+      exists: true,
+      projectRoot,
+      projectName,
+    }))
+
+  return [...staticFiles, ...dynamicFiles]
+}
+
+const handleConfigGet = (filePath: string | null, params?: QueryParams): unknown => {
+  if (!filePath) {
+    const registered = getRegisteredProjects()
+
+    const projectFiles = registered.flatMap(({ project_name, project_path }) =>
+      getProjectFiles(project_path, project_name)
+    )
 
     const userFiles = USER_STATIC_FILES
       .filter((f) => fs.existsSync(resolvePath(f.path)))
@@ -371,18 +431,25 @@ const handleConfigGet = (filePath: string | null): unknown => {
     return { files: [...projectFiles, ...userFiles] }
   }
 
-  if (!isPathSafe(filePath)) {
-    throw new Error('Invalid file path')
+  const projectRoot = params?.projectRoot ? str(params.projectRoot) : null
+
+  if (filePath.startsWith('~/')) {
+    const fullPath = resolvePath(filePath)
+    if (!fs.existsSync(fullPath)) throw new Error('File not found')
+    return { path: filePath, content: fs.readFileSync(fullPath, 'utf-8'), scope: 'user' }
   }
 
+  if (projectRoot) {
+    const resolved = path.resolve(projectRoot, filePath)
+    if (!resolved.startsWith(path.resolve(projectRoot))) throw new Error('Invalid file path')
+    if (!fs.existsSync(resolved)) throw new Error('File not found')
+    return { path: filePath, content: fs.readFileSync(resolved, 'utf-8'), scope: 'project' }
+  }
+
+  if (!isPathSafe(filePath)) throw new Error('Invalid file path')
   const fullPath = resolvePath(filePath)
-  if (!fs.existsSync(fullPath)) {
-    throw new Error('File not found')
-  }
-
-  const content = fs.readFileSync(fullPath, 'utf-8')
-  const scope = isProjectPath(filePath) ? 'project' : 'user'
-  return { path: filePath, content, scope }
+  if (!fs.existsSync(fullPath)) throw new Error('File not found')
+  return { path: filePath, content: fs.readFileSync(fullPath, 'utf-8'), scope: 'project' }
 }
 
 export const registerIpcHandlers = (): void => {

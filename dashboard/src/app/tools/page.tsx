@@ -460,7 +460,7 @@ export default function ToolsPage() {
 
       <div className="flex-1 overflow-auto px-4 py-4">
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <KpiCard
               label={t('tools.kpi.totalCalls')}
               value={kpi ? formatNumber(kpi.total_calls) : '—'}

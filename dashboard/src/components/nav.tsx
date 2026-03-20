@@ -62,7 +62,7 @@ export const Nav = () => {
   return (
     <aside
       className={cn(
-        'flex flex-shrink-0 flex-col border-r bg-background transition-[width] duration-200',
+        'flex flex-shrink-0 flex-col transition-[width] duration-200',
         collapsed ? 'w-14' : 'w-48'
       )}
     >
@@ -107,7 +107,7 @@ export const Nav = () => {
       </nav>
 
       {/* Settings */}
-      <div className="border-t px-2 py-2">
+      <div className="mt-auto px-2 py-2">
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger

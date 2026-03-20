@@ -207,10 +207,7 @@ export default function RulesPage() {
 
   const handleUnload = async (projectName: string) => {
     try {
-      const res = await fetch(`/api/projects/registry?name=${encodeURIComponent(projectName)}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) return
+      await dataClient.mutate('projects/registry/delete', { name: projectName })
       setLoading(true)
       if (selectedFile?.projectName === projectName) {
         setSelectedFile(null)
@@ -311,7 +308,7 @@ export default function RulesPage() {
       <FilterBar><span className="text-sm font-semibold">Rules</span><span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span></FilterBar>
       <div className="flex flex-1 min-h-0">
       {/* Left: File Tree */}
-      <div className="w-[35%] border-r flex flex-col overflow-auto">
+      <div className="w-[35%] border-r border-[var(--border-subtle)] flex flex-col overflow-auto">
 
         {loading ? (
           <div className="flex items-center justify-center flex-1 text-muted-foreground text-sm">
@@ -569,7 +566,7 @@ export default function RulesPage() {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b gap-3">
+            <div className="flex items-center justify-between px-4 py-3 gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs font-mono text-muted-foreground truncate">
                   {selectedFile.projectName

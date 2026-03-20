@@ -90,7 +90,7 @@ const SuggestionCard = ({ suggestion, t }: SuggestionCardProps) => {
   return (
     <div
       className={cn(
-        'flex gap-3 rounded-md border border-l-4 bg-card p-4',
+        'flex gap-3 rounded-md border-l-4 bg-card p-4',
         cfg.border
       )}
     >
@@ -274,7 +274,7 @@ export default function InsightsPage() {
             {t('insights.suggestions.loading')}
           </div>
         ) : suggestions.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-md border border-l-4 border-l-green-500 bg-card p-4">
+          <div className="flex items-center gap-3 rounded-md border-l-4 border-l-green-500 bg-card p-4">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
             <div>
               <p className="text-sm font-semibold">{t('insights.suggestions.allGood')}</p>
@@ -291,7 +291,7 @@ export default function InsightsPage() {
       </ChartCard>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <KpiCard
           label={t('insights.kpi.top10Total')}
           value={formatCost(totalHighCost)}

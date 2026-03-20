@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
@@ -60,60 +61,58 @@ export const RegisteredToolsCard = () => {
             등록된 도구가 없습니다. .claude/agents/, .claude/skills/, .mcp.json, .claude/settings.json(hooks)을 확인하세요.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed text-sm">
-              <colgroup>
-                <col className="w-[28%]" />
-                <col className="w-[12%]" />
-                <col className="w-[12%]" />
-                <col className="w-[48%]" />
-              </colgroup>
-              <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="pb-2 pr-4 font-medium">Name</th>
-                  <th className="pb-2 pr-4 font-medium">Type</th>
-                  <th className="pb-2 pr-4 font-medium">Scope</th>
-                  <th className="pb-2 font-medium">File Path</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tools.map((tool) => {
-                  const typeConfig = TYPE_CONFIG[tool.type] ?? { label: tool.type, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
-                  const scopeConfig = SCOPE_CONFIG[tool.scope] ?? { label: tool.scope, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
-                  return (
-                    <tr key={`${tool.name}-${tool.type}-${tool.scope}`} className="border-b border-border/50 last:border-0">
-                      <td className="py-2.5 pr-4 max-w-0">
-                        <Tooltip>
-                          <TooltipTrigger className="block w-full truncate text-left font-mono text-xs font-medium">
-                            {tool.name}
-                          </TooltipTrigger>
-                          <TooltipContent side="top">{tool.name}</TooltipContent>
-                        </Tooltip>
-                      </td>
-                      <td className="py-2.5 pr-4">
-                        <Badge className={cn('text-[10px] px-1.5 py-0 whitespace-nowrap', typeConfig.color, typeConfig.bg)}>
-                          {typeConfig.label}
-                        </Badge>
-                      </td>
-                      <td className="py-2.5 pr-4">
-                        <Badge className={cn('text-[10px] px-1.5 py-0 whitespace-nowrap', scopeConfig.color, scopeConfig.bg)}>
-                          {scopeConfig.label}
-                        </Badge>
-                      </td>
-                      <td className="py-2.5 max-w-0">
-                        <Tooltip>
-                          <TooltipTrigger className="block w-full truncate text-left font-mono text-xs text-muted-foreground">
-                            {tool.filePath}
-                          </TooltipTrigger>
-                          <TooltipContent side="top">{tool.filePath}</TooltipContent>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Table className="table-fixed">
+            <colgroup>
+              <col className="w-[28%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[48%]" />
+            </colgroup>
+            <TableHeader>
+              <TableRow className="text-xs text-muted-foreground">
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Scope</TableHead>
+                <TableHead>File Path</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tools.map((tool) => {
+                const typeConfig = TYPE_CONFIG[tool.type] ?? { label: tool.type, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
+                const scopeConfig = SCOPE_CONFIG[tool.scope] ?? { label: tool.scope, color: 'text-gray-700 dark:text-gray-300', bg: 'bg-gray-100 dark:bg-gray-900' }
+                return (
+                  <TableRow key={`${tool.name}-${tool.type}-${tool.scope}`}>
+                    <TableCell className="max-w-0">
+                      <Tooltip>
+                        <TooltipTrigger className="block w-full truncate text-left font-mono text-xs font-medium">
+                          {tool.name}
+                        </TooltipTrigger>
+                        <TooltipContent side="top">{tool.name}</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={cn('text-[10px] px-1.5 py-0', typeConfig.color, typeConfig.bg)}>
+                        {typeConfig.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={cn('text-[10px] px-1.5 py-0', scopeConfig.color, scopeConfig.bg)}>
+                        {scopeConfig.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-0">
+                      <Tooltip>
+                        <TooltipTrigger className="block w-full truncate text-left font-mono text-xs text-muted-foreground">
+                          {tool.filePath}
+                        </TooltipTrigger>
+                        <TooltipContent side="top">{tool.filePath}</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
