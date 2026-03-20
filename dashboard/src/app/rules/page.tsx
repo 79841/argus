@@ -207,10 +207,7 @@ export default function RulesPage() {
 
   const handleUnload = async (projectName: string) => {
     try {
-      const res = await fetch(`/api/projects/registry?name=${encodeURIComponent(projectName)}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) return
+      await dataClient.mutate('projects/registry/delete', { name: projectName })
       setLoading(true)
       if (selectedFile?.projectName === projectName) {
         setSelectedFile(null)

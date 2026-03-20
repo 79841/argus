@@ -210,6 +210,12 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
       return { limits: rows }
     }
 
+    case 'projects/registry': {
+      const db = getDb()
+      const rows = db.prepare('SELECT * FROM project_registry ORDER BY project_name').all()
+      return { projects: rows }
+    }
+
     case 'config': {
       const filePath = params?.path ? str(params.path) : null
       return handleConfigGet(filePath)
@@ -262,6 +268,30 @@ const handleMutate = async (name: string, body?: unknown): Promise<unknown> => {
       }
       fs.writeFileSync(fullPath, content, 'utf-8')
       return { success: true, path: filePath }
+    }
+
+    case 'projects/registry/delete': {
+      const { name: deleteName } = body as { name: string }
+      if (!deleteName) throw new Error('name is required')
+      const deleteDb = getDb()
+      deleteDb.prepare('DELETE FROM project_registry WHERE project_name = ?').run(deleteName)
+      return { success: true }
+    }
+
+    case 'projects/registry': {
+      const { name: projectName, path: projectPath } = body as { name: string; path: string }
+      if (!projectName || !projectPath) {
+        throw new Error('name and path are required')
+      }
+      const resolved = path.resolve(projectPath)
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+        throw new Error('Directory not found')
+      }
+      const db = getDb()
+      db.prepare(
+        'INSERT OR REPLACE INTO project_registry (project_name, project_path) VALUES (?, ?)'
+      ).run(projectName, resolved)
+      return { success: true, name: projectName, path: resolved }
     }
 
     default:
