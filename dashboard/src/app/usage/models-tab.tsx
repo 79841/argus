@@ -14,6 +14,7 @@ import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { ModelUsage } from '@/lib/queries'
 import { formatCostChart } from '@/lib/format'
+import type { ModelTableRow, ModelsTabProps } from '@/types/usage'
 
 const SERIES_PIE_COLORS = [
   'oklch(0.55 0 0)',
@@ -25,20 +26,6 @@ const SERIES_PIE_COLORS = [
   'oklch(0.70 0 0)',
   'oklch(0.40 0 0)',
 ]
-
-type ModelTableRow = {
-  model: string
-  agent_type: string
-  request_count: number
-  cost: number
-  avg_cost: number
-}
-
-type ModelsTabProps = {
-  agentType: AgentType
-  project: string
-  dateRange: DateRange
-}
 
 export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
   const [models, setModels] = useState<ModelTableRow[]>([])

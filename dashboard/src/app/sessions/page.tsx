@@ -14,6 +14,7 @@ import { SessionDetail } from '@/components/session-detail'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
+import type { SortOption } from '@/types/common'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
 import { formatCost, formatTokens, formatDuration, shortenModel, parseModels } from '@/lib/format'
@@ -24,8 +25,6 @@ const daysAgoISO = (days: number) => {
   d.setDate(d.getDate() - (days - 1))
   return d.toISOString().slice(0, 10)
 }
-
-type SortOption = 'latest' | 'cost' | 'tokens'
 
 const formatRelativeTime = (ts: string, tFn: (key: string) => string): string => {
   const now = Date.now()

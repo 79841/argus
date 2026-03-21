@@ -25,37 +25,7 @@ import { TocSidebar } from '@/components/toc-sidebar'
 import { ContentSearch } from '@/components/content-search'
 import { JsonHighlight, TomlHighlight } from '@/components/syntax-highlight'
 import { FilterBar } from '@/components/filter-bar'
-
-type Scope = 'project' | 'user'
-type Agent = 'claude' | 'codex' | 'gemini'
-type ViewMode = 'preview' | 'edit'
-
-type FileEntry = {
-  path: string
-  agent: Agent
-  scope: Scope
-  exists: boolean
-  projectRoot: string
-  projectName: string
-}
-
-type RegistryEntry = {
-  project_name: string
-  project_path: string
-}
-
-type DbProject = {
-  project_name: string
-  loaded: boolean
-  project_path: string
-}
-
-type ProjectGroup = {
-  projectName: string
-  projectRoot: string
-  loaded: boolean
-  agents: { agent: Agent; files: FileEntry[] }[]
-}
+import type { Scope, Agent, ViewMode, FileEntry, RegistryEntry, DbProject, ProjectGroup } from '@/types/rules'
 
 const AGENT_LABELS: Record<Agent, string> = {
   claude: 'Claude',

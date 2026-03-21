@@ -6,13 +6,9 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { dataClient } from '@/lib/data-client'
 import type { DateRange } from '@/components/top-bar-context'
 import type { ConfigChange } from '@/lib/config-tracker'
+import type { ScopeType, ImpactTabProps } from '@/types/usage'
 
 const SCOPE_OPTIONS = ['all', 'project', 'user'] as const
-type ScopeType = typeof SCOPE_OPTIONS[number]
-
-type ImpactTabProps = {
-  dateRange: DateRange
-}
 
 export const ImpactTab = ({ dateRange: _dateRange }: ImpactTabProps) => {
   const [scope, setScope] = useState<ScopeType>('all')

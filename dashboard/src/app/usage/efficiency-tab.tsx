@@ -16,21 +16,9 @@ import { calculateEfficiency } from '@/lib/efficiency'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
+import type { EfficiencyAgentRow, EfficiencyTrendPoint, EfficiencyTabProps } from '@/types/usage'
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
-
-type EfficiencyAgentRow = {
-  agent_type: string
-  cache_rate: number
-  token_efficiency: number
-  avg_duration_s: number
-  score: number
-}
-
-type EfficiencyTrendPoint = {
-  date: string
-  [agent: string]: number | string
-}
 
 const efficiencyColumns = [
   {
@@ -43,11 +31,6 @@ const efficiencyColumns = [
   { key: 'avg_duration_s', label: 'Avg Speed', align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(2)}s` },
   { key: 'score', label: 'Score', align: 'right' as const, format: (v: unknown) => <span className="font-semibold">{String(v)}</span> },
 ]
-
-type EfficiencyTabProps = {
-  project: string
-  dateRange: DateRange
-}
 
 export const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
   const [agentRows, setAgentRows] = useState<EfficiencyAgentRow[]>([])

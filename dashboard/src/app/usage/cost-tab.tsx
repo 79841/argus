@@ -14,25 +14,9 @@ import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { DailyStats, OverviewStats } from '@/lib/queries'
 import { formatCost, formatCostChart } from '@/lib/format'
+import type { DailyCostPoint, AgentCostPoint, ProjectCostPoint, CostTabProps } from '@/types/usage'
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
-
-type DailyCostPoint = {
-  date: string
-  claude: number
-  codex: number
-  gemini: number
-  total: number
-}
-
-type AgentCostPoint = { agent: string; cost: number; agentId: AgentType }
-type ProjectCostPoint = { project: string; cost: number }
-
-type CostTabProps = {
-  agentType: AgentType
-  project: string
-  dateRange: DateRange
-}
 
 export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   const [daily, setDaily] = useState<DailyCostPoint[]>([])

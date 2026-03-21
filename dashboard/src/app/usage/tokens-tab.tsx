@@ -13,23 +13,9 @@ import { AGENT_CHART_COLORS, TOKEN_COLORS, CHART_THEME } from '@/lib/chart-theme
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { DailyStats, OverviewStats } from '@/lib/queries'
+import type { DailyTokenPoint, AgentTokenPoint, TokensTabProps } from '@/types/usage'
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
-
-type DailyTokenPoint = {
-  date: string
-  input: number
-  output: number
-  cache_read: number
-}
-
-type AgentTokenPoint = { agent: string; input: number; output: number; cache_read: number; agentId: AgentType }
-
-type TokensTabProps = {
-  agentType: AgentType
-  project: string
-  dateRange: DateRange
-}
 
 export const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => {
   const [daily, setDaily] = useState<DailyTokenPoint[]>([])

@@ -14,13 +14,8 @@ import type { Locale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { dataClient } from '@/lib/data-client'
 import { FilterBar } from '@/components/filter-bar'
-
-type Theme = 'light' | 'dark' | 'system'
-type AgentTheme = 'claude' | 'codex' | 'gemini'
-
-type Category = 'general' | 'agents' | 'pricing' | 'agentConnection' | 'projectConnection' | 'data'
-
-const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
+import { STORAGE_KEYS, POLLING } from '@/shared/lib/constants'
+import type { Theme, AgentTheme, Category, AgentLimitState, AgentConnectionStatus, RegistryProject } from '@/types/settings'
 
 const AGENT_THEMES: { value: AgentTheme; label: string }[] = [
   { value: 'claude', label: 'Claude' },
@@ -28,14 +23,10 @@ const AGENT_THEMES: { value: AgentTheme; label: string }[] = [
   { value: 'gemini', label: 'Gemini' },
 ]
 
-const REFRESH_OPTIONS = [
-  { value: '30000', label: '30s' },
-  { value: '60000', label: '1m' },
-  { value: '300000', label: '5m' },
-  { value: '0', label: 'Off' },
-]
-
-const REFRESH_STORAGE_KEY = 'argus-refresh-interval'
+const REFRESH_OPTIONS = POLLING.REFRESH_OPTIONS.map((opt) => ({
+  value: String(opt.value),
+  label: opt.label,
+}))
 
 const GeneralSection = () => {
   const { theme, setTheme } = useTheme()
@@ -45,14 +36,14 @@ const GeneralSection = () => {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(REFRESH_STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEYS.REFRESH_INTERVAL)
       if (stored) setRefreshInterval(stored)
-      const storedAgent = localStorage.getItem(AGENT_THEME_STORAGE_KEY)
+      const storedAgent = localStorage.getItem(STORAGE_KEYS.AGENT_THEME)
       if (storedAgent && storedAgent !== 'default') {
         setAgentTheme(storedAgent as AgentTheme)
       } else if (storedAgent === 'default') {
         setAgentTheme('claude')
-        localStorage.setItem(AGENT_THEME_STORAGE_KEY, 'claude')
+        localStorage.setItem(STORAGE_KEYS.AGENT_THEME, 'claude')
         document.documentElement.setAttribute('data-agent-theme', 'claude')
       }
     } catch {
@@ -64,7 +55,7 @@ const GeneralSection = () => {
     if (value === null) return
     setRefreshInterval(value)
     try {
-      localStorage.setItem(REFRESH_STORAGE_KEY, value)
+      localStorage.setItem(STORAGE_KEYS.REFRESH_INTERVAL, value)
     } catch {
       // ignore
     }
@@ -73,7 +64,7 @@ const GeneralSection = () => {
   const handleAgentThemeChange = (value: AgentTheme) => {
     setAgentTheme(value)
     try {
-      localStorage.setItem(AGENT_THEME_STORAGE_KEY, value)
+      localStorage.setItem(STORAGE_KEYS.AGENT_THEME, value)
       document.documentElement.setAttribute('data-agent-theme', value)
     } catch {
       // ignore
@@ -195,12 +186,6 @@ const GeneralSection = () => {
       </Card>
     </div>
   )
-}
-
-type AgentLimitState = {
-  agent_type: string
-  daily_cost_limit: string
-  monthly_cost_limit: string
 }
 
 const LIMIT_AGENT_TYPES = [
@@ -401,15 +386,6 @@ const PricingSection = () => {
       </Card>
     </div>
   )
-}
-
-type AgentConnectionStatus = {
-  type: string
-  configPath: string
-  displayPath: string
-  installed: boolean
-  configured: boolean
-  endpoint: string | null
 }
 
 const AGENT_LABELS: Record<string, string> = {
@@ -758,12 +734,6 @@ pnpm dev`}</code></pre>
       </div>
     </div>
   )
-}
-
-type RegistryProject = {
-  project_name: string
-  project_path: string
-  created_at: string
 }
 
 const TRACKING_STATUS: { agent: string; label: string; supported: boolean; note: string }[] = [

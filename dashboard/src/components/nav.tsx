@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useLocale } from '@/lib/i18n'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 import type { LucideIcon } from 'lucide-react'
 
@@ -41,8 +42,6 @@ const SETTINGS_ITEM: NavItem = {
   icon: Settings,
 }
 
-const STORAGE_KEY = 'argus-nav-collapsed'
-
 export const Nav = () => {
   const pathname = usePathname()
   const { t } = useLocale()
@@ -50,7 +49,7 @@ export const Nav = () => {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEYS.NAV_COLLAPSED)
       if (stored !== null) setCollapsed(JSON.parse(stored))
     } catch {}
 

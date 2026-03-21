@@ -8,29 +8,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { AgentDot } from '@/components/ui/agent-dot'
 import { dataClient } from '@/lib/data-client'
 import { formatCost } from '@/lib/format'
-
-type AgentStatus = {
-  agent_type: string
-  last_received: string
-  today_count: number
-  total_count: number
-}
-
-type AllTimeTotals = {
-  total_cost: number
-  total_tokens: number
-}
-
-type AgentLimit = {
-  agent_type: string
-  daily_cost_limit: number
-  monthly_cost_limit: number
-}
-
-type AgentDailyCost = {
-  agent_type: string
-  daily_cost: number
-}
+import { POLLING, AGENT_TYPES } from '@/shared/lib/constants'
+import type { AgentStatus, AllTimeTotals, AgentLimit, AgentDailyCost, ActiveSessionInfo } from '@/types/api'
 
 const formatTokensShort = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
@@ -58,23 +37,12 @@ const getStatusDot = (iso: string | null): string => {
   return 'bg-gray-400'
 }
 
-type ActiveSessionInfo = {
-  session_id: string
-  agent_type: string
-  model: string
-  last_event: string
-  cost: number
-  event_count: number
-}
-
 const formatModel = (model: string): string => {
   if (!model) return ''
   const parts = model.split('/')
   const name = parts[parts.length - 1]
   return name.length > 20 ? `${name.slice(0, 18)}...` : name
 }
-
-const ACTIVE_POLL_MS = 30_000
 
 export const BottomBar = () => {
   const [agents, setAgents] = useState<AgentStatus[]>([])
@@ -111,11 +79,11 @@ export const BottomBar = () => {
         .catch(() => {})
     }
     fetchActive()
-    const id = setInterval(fetchActive, ACTIVE_POLL_MS)
+    const id = setInterval(fetchActive, POLLING.ACTIVE_SESSION_MS)
     return () => clearInterval(id)
   }, [])
 
-  const agentTypes: AgentType[] = ['claude', 'codex', 'gemini']
+  const agentTypes: AgentType[] = [...AGENT_TYPES]
 
   // Build limit progress data
   const limitBars = agentTypes
