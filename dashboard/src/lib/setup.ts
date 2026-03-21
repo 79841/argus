@@ -46,6 +46,7 @@ const ARGUS_ENV_KEYS = [
   'OTEL_LOGS_EXPORTER',
   'OTEL_EXPORTER_OTLP_PROTOCOL',
   'OTEL_EXPORTER_OTLP_ENDPOINT',
+  'OTEL_LOG_USER_PROMPTS',
 ] as const
 
 const ARGUS_ENV = (endpoint: string) => ({
@@ -53,6 +54,7 @@ const ARGUS_ENV = (endpoint: string) => ({
   OTEL_LOGS_EXPORTER: 'otlp',
   OTEL_EXPORTER_OTLP_PROTOCOL: 'http/json',
   OTEL_EXPORTER_OTLP_ENDPOINT: endpoint,
+  OTEL_LOG_USER_PROMPTS: '1',
 })
 
 const ARGUS_GEMINI_TELEMETRY = (endpoint: string) => ({

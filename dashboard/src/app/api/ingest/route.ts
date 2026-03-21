@@ -83,12 +83,17 @@ export async function POST(request: NextRequest) {
             const toolName = getAttr(attrs, 'tool_name') || getAttr(attrs, 'function_name')
             const durationMs = getNumAttr(attrs, 'duration_ms')
 
-            let body = logRecord.body ? getVal(logRecord.body) : ''
+            const rawBody = logRecord.body ? getVal(logRecord.body) : ''
+            let body = rawBody
             if (eventName === 'api_error') {
               body = getErrorMessage(attrs) || body
             } else if (eventName === 'user_prompt') {
               const promptText = getAttr(attrs, 'prompt')
-              if (promptText) body = promptText
+              if (promptText && !['<REDACTED>', '[REDACTED]'].includes(promptText)) {
+                body = promptText
+              } else if (!body || body === `claude_code.${eventName}` || ['<REDACTED>', '[REDACTED]'].includes(body)) {
+                body = ''
+              }
             }
 
             insert.run(
