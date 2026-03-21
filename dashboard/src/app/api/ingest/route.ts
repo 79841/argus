@@ -9,8 +9,13 @@ import {
 import type { OtlpLogsRequest } from '@/lib/ingest-utils'
 
 export async function POST(request: NextRequest) {
+  let data: OtlpLogsRequest
   try {
-    const data = (await request.json()) as OtlpLogsRequest
+    data = (await request.json()) as OtlpLogsRequest
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  try {
     if (!data.resourceLogs || !Array.isArray(data.resourceLogs)) {
       return NextResponse.json({ accepted: 0 })
     }

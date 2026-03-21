@@ -33,13 +33,17 @@ Codex CLI / Claude Code / Gemini CLI
 argus/
 ├── argus.db                         # SQLite 데이터베이스 (자동 생성, gitignore)
 ├── dashboard/                       # Next.js 대시보드
-│   ├── src/app/                     # App Router 페이지
-│   ├── src/app/api/ingest/          # OTLP 수신 엔드포인트
-│   ├── src/app/api/seed/            # 테스트 데이터 시드
-│   ├── src/lib/db.ts                # SQLite 클라이언트 + 스키마 초기화
-│   ├── src/lib/queries.ts            # SQLite 쿼리 함수
-│   ├── src/lib/                     # 비즈니스 로직 (agents, efficiency, config-tracker)
-│   └── src/components/              # UI 컴포넌트 (shadcn/ui + 커스텀)
+│   └── src/
+│       ├── app/                     # App Router — 라우팅만 담당
+│       │   ├── api/                 # API 라우트
+│       │   └── {page}/page.tsx      # 페이지 → features/{name} import
+│       ├── features/                # Feature 모듈 (도메인별 컴포넌트·로직·테스트)
+│       │   └── {feature-name}/      # components/, lib/, hooks/, __tests__/, index.ts
+│       ├── shared/                  # 공유 모듈 (2개+ feature에서 사용)
+│       │   ├── components/          # 공유 컴포넌트 (ui/, 필터, 네비게이션)
+│       │   ├── hooks/               # 공유 훅
+│       │   └── lib/                 # 유틸 (db, queries, format, agents)
+│       └── infra/                   # 외부 시스템 연동 (git, fetch)
 └── .claude/                         # Claude Code 구성
     ├── agents/                      # 에이전트 정의
     └── skills/                      # 스킬 정의
