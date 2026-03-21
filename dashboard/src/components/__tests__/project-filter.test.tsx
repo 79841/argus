@@ -33,7 +33,7 @@ describe('ProjectFilter', () => {
     ])
     render(<ProjectFilter value="all" onChange={vi.fn()} />)
     await waitFor(() => {
-      expect(mockQuery).toHaveBeenCalledWith('projects')
+      expect(mockQuery).toHaveBeenCalledWith('projects', undefined)
     })
   })
 
@@ -59,7 +59,7 @@ describe('ProjectFilter', () => {
     mockQuery.mockResolvedValue([])
     render(<ProjectFilter value="all" onChange={vi.fn()} />)
     await waitFor(() => {
-      expect(mockQuery).toHaveBeenCalledWith('projects')
+      expect(mockQuery).toHaveBeenCalledWith('projects', undefined)
     })
   })
 })

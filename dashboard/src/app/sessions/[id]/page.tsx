@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { AgentBadge } from '@/components/ui/agent-badge'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { dataClient } from '@/lib/data-client'
+import { sessionsService } from '@/shared/services'
 import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
@@ -242,7 +242,7 @@ export default function SessionDetailPage() {
     if (!sessionId) return
 
     setLoading(true)
-    dataClient.query(`sessions/${encodeURIComponent(sessionId)}`, { summary: 'true' })
+    sessionsService.getSessionDetail(sessionId, { summary: 'true' })
       .then((data) => {
         const d = data as { summary: SessionSummary | null; events: SessionDetailEvent[] }
         setSummary(d.summary ?? null)

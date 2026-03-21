@@ -18,7 +18,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
-import { dataClient } from '@/lib/data-client'
+import { projectsService, configService } from '@/shared/services'
 import { MarkdownViewer } from '@/components/markdown-viewer'
 import type { Heading } from '@/components/markdown-viewer'
 import { TocSidebar } from '@/components/toc-sidebar'
@@ -95,8 +95,8 @@ export default function RulesPage() {
   const loadAll = useCallback(async () => {
     try {
       const [registryRes, configRes] = await Promise.all([
-        dataClient.query('projects/registry') as Promise<{ projects?: RegistryEntry[] }>,
-        dataClient.query('config') as Promise<{ files?: FileEntry[] }>,
+        projectsService.getProjectRegistry(),
+        configService.getConfigFiles(),
       ])
       const registry = registryRes.projects ?? []
       setDbProjects(
@@ -129,7 +129,7 @@ export default function RulesPage() {
     try {
       const params: Record<string, string> = { path: file.path }
       if (file.projectRoot) params.projectRoot = file.projectRoot
-      const data = (await dataClient.query('config', params)) as { content?: string }
+      const data = await configService.getConfigContent(params)
       const content = data.content ?? ''
       setFileContent(content)
       setEditContent(content)
@@ -146,7 +146,7 @@ export default function RulesPage() {
     setSaving(true)
     setSaveSuccess(false)
     try {
-      await dataClient.mutate('config', {
+      await configService.saveConfig({
         path: selectedFile.path,
         content: editContent,
         projectRoot: selectedFile.projectRoot || undefined,

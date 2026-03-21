@@ -8,7 +8,7 @@ import {
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { AgentBadge } from '@/components/ui/agent-badge'
-import { dataClient } from '@/lib/data-client'
+import { modelsService } from '@/shared/services'
 import { CHART_THEME } from '@/lib/chart-theme'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
@@ -31,7 +31,7 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
   const [models, setModels] = useState<ModelTableRow[]>([])
 
   useEffect(() => {
-    dataClient.query('models', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    modelsService.getModels({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((rows) => {
         const typedRows = rows as ModelUsage[]
         setModels(

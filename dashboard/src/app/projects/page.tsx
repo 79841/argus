@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
-import { dataClient } from '@/lib/data-client'
+import { projectsService } from '@/shared/services'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
@@ -43,7 +43,7 @@ export default function ProjectsPage() {
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    dataClient.query('projects', { view: 'comparison' })
+    projectsService.getProjects({ view: 'comparison' })
       .then((res) => {
         setProjects(res as ProjectComparisonRow[])
         setLoading(false)

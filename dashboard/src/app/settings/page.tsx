@@ -12,7 +12,7 @@ import { useTheme } from '@/components/theme-provider'
 import { useLocale } from '@/lib/i18n'
 import type { Locale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { dataClient } from '@/lib/data-client'
+import { settingsService, overviewService, projectsService } from '@/shared/services'
 import { FilterBar } from '@/components/filter-bar'
 import { STORAGE_KEYS, POLLING } from '@/shared/lib/constants'
 import type { Theme, AgentTheme, Category, AgentLimitState, AgentConnectionStatus, RegistryProject } from '@/types/settings'
@@ -203,9 +203,9 @@ const AgentsSection = () => {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    dataClient.query('settings/limits')
+    settingsService.getLimits()
       .then((data) => {
-        const existing = ((data as { limits?: { agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }[] }).limits ?? [])
+        const existing = (data.limits ?? [])
         setLimits((prev) =>
           prev.map((l) => {
             const found = existing.find((e) => e.agent_type === l.agent_type)
@@ -234,7 +234,7 @@ const AgentsSection = () => {
     setSaving(true)
     setSaved(false)
     try {
-      await dataClient.mutate('settings/limits', {
+      await settingsService.saveLimits({
         limits: limits.map((l) => ({
           agent_type: l.agent_type,
           daily_cost_limit: parseFloat(l.daily_cost_limit) || 0,
@@ -350,8 +350,8 @@ const PricingSection = () => {
     setSyncing(true)
     setResult(null)
     try {
-      const json = await dataClient.mutate('pricing-sync')
-      setResult(json as { synced?: number; error?: string })
+      const json = await overviewService.syncPricing()
+      setResult(json)
     } catch {
       setResult({ error: 'Failed to connect' })
     } finally {
@@ -403,11 +403,10 @@ const SetupSection = () => {
   const [showManual, setShowManual] = useState(false)
 
   useEffect(() => {
-    dataClient.query('setup/status')
+    settingsService.getSetupStatus()
       .then((data) => {
-        const d = data as { agents: AgentConnectionStatus[] }
-        setAgents(d.agents)
-        const connected = d.agents.find((a) => a.configured && a.endpoint)
+        setAgents(data.agents)
+        const connected = data.agents.find((a) => a.configured && a.endpoint)
         if (connected?.endpoint) setEndpoint(connected.endpoint)
         setLoading(false)
       })
@@ -415,7 +414,7 @@ const SetupSection = () => {
   }, [])
 
   const refreshStatus = async () => {
-    const data = await dataClient.query('setup/status') as { agents: AgentConnectionStatus[] }
+    const data = await settingsService.getSetupStatus()
     setAgents(data.agents)
     const connected = data.agents.find((a) => a.configured && a.endpoint)
     if (connected?.endpoint) setEndpoint(connected.endpoint)
@@ -425,7 +424,7 @@ const SetupSection = () => {
     const key = agentTypes.length > 1 ? 'all' : agentTypes[0]
     setConnecting(key)
     try {
-      await dataClient.mutate('setup/connect', { agents: agentTypes, endpoint })
+      await settingsService.connectAgents({ agents: agentTypes, endpoint })
       await refreshStatus()
     } catch {
       // ignore
@@ -437,7 +436,7 @@ const SetupSection = () => {
   const handleDisconnect = async (type: string) => {
     setConnecting(type)
     try {
-      await dataClient.mutate('setup/disconnect', { agents: [type] })
+      await settingsService.disconnectAgents({ agents: [type] })
       await refreshStatus()
     } catch {
       // ignore
@@ -753,8 +752,8 @@ const ProjectConnectionSection = () => {
 
   const loadProjects = useCallback(async () => {
     try {
-      const data = await dataClient.query('projects/registry') as { projects?: RegistryProject[] }
-      setProjects(data.projects ?? [])
+      const data = await projectsService.getProjectRegistry()
+      setProjects((data.projects ?? []) as unknown as RegistryProject[])
     } catch {
       // ignore
     } finally {
@@ -772,7 +771,7 @@ const ProjectConnectionSection = () => {
     const name = nameInput.trim() || pathInput.trim().split(/[/\\]/).pop() || 'untitled'
     setAdding(true)
     try {
-      const res = await dataClient.mutate('projects/registry', {
+      const res = await projectsService.addProject({
         name,
         path: pathInput.trim(),
       }) as { error?: string }
@@ -805,7 +804,7 @@ const ProjectConnectionSection = () => {
 
   const handleDisconnect = async (name: string) => {
     try {
-      await dataClient.mutate('projects/registry/delete', { name })
+      await projectsService.deleteProject(name)
       await loadProjects()
     } catch {
       // ignore

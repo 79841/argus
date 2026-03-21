@@ -6,7 +6,7 @@ import type { AgentType } from '@/lib/agents'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AgentDot } from '@/components/ui/agent-dot'
-import { dataClient } from '@/lib/data-client'
+import { overviewService, settingsService, sessionsService } from '@/shared/services'
 import { formatCost } from '@/lib/format'
 import { POLLING, AGENT_TYPES } from '@/shared/lib/constants'
 import type { AgentStatus, AllTimeTotals, AgentLimit, AgentDailyCost, ActiveSessionInfo } from '@/types/api'
@@ -52,30 +52,29 @@ export const BottomBar = () => {
   const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
 
   useEffect(() => {
-    dataClient.query('ingest-status')
-      .then((data: unknown) => setAgents((data as { agents?: AgentStatus[] }).agents ?? []))
+    overviewService.getIngestStatus()
+      .then((data) => setAgents((data.agents ?? []) as AgentStatus[]))
       .catch(() => {})
-    dataClient.query('overview', { agent_type: 'all' })
-      .then((data: unknown) => {
-        const d = data as { all_time_cost?: number; all_time_tokens?: number }
+    overviewService.getOverview({ agent_type: 'all' })
+      .then((data) => {
         setTotals({
-          total_cost: d.all_time_cost ?? 0,
-          total_tokens: d.all_time_tokens ?? 0,
+          total_cost: data.all_time_cost ?? 0,
+          total_tokens: data.all_time_tokens ?? 0,
         })
       })
       .catch(() => {})
-    dataClient.query('settings/limits')
-      .then((data: unknown) => setLimits((data as { limits?: AgentLimit[] }).limits ?? []))
+    settingsService.getLimits()
+      .then((data) => setLimits((data.limits ?? []) as AgentLimit[]))
       .catch(() => {})
-    dataClient.query('daily-costs')
-      .then((data: unknown) => setDailyCosts((data as { costs?: AgentDailyCost[] }).costs ?? []))
+    overviewService.getDailyCosts()
+      .then((data) => setDailyCosts((data.costs ?? []) as AgentDailyCost[]))
       .catch(() => {})
   }, [])
 
   useEffect(() => {
     const fetchActive = () => {
-      dataClient.query('sessions/active')
-        .then((data: unknown) => setActiveSessions((data as { sessions?: ActiveSessionInfo[] }).sessions ?? []))
+      sessionsService.getActiveSessions()
+        .then((data) => setActiveSessions((data.sessions ?? []) as ActiveSessionInfo[]))
         .catch(() => {})
     }
     fetchActive()

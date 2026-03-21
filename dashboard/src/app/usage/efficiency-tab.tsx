@@ -9,7 +9,7 @@ import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { AgentBadge } from '@/components/ui/agent-badge'
-import { dataClient } from '@/lib/data-client'
+import { efficiencyService } from '@/shared/services'
 import { AGENTS } from '@/lib/agents'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/lib/chart-theme'
 import { calculateEfficiency } from '@/lib/efficiency'
@@ -38,7 +38,7 @@ export const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
   const [overall, setOverall] = useState<{ cacheRate: number; avgDuration: number; score: number } | null>(null)
 
   useEffect(() => {
-    dataClient.query('efficiency', { project, from: dateRange.from, to: dateRange.to })
+    efficiencyService.getEfficiency({ project, from: dateRange.from, to: dateRange.to })
       .then((res) => {
         const { data, comparison } = res as { data: EfficiencyRow[]; comparison: { current: EfficiencyComparisonRow[]; previous: EfficiencyComparisonRow[] } }
         const trendMap: Record<string, EfficiencyTrendPoint> = {}

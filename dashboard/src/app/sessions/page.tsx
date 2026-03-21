@@ -16,7 +16,7 @@ import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
 import type { SortOption } from '@/types/common'
 import { useLocale } from '@/lib/i18n'
-import { dataClient } from '@/lib/data-client'
+import { sessionsService } from '@/shared/services'
 import { formatCost, formatTokens, formatDuration, shortenModel, parseModels } from '@/lib/format'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -60,7 +60,7 @@ export default function SessionsPage() {
     setLoading(true)
     setSelectedId(null)
     setDetailEvents([])
-    dataClient.query('sessions', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    sessionsService.getSessions({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((data) => {
         setSessions(Array.isArray(data) ? data : [])
         setLoading(false)
@@ -74,7 +74,7 @@ export default function SessionsPage() {
   const handleSelect = useCallback((sessionId: string) => {
     setSelectedId(sessionId)
     setDetailLoading(true)
-    dataClient.query(`sessions/${encodeURIComponent(sessionId)}`)
+    sessionsService.getSessionDetail(sessionId)
       .then((data) => {
         setDetailEvents(Array.isArray(data) ? data : [])
         setDetailLoading(false)

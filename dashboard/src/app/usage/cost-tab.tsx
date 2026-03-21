@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
-import { dataClient } from '@/lib/data-client'
+import { dailyService, overviewService, projectsService } from '@/shared/services'
 import { AGENTS } from '@/lib/agents'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/lib/chart-theme'
 import type { AgentType } from '@/lib/agents'
@@ -26,7 +26,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   const [prevOverview, setPrevOverview] = useState<OverviewStats | null>(null)
 
   useEffect(() => {
-    dataClient.query('daily', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    dailyService.getDailyStats({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((rows) => {
         const typedRows = rows as DailyStats[]
         const byDate: Record<string, DailyCostPoint> = {}
@@ -49,7 +49,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
       })
       .catch(() => {})
 
-    dataClient.query('overview', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    overviewService.getOverview({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((data) => setOverview(data as OverviewStats))
       .catch(() => {})
 
@@ -60,11 +60,11 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
     prevTo.setDate(prevTo.getDate() - 1)
     const prevFrom = new Date(prevTo)
     prevFrom.setDate(prevFrom.getDate() - days + 1)
-    dataClient.query('overview', { agent_type: agentType, project, from: prevFrom.toISOString().slice(0, 10), to: prevTo.toISOString().slice(0, 10) })
+    overviewService.getOverview({ agent_type: agentType, project, from: prevFrom.toISOString().slice(0, 10), to: prevTo.toISOString().slice(0, 10) })
       .then((data) => setPrevOverview(data as OverviewStats))
       .catch(() => {})
 
-    dataClient.query('projects', { agent_type: agentType, from: dateRange.from, to: dateRange.to })
+    projectsService.getProjects({ agent_type: agentType, from: dateRange.from, to: dateRange.to })
       .then((data) => {
         const typedData = data as Array<{ project_name: string; total_cost: number }>
         setProjectCosts(typedData.map(d => ({ project: d.project_name, cost: d.total_cost })))

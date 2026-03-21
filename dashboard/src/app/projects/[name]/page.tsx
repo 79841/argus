@@ -17,7 +17,7 @@ import {
 } from 'recharts'
 import { ChevronLeft } from 'lucide-react'
 import { FilterBar } from '@/components/filter-bar'
-import { dataClient } from '@/lib/data-client'
+import { projectsService } from '@/shared/services'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
@@ -64,7 +64,7 @@ export default function ProjectDetailPage() {
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    dataClient.query(`projects/${encodeURIComponent(projectName)}`)
+    projectsService.getProjectDetail(projectName)
       .then((res) => {
         setData(res as ProjectData)
         setLoading(false)

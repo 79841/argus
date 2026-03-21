@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAgentColor } from '@/lib/agents'
 import { cn } from '@/lib/utils'
-import { dataClient } from '@/lib/data-client'
+import { configService } from '@/shared/services'
 import { formatCostChart } from '@/lib/format'
 
 type ConfigTimelineProps = {
@@ -53,8 +53,8 @@ const ComparePanel = ({ date }: { date: string }) => {
 
   useEffect(() => {
     setLoading(true)
-    dataClient.query('config-history/compare', { date, days: 7 })
-      .then((json) => setData(json as ConfigCompareResult))
+    configService.getConfigCompare({ date, days: 7 })
+      .then((json) => setData(json))
       .catch(() => setData(null))
       .finally(() => setLoading(false))
   }, [date])

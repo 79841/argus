@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { ProjectRow } from '@/lib/queries'
-import { dataClient } from '@/lib/data-client'
+import { projectsService } from '@/shared/services'
 
 type ProjectFilterProps = {
   value: string
@@ -20,7 +20,7 @@ export const ProjectFilter = ({ value, onChange }: ProjectFilterProps) => {
   const [projects, setProjects] = useState<ProjectRow[]>([])
 
   useEffect(() => {
-    dataClient.query('projects')
+    projectsService.getProjects()
       .then((data) => setProjects(data as ProjectRow[]))
       .catch(() => setProjects([]))
   }, [])

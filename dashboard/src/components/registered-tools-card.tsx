@@ -6,7 +6,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { dataClient } from '@/lib/data-client'
+import { toolsService } from '@/shared/services'
 
 type RegisteredTool = {
   name: string
@@ -32,9 +32,9 @@ export const RegisteredToolsCard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    dataClient.query('tools/registered')
-      .then((data: unknown) => {
-        setTools((data as { tools?: RegisteredTool[] }).tools ?? [])
+    toolsService.getRegisteredTools()
+      .then((data) => {
+        setTools((data.tools ?? []) as RegisteredTool[])
         setLoading(false)
       })
       .catch(() => {

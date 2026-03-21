@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutoRefresh } from '@/hooks/use-auto-refresh'
-import { dataClient } from '@/lib/data-client'
+import { overviewService, dailyService, sessionsService } from '@/shared/services'
 import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -53,21 +53,22 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    dataClient.mutate('pricing-sync').catch(() => {})
+    overviewService.syncPricing().catch(() => {})
   }, [])
 
   const fetchData = useCallback((showLoading = true) => {
     if (showLoading) setLoading(true)
     Promise.all([
-      dataClient.query('overview'),
-      dataClient.query('daily', { days: 112 }),
-      dataClient.query('sessions', { limit: 5 }),
+      overviewService.getOverview(),
+      dailyService.getDailyStats({ days: 112 }),
+      sessionsService.getSessions({ limit: 5 }),
     ])
       .then(([overviewData, dailyData, sessionsData]) => {
+        const rawOverview = overviewData as unknown as Record<string, unknown>
         setData({
-          stats: overviewData as OverviewStats,
-          delta: (overviewData as { delta: OverviewDelta }).delta ?? null,
-          agentSummaries: (overviewData as { agent_summaries: AgentTodaySummary[] }).agent_summaries ?? [],
+          stats: overviewData as unknown as OverviewStats,
+          delta: (rawOverview.delta as OverviewDelta) ?? null,
+          agentSummaries: (rawOverview.agent_summaries as AgentTodaySummary[]) ?? [],
           daily: Array.isArray(dailyData) ? (dailyData as DailyStats[]) : [],
           sessions: Array.isArray(sessionsData) ? (sessionsData as SessionRow[]) : [],
         })

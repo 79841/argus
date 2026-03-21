@@ -30,7 +30,7 @@ import {
 import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { AgentType } from '@/lib/agents'
-import { dataClient } from '@/lib/data-client'
+import { toolsService } from '@/shared/services'
 import { formatDuration } from '@/lib/format'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -392,8 +392,8 @@ export default function ToolsPage() {
     setLoading(true)
 
     Promise.all([
-      dataClient.query('tools', { agent_type: agentType, days: Number(days), detail: true }),
-      dataClient.query('tools', { agent_type: agentType, days: Number(days) }),
+      toolsService.getTools({ agent_type: agentType, days: Number(days), detail: true }),
+      toolsService.getTools({ agent_type: agentType, days: Number(days) }),
     ])
       .then(([detail, simple]) => {
         const d = detail as Record<string, unknown[]>

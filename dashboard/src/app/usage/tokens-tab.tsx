@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
-import { dataClient } from '@/lib/data-client'
+import { dailyService, overviewService } from '@/shared/services'
 import { AGENTS } from '@/lib/agents'
 import { AGENT_CHART_COLORS, TOKEN_COLORS, CHART_THEME } from '@/lib/chart-theme'
 import type { AgentType } from '@/lib/agents'
@@ -23,7 +23,7 @@ export const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => 
   const [overview, setOverview] = useState<OverviewStats | null>(null)
 
   useEffect(() => {
-    dataClient.query('daily', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    dailyService.getDailyStats({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((rows) => {
         const typedRows = rows as DailyStats[]
         const byDate: Record<string, DailyTokenPoint> = {}
@@ -54,7 +54,7 @@ export const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => 
       })
       .catch(() => {})
 
-    dataClient.query('overview', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    overviewService.getOverview({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((data) => setOverview(data as OverviewStats))
       .catch(() => {})
   }, [agentType, project, dateRange])

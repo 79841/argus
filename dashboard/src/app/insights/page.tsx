@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { AlertTriangle, AlertCircle, Info, CheckCircle2 } from 'lucide-react'
-import { dataClient } from '@/lib/data-client'
+import { insightsService } from '@/shared/services'
 import { useLocale } from '@/lib/i18n'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
@@ -133,7 +133,7 @@ export default function InsightsPage() {
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    dataClient.query('insights', { days: Number(days) })
+    insightsService.getInsights({ days: Number(days) })
       .then((res) => {
         setData(res as InsightsData)
         setLoading(false)
@@ -143,7 +143,7 @@ export default function InsightsPage() {
 
   const fetchSuggestions = useCallback(() => {
     setSuggestionsLoading(true)
-    dataClient.query('suggestions', { days: Number(days) })
+    insightsService.getSuggestions({ days: Number(days) })
       .then((res) => {
         setSuggestions((res as SuggestionsData).suggestions ?? [])
         setSuggestionsLoading(false)

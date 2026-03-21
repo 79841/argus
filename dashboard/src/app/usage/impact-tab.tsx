@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ConfigTimeline } from '@/components/config-timeline'
 import { EmptyState } from '@/components/ui/empty-state'
-import { dataClient } from '@/lib/data-client'
+import { configService } from '@/shared/services'
 import type { DateRange } from '@/components/top-bar-context'
 import type { ConfigChange } from '@/lib/config-tracker'
 import type { ScopeType, ImpactTabProps } from '@/types/usage'
@@ -17,7 +17,7 @@ export const ImpactTab = ({ dateRange: _dateRange }: ImpactTabProps) => {
 
   const loadData = useCallback(() => {
     setLoading(true)
-    dataClient.query('config-history', { days: 90 })
+    configService.getConfigHistory({ days: 90 })
       .then((data) => {
         const typedData = data as ConfigChange[]
         const isUserScope = (fp: string) =>
