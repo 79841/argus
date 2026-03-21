@@ -7,7 +7,7 @@ allowed-tools: Bash, Read
 
 # /screenshot — 대시보드 스크린샷 캡처
 
-headless Chrome으로 localhost:3000의 대시보드 페이지를 캡처한다. JS 실행을 5초 대기한 후 스크린샷을 저장한다.
+headless Chrome으로 localhost:9845의 대시보드 페이지를 캡처한다. JS 실행을 5초 대기한 후 스크린샷을 저장한다.
 
 ## 사용법
 
@@ -24,7 +24,7 @@ headless Chrome으로 localhost:3000의 대시보드 페이지를 캡처한다. 
 ### 1. 서버 상태 확인
 
 ```bash
-curl -sf http://localhost:3000/api/health > /dev/null 2>&1 && echo "Server OK" || echo "FAIL: pnpm dev 또는 pnpm electron:dev를 먼저 실행하세요"
+curl -sf http://localhost:9845/api/health > /dev/null 2>&1 && echo "Server OK" || echo "FAIL: pnpm dev 또는 pnpm electron:dev를 먼저 실행하세요"
 ```
 
 ### 2. 스크린샷 캡처
@@ -35,7 +35,7 @@ Chrome 경로: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
 
 ```bash
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-BASE="http://localhost:3000"
+BASE="http://localhost:9845"
 OUTDIR="/tmp/argus-screenshots"
 mkdir -p "$OUTDIR"
 
@@ -56,7 +56,7 @@ PAGE="${ARGUMENTS:-/}"
 NAME=$(echo "$PAGE" | sed 's/\//-/g' | sed 's/^-//' | sed 's/^$/overview/')
 OUTDIR="/tmp/argus-screenshots"
 mkdir -p "$OUTDIR"
-"$CHROME" --headless=new --disable-gpu --window-size=1280,900 --hide-scrollbars --virtual-time-budget=5000 --screenshot="$OUTDIR/$NAME.png" "http://localhost:3000$PAGE" 2>/dev/null
+"$CHROME" --headless=new --disable-gpu --window-size=1280,900 --hide-scrollbars --virtual-time-budget=5000 --screenshot="$OUTDIR/$NAME.png" "http://localhost:9845$PAGE" 2>/dev/null
 echo "Captured: $OUTDIR/$NAME.png"
 ```
 

@@ -33,7 +33,7 @@ Download the latest installer for your platform from [Releases](https://github.c
 | **macOS** (Apple Silicon) | `Argus-x.x.x-arm64.dmg` | Open DMG → drag to Applications |
 | **Windows** | `Argus Setup x.x.x.exe` | Run installer (NSIS) |
 
-After installing, launch Argus. It runs as a tray-resident app and automatically starts an OTLP receiver on `http://localhost:3000`.
+After installing, launch Argus. It runs as a tray-resident app and automatically starts an OTLP receiver on `http://localhost:9845`.
 
 ### Development Mode
 
@@ -43,7 +43,7 @@ For contributors who want to run from source:
 git clone https://github.com/79841/argus.git
 cd argus/dashboard
 pnpm install
-pnpm dev              # Web mode: http://localhost:3000
+pnpm dev              # Web mode: http://localhost:9845
 pnpm electron:dev     # Desktop mode with Electron
 ```
 
@@ -57,14 +57,14 @@ Configure your AI coding agents to send telemetry to Argus.
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ```
 
 ### Codex CLI
 
 ```bash
 export CODEX_OTEL_EXPORT_ENABLED=true
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 ```
 
@@ -72,7 +72,7 @@ export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 
 ```bash
 export GEMINI_CLI_OTEL_ENABLED=true
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 ```
 

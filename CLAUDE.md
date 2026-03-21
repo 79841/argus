@@ -63,7 +63,7 @@ Claude Code의 OTel 텔레메트리를 직접 수신한다. 설정:
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ```
 
 ### 수신 엔드포인트

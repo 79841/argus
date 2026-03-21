@@ -15,7 +15,7 @@ vi.mock('@/lib/db', async (importOriginal) => {
 const { POST } = await import('../route')
 
 const mkRequest = (body: unknown): Request => {
-  return new Request('http://localhost:3000/v1/metrics', {
+  return new Request('http://localhost:9845/v1/metrics', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

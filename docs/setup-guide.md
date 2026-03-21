@@ -34,7 +34,7 @@ Download the latest installer from [Releases](https://github.com/79841/argus/rel
 | **macOS** (Apple Silicon) | `Argus-x.x.x-arm64.dmg` | Open DMG → drag Argus to Applications → launch |
 | **Windows** | `Argus Setup x.x.x.exe` | Run the installer → launch from Start Menu |
 
-After launching, Argus runs as a **tray-resident app** and automatically starts an OTLP receiver on `http://localhost:3000`. The SQLite database is created automatically — no manual setup needed.
+After launching, Argus runs as a **tray-resident app** and automatically starts an OTLP receiver on `http://localhost:9845`. The SQLite database is created automatically — no manual setup needed.
 
 ### From Source (Contributors)
 
@@ -44,7 +44,7 @@ Requires **Node.js 20+** and **pnpm**.
 git clone https://github.com/79841/argus.git
 cd argus/dashboard
 pnpm install
-pnpm dev              # Web mode: http://localhost:3000
+pnpm dev              # Web mode: http://localhost:9845
 pnpm electron:dev     # Desktop mode with Electron
 ```
 
@@ -75,7 +75,7 @@ Add the following to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ```
 
 Reload your shell or run `source ~/.zshrc`.
@@ -88,7 +88,7 @@ Alternatively, set them in `~/.claude/settings.json`:
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
     "OTEL_LOGS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:3000"
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:9845"
   }
 }
 ```
@@ -148,7 +148,7 @@ Edit `~/.codex/config.toml` and add an `[otel]` section:
 
 ```toml
 [otel]
-exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }
+exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol = "json" } }
 ```
 
 ### Step 2: Enable prompt logging (optional)
@@ -157,7 +157,7 @@ To include user prompt content in telemetry:
 
 ```toml
 [otel]
-exporter = { otlp-http = { endpoint = "http://localhost:3000/v1/logs", protocol = "json" } }
+exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol = "json" } }
 log_user_prompt = true
 ```
 
@@ -196,7 +196,7 @@ Edit `~/.gemini/settings.json`:
   "telemetry": {
     "enabled": true,
     "target": "local",
-    "otlpEndpoint": "http://localhost:3000",
+    "otlpEndpoint": "http://localhost:9845",
     "otlpProtocol": "http"
   }
 }
@@ -207,7 +207,7 @@ Edit `~/.gemini/settings.json`:
 ```bash
 export GEMINI_TELEMETRY_ENABLED=true
 export GEMINI_TELEMETRY_TARGET=local
-export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http
 ```
 
@@ -252,7 +252,7 @@ export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"
 ### Health check
 
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost:9845/api/health
 ```
 
 Expected response:
@@ -266,7 +266,7 @@ Expected response:
 To populate the dashboard with sample data for testing:
 
 ```bash
-curl -X POST http://localhost:3000/api/seed
+curl -X POST http://localhost:9845/api/seed
 ```
 
 This inserts sample sessions for all three agents (Claude Code, Codex CLI, Gemini CLI).
@@ -276,7 +276,7 @@ This inserts sample sessions for all three agents (Claude Code, Codex CLI, Gemin
 Send a minimal OTLP log record to verify ingestion:
 
 ```bash
-curl -X POST http://localhost:3000/v1/logs \
+curl -X POST http://localhost:9845/v1/logs \
   -H "Content-Type: application/json" \
   -d '{
     "resourceLogs": [{
@@ -316,7 +316,7 @@ Expected response:
 
 ### No data appearing in the dashboard
 
-1. **Check the dashboard is running**: `curl http://localhost:3000/api/health`
+1. **Check the dashboard is running**: `curl http://localhost:9845/api/health`
 2. **Check the port**: All agents must point to the same port where Argus is running (default: 3000).
 3. **Check the protocol**: Claude Code requires `http/json`. Codex CLI requires `protocol = "json"`. Gemini CLI requires `otlpProtocol: "http"`.
 4. **Check environment variables are loaded**: Run `env | grep OTEL` or `env | grep CLAUDE_CODE` to confirm.
@@ -330,7 +330,7 @@ Expected response:
 ### Codex CLI telemetry not sending
 
 - Verify `~/.codex/config.toml` exists and has the `[otel]` section.
-- The endpoint must include the full path: `http://localhost:3000/v1/logs`.
+- The endpoint must include the full path: `http://localhost:9845/v1/logs`.
 
 ### Gemini CLI telemetry not sending
 

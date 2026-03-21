@@ -12,24 +12,24 @@ allowed-tools: Bash
 
 ```bash
 echo "=== Dashboard ==="
-curl -sf http://localhost:3000/api/health && echo " OK" || echo "FAIL (not running)"
+curl -sf http://localhost:9845/api/health && echo " OK" || echo "FAIL (not running)"
 ```
 
 ### 2. API 검증
 
 ```bash
 echo "=== Overview API ==="
-curl -s http://localhost:3000/api/overview | python3 -m json.tool
+curl -s http://localhost:9845/api/overview | python3 -m json.tool
 
 echo "=== Daily API (7 days) ==="
-curl -s "http://localhost:3000/api/daily?days=7" | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} rows')"
+curl -s "http://localhost:9845/api/daily?days=7" | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} rows')"
 
 echo "=== Sessions API ==="
-curl -s http://localhost:3000/api/sessions | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} sessions')"
+curl -s http://localhost:9845/api/sessions | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} sessions')"
 
 echo "=== Models API ==="
-curl -s http://localhost:3000/api/models | python3 -m json.tool
+curl -s http://localhost:9845/api/models | python3 -m json.tool
 
 echo "=== Efficiency API ==="
-curl -s "http://localhost:3000/api/efficiency?days=7" | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} rows')"
+curl -s "http://localhost:9845/api/efficiency?days=7" | python3 -c "import sys,json; data=json.load(sys.stdin); print(f'{len(data)} rows')"
 ```

@@ -11,7 +11,7 @@ export CLAUDE_CODE_ENABLE_TELEMETRY=1
 # 로그(이벤트) 내보내기
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 
 # 메트릭 내보내기 (선택)
 export OTEL_METRICS_EXPORTER=otlp
@@ -48,7 +48,7 @@ export OTEL_METRICS_EXPORTER=otlp
     "OTEL_METRICS_EXPORTER": "otlp",
     "OTEL_LOGS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:3000"
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:9845"
   }
 }
 ```

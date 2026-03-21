@@ -16,15 +16,15 @@ log_user_prompt = false        # true면 사용자 프롬프트 원문 포함
 
 # Argus으로 전송하는 설정 예시
 [otel.exporter.otlp-http]
-endpoint = "http://localhost:3000/v1/logs"
+endpoint = "http://localhost:9845/v1/logs"
 protocol = "json"              # "binary" (protobuf) | "json"
 
 [otel.trace_exporter.otlp-http]
-endpoint = "http://localhost:3000/v1/traces"
+endpoint = "http://localhost:9845/v1/traces"
 protocol = "json"
 
 [otel.metrics_exporter.otlp-http]
-endpoint = "http://localhost:3000/v1/metrics"
+endpoint = "http://localhost:9845/v1/metrics"
 protocol = "json"
 ```
 

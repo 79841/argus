@@ -2,7 +2,7 @@
 
 Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints are unauthenticated and intended for local use only.
 
-**Base URL:** `http://localhost:3000`
+**Base URL:** `http://localhost:9845`
 
 ---
 
@@ -153,7 +153,7 @@ OTLP standard log ingestion endpoint. Accepts both JSON and Protobuf (`applicati
 
 Claude Code sends telemetry directly to this endpoint when configured with:
 ```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ```
 
 **Request Body**

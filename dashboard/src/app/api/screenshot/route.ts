@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     const timestamp = Date.now()
     const screenshotPath = path.join(os.tmpdir(), `argus-screenshot-${timestamp}.png`)
-    const url = `http://localhost:3000${pagePath}`
+    const url = `http://localhost:9845${pagePath}`
 
     execFileSync(
       chromePath,

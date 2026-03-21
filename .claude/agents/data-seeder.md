@@ -14,40 +14,40 @@ model: claude-sonnet-4-6
 
 ```bash
 # 대시보드 기동 확인
-curl -s http://localhost:3000/api/health
+curl -s http://localhost:9845/api/health
 
 # 기존 데이터 확인
-curl -s http://localhost:3000/api/overview | python3 -m json.tool
+curl -s http://localhost:9845/api/overview | python3 -m json.tool
 ```
 
 ### 2. 시드 데이터 생성
 
 ```bash
 # 시드 API 호출
-curl -s -X POST http://localhost:3000/api/seed | python3 -m json.tool
+curl -s -X POST http://localhost:9845/api/seed | python3 -m json.tool
 ```
 
 ### 3. 파이프라인 검증
 
 ```bash
 # Overview 데이터 확인
-curl -s http://localhost:3000/api/overview | python3 -m json.tool
+curl -s http://localhost:9845/api/overview | python3 -m json.tool
 
 # Sessions 확인
-curl -s http://localhost:3000/api/sessions | python3 -m json.tool
+curl -s http://localhost:9845/api/sessions | python3 -m json.tool
 ```
 
 ### 4. 대시보드 API 검증
 
 ```bash
 # Overview API
-curl -s http://localhost:3000/api/overview | python3 -m json.tool
+curl -s http://localhost:9845/api/overview | python3 -m json.tool
 
 # Daily API
-curl -s "http://localhost:3000/api/daily?days=7" | python3 -m json.tool
+curl -s "http://localhost:9845/api/daily?days=7" | python3 -m json.tool
 
 # Sessions API
-curl -s http://localhost:3000/api/sessions | python3 -m json.tool
+curl -s http://localhost:9845/api/sessions | python3 -m json.tool
 ```
 
 ## 데이터 생성 규칙

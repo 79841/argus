@@ -51,8 +51,8 @@ cat dashboard/src/lib/db.ts
 cd dashboard
 npm run dev &
 sleep 3
-curl -s -X POST http://localhost:3000/api/seed
-curl -s http://localhost:3000/api/overview | python3 -m json.tool
+curl -s -X POST http://localhost:9845/api/seed
+curl -s http://localhost:9845/api/overview | python3 -m json.tool
 ```
 
 ## 주의사항

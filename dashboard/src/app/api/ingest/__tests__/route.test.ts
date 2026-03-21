@@ -17,7 +17,7 @@ vi.mock('@/lib/db', async (importOriginal) => {
 const { POST } = await import('../route')
 
 const mkRequest = (body: unknown): Request => {
-  return new Request('http://localhost:3000/api/ingest', {
+  return new Request('http://localhost:9845/api/ingest', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -433,7 +433,7 @@ describe('empty payloads', () => {
 
 describe('invalid payload', () => {
   it('returns 400 for unparseable JSON', async () => {
-    const req = new Request('http://localhost:3000/api/ingest', {
+    const req = new Request('http://localhost:9845/api/ingest', {
       method: 'POST',
       body: 'not-json',
     })

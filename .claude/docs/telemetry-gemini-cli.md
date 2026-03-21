@@ -11,7 +11,7 @@
   "telemetry": {
     "enabled": true,
     "target": "local",
-    "otlpEndpoint": "http://localhost:3000",
+    "otlpEndpoint": "http://localhost:9845",
     "otlpProtocol": "http",
     "logPrompts": true
   }
@@ -37,7 +37,7 @@
 
 ```bash
 export GEMINI_TELEMETRY_ENABLED=1
-export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:3000
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http
 export GEMINI_TELEMETRY_LOG_PROMPTS=1
 ```

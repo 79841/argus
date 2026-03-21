@@ -74,7 +74,7 @@ cd dashboard
 npm run dev
 # 브라우저에서 페이지 확인
 # API 직접 호출 테스트
-curl -s http://localhost:3000/api/{name}
+curl -s http://localhost:9845/api/{name}
 ```
 
 ## API 라우트 패턴

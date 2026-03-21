@@ -18,8 +18,8 @@ cd dashboard && npm run dev &
 
 ```bash
 for i in $(seq 1 10); do
-  if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
-    echo "Dashboard is ready at http://localhost:3000"
+  if curl -sf http://localhost:9845/api/health > /dev/null 2>&1; then
+    echo "Dashboard is ready at http://localhost:9845"
     break
   fi
   echo "Waiting for dashboard... ($i/10)"
@@ -31,7 +31,7 @@ done
 
 ```
 대시보드가 시작되었습니다.
-- Dashboard: http://localhost:3000
-- OTLP Ingest: POST http://localhost:3000/api/ingest
-- 테스트 데이터: POST http://localhost:3000/api/seed
+- Dashboard: http://localhost:9845
+- OTLP Ingest: POST http://localhost:9845/api/ingest
+- 테스트 데이터: POST http://localhost:9845/api/seed
 ```

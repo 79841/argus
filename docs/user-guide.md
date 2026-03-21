@@ -530,7 +530,7 @@ Step-by-step setup guides for each agent:
 1. **Start the dashboard**: `cd dashboard && pnpm dev`
 2. **Configure your agent** (see Settings > Setup for exact commands)
 3. **Sync pricing**: Visit Settings > Pricing > Sync Now
-4. **Seed test data** (optional): `POST http://localhost:3000/api/seed`
+4. **Seed test data** (optional): `POST http://localhost:9845/api/seed`
 5. **Start coding** with your AI agent -- data will flow automatically
 6. **Check Overview** to see today's activity
 7. **Explore Sessions** to drill into individual conversations

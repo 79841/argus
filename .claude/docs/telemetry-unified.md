@@ -270,7 +270,7 @@ Agent → POST /v1/traces → /api/traces → SQLite (traces 테이블)
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 # 선택: 상세 수집
 export OTEL_LOG_TOOL_DETAILS=1
 export OTEL_LOG_USER_PROMPTS=1
@@ -283,7 +283,7 @@ exporter = "otlp-http"
 log_user_prompt = true
 
 [otel.exporter.otlp-http]
-endpoint = "http://localhost:3000/v1/logs"
+endpoint = "http://localhost:9845/v1/logs"
 protocol = "json"
 ```
 
@@ -293,7 +293,7 @@ protocol = "json"
   "telemetry": {
     "enabled": true,
     "target": "local",
-    "otlpEndpoint": "http://localhost:3000",
+    "otlpEndpoint": "http://localhost:9845",
     "otlpProtocol": "http",
     "logPrompts": true
   }
