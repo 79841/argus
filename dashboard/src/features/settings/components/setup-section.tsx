@@ -214,8 +214,17 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.codex.step1.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
-exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol = "json" } }`}</code></pre>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel.exporter.otlp-http]
+endpoint = "http://localhost:9845/v1/logs"
+protocol = "json"
+
+[otel.trace_exporter.otlp-http]
+endpoint = "http://localhost:9845/v1/logs"
+protocol = "json"
+
+[otel.metrics_exporter.otlp-http]
+endpoint = "http://localhost:9845/v1/logs"
+protocol = "json"`}</code></pre>
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step2')}</h3>

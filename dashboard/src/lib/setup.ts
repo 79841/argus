@@ -63,7 +63,7 @@ const ARGUS_GEMINI_TELEMETRY = (endpoint: string) => ({
 })
 
 const CODEX_OTEL_SECTION = (endpoint: string) =>
-  `\n[otel]\nexporter = "otlp-http"\ntrace_exporter = "otlp-http"\nmetrics_exporter = "otlp-http"\n\n[otel.exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n`
+  `\n[otel.exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.trace_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.metrics_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n`
 
 // Claude
 
@@ -145,7 +145,7 @@ const getCodexStatus = (configPath: string, defaultEndpoint: string): AgentStatu
   }
   try {
     const content = fs.readFileSync(configPath, 'utf-8')
-    const hasOtel = /\[otel\]/.test(content)
+    const hasOtel = /\[otel[\.\]]/.test(content)
     const endpointMatch = content.match(/endpoint\s*=\s*"([^"]+)"/)
     const endpoint = endpointMatch ? endpointMatch[1].replace(/\/v1\/logs$/, '') : null
     const configured = hasOtel && endpoint === defaultEndpoint
@@ -167,7 +167,7 @@ const connectCodex = (configPath: string, endpoint: string): ConnectResult => {
       return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml에 새로 썼다' }
     }
     let content = fs.readFileSync(configPath, 'utf-8')
-    if (/\[otel\]/.test(content)) {
+    if (/\[otel[\.\]]/.test(content)) {
       content = replaceCodexOtelSections(content, section)
       fs.writeFileSync(configPath, content, 'utf-8')
       return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml에서 교체했다' }
