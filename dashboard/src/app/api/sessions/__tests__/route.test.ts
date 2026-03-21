@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
-vi.mock('@/lib/queries', () => ({
+vi.mock('@/shared/lib/queries', () => ({
   getSessions: vi.fn(),
 }))
 
 const { GET } = await import('../route')
-import { getSessions } from '@/lib/queries'
+import { getSessions } from '@/shared/lib/queries'
 
 const mkRequest = (params: Record<string, string> = {}): NextRequest => {
   const url = new URL('http://localhost:9845/api/sessions')

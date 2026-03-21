@@ -4,14 +4,14 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { ChartCard } from '@/components/ui/chart-card'
-import { DataTable } from '@/components/ui/data-table'
-import { AgentBadge } from '@/components/ui/agent-badge'
-import { CHART_THEME } from '@/lib/chart-theme'
-import { formatCostChart } from '@/lib/format'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { DataTable } from '@/shared/components/ui/data-table'
+import { AgentBadge } from '@/shared/components/ui/agent-badge'
+import { CHART_THEME } from '@/shared/lib/chart-theme'
+import { formatCostChart } from '@/shared/lib/format'
 import { useModelsData } from '../hooks/use-models-data'
-import type { AgentType } from '@/lib/agents'
-import type { ModelsTabProps } from '@/types/usage'
+import type { AgentType } from '@/shared/lib/agents'
+import type { ModelsTabProps } from '@/features/usage/types/usage'
 
 const SERIES_PIE_COLORS = [
   'oklch(0.55 0 0)',

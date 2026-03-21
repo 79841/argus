@@ -1,24 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
-import { KpiCard } from '@/components/ui/kpi-card'
-import { ChartCard } from '@/components/ui/chart-card'
-import { DataTable } from '@/components/ui/data-table'
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
-import { CHART_THEME } from '@/lib/chart-theme'
-import { useLocale } from '@/lib/i18n'
-import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
-import { FilterBar } from '@/components/filter-bar'
-import { useProjectsData } from '@/features/projects'
+import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { useLocale } from '@/shared/lib/i18n'
+import { formatCost, formatCostDetail } from '@/shared/lib/format'
+import { FilterBar } from '@/shared/components/filter-bar'
+import { DataTable } from '@/shared/components/ui/data-table'
+import { useProjectsData, CostComparisonChart } from '@/features/projects'
 
 const formatDate = (iso: string) => {
   if (!iso) return '—'
@@ -27,11 +16,6 @@ const formatDate = (iso: string) => {
     day: 'numeric',
   })
 }
-
-const COLORS = [
-  '#8b5cf6', '#f97316', '#10b981', '#3b82f6', '#ef4444',
-  '#eab308', '#ec4899', '#14b8a6', '#6366f1', '#f59e0b',
-]
 
 export default function ProjectsPage() {
   const router = useRouter()
@@ -122,45 +106,7 @@ export default function ProjectsPage() {
         empty={!loading && projects.length === 0}
         emptyMessage={t('projects.chart.noData')}
       >
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart
-            layout="vertical"
-            data={chartData}
-            margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
-          >
-            <XAxis
-              type="number"
-              tickFormatter={(v) => formatCost(Number(v))}
-              {...CHART_THEME.axis}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={120}
-              {...CHART_THEME.axis}
-            />
-            <Tooltip
-              formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
-              labelFormatter={(_label, payload) => {
-                if (payload?.[0]) {
-                  return (payload[0].payload as { fullName: string }).fullName
-                }
-                return _label
-              }}
-              contentStyle={CHART_THEME.tooltip.containerStyle}
-              labelStyle={CHART_THEME.tooltip.labelStyle}
-              itemStyle={CHART_THEME.tooltip.itemStyle}
-            />
-            <Bar dataKey="cost" radius={[0, 3, 3, 0]}>
-              {chartData.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <CostComparisonChart data={chartData} />
       </ChartCard>
 
       {/* 프로젝트 목록 테이블 */}
@@ -170,7 +116,7 @@ export default function ProjectsPage() {
         empty={!loading && projects.length === 0}
         emptyMessage={t('projects.chart.noData')}
       >
-        <DataTableClickable
+        <DataTable
           columns={columns}
           data={projects as unknown as Record<string, unknown>[]}
           onRowClick={(row) => {
@@ -181,62 +127,5 @@ export default function ProjectsPage() {
       </div>
       </div>
     </div>
-  )
-}
-
-// 클릭 가능한 DataTable 래퍼
-type DataTableClickableProps = {
-  columns: Parameters<typeof DataTable>[0]['columns']
-  data: Record<string, unknown>[]
-  onRowClick: (row: Record<string, unknown>) => void
-}
-
-const DataTableClickable = ({ columns, data, onRowClick }: DataTableClickableProps) => {
-  if (data.length === 0) {
-    return <DataTable columns={columns} data={data} />
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-[var(--bg-sunken)]">
-          {columns.map((col) => (
-            <TableHead
-              key={col.key}
-              className={[
-                'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
-                col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-              ].join(' ')}
-              style={col.width ? { width: col.width } : undefined}
-            >
-              {col.label}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((row, rowIndex) => (
-          <TableRow
-            key={rowIndex}
-            onClick={() => onRowClick(row)}
-            className="cursor-pointer"
-          >
-            {columns.map((col) => (
-              <TableCell
-                key={col.key}
-                className={[
-                  'tabular-nums',
-                  col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-                ].join(' ')}
-              >
-                {col.format
-                  ? col.format(row[col.key], row)
-                  : (row[col.key] as string | number | null | undefined) ?? '—'}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
   )
 }

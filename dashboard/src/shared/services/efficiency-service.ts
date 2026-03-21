@@ -1,6 +1,6 @@
-import { dataClient } from '@/lib/data-client'
-import type { QueryParams } from '@/types/electron'
-import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
+import { dataClient } from '@/shared/lib/data-client'
+import type { QueryParams } from '@/shared/types/electron'
+import type { EfficiencyRow, EfficiencyComparisonRow } from '@/shared/lib/queries'
 
 type EfficiencyResponse = {
   data: EfficiencyRow[]

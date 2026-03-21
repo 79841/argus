@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getIngestStatus } from '@/lib/queries'
+import { getIngestStatus } from '@/shared/lib/queries'
 
 export const dynamic = 'force-dynamic'
 

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { modelsService } from '@/shared/services'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/types/common'
-import type { ModelUsage } from '@/lib/queries'
-import type { ModelTableRow } from '@/types/usage'
+import type { AgentType } from '@/shared/lib/agents'
+import type { DateRange } from '@/shared/types/common'
+import type { ModelUsage } from '@/shared/lib/queries'
+import type { ModelTableRow } from '@/features/usage/types/usage'
 
 type UseModelsDataParams = {
   agentType: AgentType

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { projectsService } from '@/shared/services'
-import type { ProjectComparisonRow } from '@/lib/queries'
+import type { ProjectComparisonRow } from '@/shared/lib/queries'
 
 type UseProjectsDataReturn = {
   projects: ProjectComparisonRow[]

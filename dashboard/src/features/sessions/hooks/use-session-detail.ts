@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { sessionsService } from '@/shared/services'
-import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
+import type { SessionDetailEvent, SessionSummary } from '@/shared/lib/queries'
 
 export type PromptGroup = {
   promptId: string

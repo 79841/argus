@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionDetail, getSessionSummary } from '@/lib/queries'
+import { getSessionDetail, getSessionSummary } from '@/shared/lib/queries'
 
 export async function GET(
   request: NextRequest,

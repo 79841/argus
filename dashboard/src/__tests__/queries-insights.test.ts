@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import Database from 'better-sqlite3'
-import { initSchema } from '@/lib/db'
+import { initSchema } from '@/shared/lib/db'
 
 let db: ReturnType<typeof Database>
 
@@ -55,7 +55,7 @@ afterAll(() => {
 
 describe('getHighCostSessions', () => {
   it('비용 상위 세션을 내림차순으로 반환한다', async () => {
-    const { getHighCostSessions } = await import('@/lib/queries')
+    const { getHighCostSessions } = await import('@/shared/lib/queries')
     const sessions = await getHighCostSessions(30, 10, db)
 
     expect(sessions.length).toBeGreaterThan(0)
@@ -63,7 +63,7 @@ describe('getHighCostSessions', () => {
   })
 
   it('세션별 원인 태그를 포함한다', async () => {
-    const { getHighCostSessions } = await import('@/lib/queries')
+    const { getHighCostSessions } = await import('@/shared/lib/queries')
     const sessions = await getHighCostSessions(30, 10, db)
 
     for (const s of sessions) {
@@ -73,7 +73,7 @@ describe('getHighCostSessions', () => {
   })
 
   it('고비용 세션에 expensive_model 태그가 포함된다', async () => {
-    const { getHighCostSessions } = await import('@/lib/queries')
+    const { getHighCostSessions } = await import('@/shared/lib/queries')
     const sessions = await getHighCostSessions(30, 10, db)
 
     const expensive = sessions.find(s => s.session_id === 'session-expensive')
@@ -82,7 +82,7 @@ describe('getHighCostSessions', () => {
   })
 
   it('다수 도구 호출 세션에 many_tool_calls 태그가 포함된다', async () => {
-    const { getHighCostSessions } = await import('@/lib/queries')
+    const { getHighCostSessions } = await import('@/shared/lib/queries')
     const sessions = await getHighCostSessions(30, 10, db)
 
     const expensive = sessions.find(s => s.session_id === 'session-expensive')
@@ -91,7 +91,7 @@ describe('getHighCostSessions', () => {
   })
 
   it('limit 파라미터로 결과 수를 제한한다', async () => {
-    const { getHighCostSessions } = await import('@/lib/queries')
+    const { getHighCostSessions } = await import('@/shared/lib/queries')
     const sessions = await getHighCostSessions(30, 2, db)
 
     expect(sessions.length).toBeLessThanOrEqual(2)
@@ -100,7 +100,7 @@ describe('getHighCostSessions', () => {
 
 describe('getModelCostEfficiency', () => {
   it('모델별 비용 효율 데이터를 반환한다', async () => {
-    const { getModelCostEfficiency } = await import('@/lib/queries')
+    const { getModelCostEfficiency } = await import('@/shared/lib/queries')
     const models = await getModelCostEfficiency(30, db)
 
     expect(models.length).toBeGreaterThan(0)
@@ -116,7 +116,7 @@ describe('getModelCostEfficiency', () => {
   })
 
   it('비용 내림차순으로 정렬된다', async () => {
-    const { getModelCostEfficiency } = await import('@/lib/queries')
+    const { getModelCostEfficiency } = await import('@/shared/lib/queries')
     const models = await getModelCostEfficiency(30, db)
 
     for (let i = 1; i < models.length; i++) {
@@ -125,7 +125,7 @@ describe('getModelCostEfficiency', () => {
   })
 
   it('cost_per_1k_tokens가 올바르게 계산된다', async () => {
-    const { getModelCostEfficiency } = await import('@/lib/queries')
+    const { getModelCostEfficiency } = await import('@/shared/lib/queries')
     const models = await getModelCostEfficiency(30, db)
 
     for (const m of models) {
@@ -140,7 +140,7 @@ describe('getModelCostEfficiency', () => {
 
 describe('getBudgetStatus', () => {
   it('에이전트별 예산 상태를 반환한다', async () => {
-    const { getBudgetStatus } = await import('@/lib/queries')
+    const { getBudgetStatus } = await import('@/shared/lib/queries')
     const status = await getBudgetStatus(db)
 
     expect(status.length).toBeGreaterThan(0)
@@ -151,7 +151,7 @@ describe('getBudgetStatus', () => {
   })
 
   it('사용률이 올바르게 계산된다', async () => {
-    const { getBudgetStatus } = await import('@/lib/queries')
+    const { getBudgetStatus } = await import('@/shared/lib/queries')
     const status = await getBudgetStatus(db)
 
     for (const s of status) {
@@ -163,7 +163,7 @@ describe('getBudgetStatus', () => {
   })
 
   it('예산 미설정 에이전트도 포함한다 (limit=0)', async () => {
-    const { getBudgetStatus } = await import('@/lib/queries')
+    const { getBudgetStatus } = await import('@/shared/lib/queries')
     const status = await getBudgetStatus(db)
 
     const gemini = status.find(s => s.agent_type === 'gemini')

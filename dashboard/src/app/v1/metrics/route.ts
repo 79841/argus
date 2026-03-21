@@ -3,9 +3,9 @@
  * Receives Gemini CLI and Claude Code metrics and stores them in SQLite.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
-import { detectAgentType, getAttr, attrsToJson } from '@/lib/ingest-utils'
-import type { AnyValue, KeyValue } from '@/lib/ingest-utils'
+import { getDb } from '@/shared/lib/db'
+import { detectAgentType, getAttr, attrsToJson } from '@/shared/lib/ingest-utils'
+import type { AnyValue, KeyValue } from '@/shared/lib/ingest-utils'
 
 type DataPoint = {
   attributes?: Record<string, unknown> | KeyValue[]

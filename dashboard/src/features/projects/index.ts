@@ -1,2 +1,5 @@
 export { useProjectsData } from './hooks/use-projects-data'
 export { useProjectDetail } from './hooks/use-project-detail'
+export { CostComparisonChart } from './components/cost-comparison-chart'
+export { AgentDistChart } from './components/agent-dist-chart'
+export { DailyCostChart } from './components/daily-cost-chart'

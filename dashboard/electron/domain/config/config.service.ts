@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
-import { getDb } from '../../../src/lib/db'
+import { getDb } from '../../../src/shared/lib/db'
 import { str } from '../../infrastructure/helpers'
 import { PROJECT_STATIC_FILES, USER_STATIC_FILES } from './config.constants'
 import type { QueryParams, RegistryRow, ProjectFileEntry, UserFileEntry } from './config.types'

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { projectsService, configService } from '@/shared/services'
-import type { FileEntry, DbProject, ProjectGroup, Agent } from '@/types/rules'
+import type { FileEntry, DbProject, ProjectGroup, Agent } from '@/features/rules/types/rules'
 
 const groupByAgent = (list: FileEntry[]) => {
   const map = new Map<Agent, FileEntry[]>()

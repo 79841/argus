@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAgentDailyCosts } from '@/lib/queries'
+import { getAgentDailyCosts } from '@/shared/lib/queries'
 
 export const dynamic = 'force-dynamic'
 

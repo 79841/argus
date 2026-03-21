@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { overviewService, settingsService, sessionsService } from '@/shared/services'
 import { POLLING, AGENT_TYPES } from '@/shared/lib/constants'
-import type { AgentType } from '@/lib/agents'
-import type { AgentStatus, AllTimeTotals, AgentLimit, AgentDailyCost, ActiveSessionInfo } from '@/types/api'
+import type { AgentType } from '@/shared/lib/agents'
+import type { AgentStatus, AllTimeTotals, AgentLimit, AgentDailyCost, ActiveSessionInfo } from '@/shared/types/api'
 
 type LimitBar = {
   type: AgentType

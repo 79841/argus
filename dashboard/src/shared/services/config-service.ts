@@ -1,8 +1,8 @@
-import { dataClient } from '@/lib/data-client'
-import type { QueryParams } from '@/types/electron'
-import type { ConfigCompareResult } from '@/lib/queries'
-import type { ConfigChange } from '@/lib/config-tracker'
-import type { FileEntry } from '@/types/rules'
+import { dataClient } from '@/shared/lib/data-client'
+import type { QueryParams } from '@/shared/types/electron'
+import type { ConfigCompareResult } from '@/shared/lib/queries'
+import type { ConfigChange } from '@/shared/lib/config-tracker'
+import type { FileEntry } from '@/features/rules/types/rules'
 
 type ConfigFilesResponse = {
   files?: FileEntry[]

@@ -2,29 +2,16 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import {
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
 import { ChevronLeft } from 'lucide-react'
-import { FilterBar } from '@/components/filter-bar'
-import { KpiCard } from '@/components/ui/kpi-card'
-import { ChartCard } from '@/components/ui/chart-card'
-import { DataTable } from '@/components/ui/data-table'
-import { AgentBadge } from '@/components/ui/agent-badge'
-import { useLocale } from '@/lib/i18n'
-import { CHART_THEME } from '@/lib/chart-theme'
-import type { AgentType } from '@/lib/agents'
-import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
-import { useProjectDetail } from '@/features/projects'
+import { FilterBar } from '@/shared/components/filter-bar'
+import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { DataTable } from '@/shared/components/ui/data-table'
+import { AgentBadge } from '@/shared/components/ui/agent-badge'
+import { useLocale } from '@/shared/lib/i18n'
+import type { AgentType } from '@/shared/lib/agents'
+import { formatCost, formatCostDetail } from '@/shared/lib/format'
+import { useProjectDetail, AgentDistChart, DailyCostChart } from '@/features/projects'
 
 const formatTokens = (v: number) =>
   v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v)
@@ -40,12 +27,6 @@ const formatDate = (iso: string) => {
 const shortenDate = (iso: string) => {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
-}
-
-const AGENT_COLORS: Record<string, string> = {
-  claude: 'var(--agent-claude)',
-  codex: 'var(--agent-codex)',
-  gemini: 'var(--agent-gemini)',
 }
 
 export default function ProjectDetailPage() {
@@ -152,40 +133,7 @@ export default function ProjectDetailPage() {
           empty={!loading && pieData.length === 0}
           emptyMessage={t('projects.detail.noData')}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) =>
-                  `${name} ${((percent ?? 0) * 100).toFixed(1)}%`
-                }
-                labelLine={false}
-              >
-                {pieData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={AGENT_COLORS[entry.name] ?? `oklch(0.55 0.12 ${(index * 60 + 200) % 360})`}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
-                contentStyle={CHART_THEME.tooltip.containerStyle}
-                labelStyle={CHART_THEME.tooltip.labelStyle}
-                itemStyle={CHART_THEME.tooltip.itemStyle}
-              />
-              <Legend
-                formatter={(value) => value}
-                {...CHART_THEME.legend}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <AgentDistChart data={pieData} />
         </ChartCard>
 
         {/* 일별 비용 추이 AreaChart */}
@@ -196,37 +144,7 @@ export default function ProjectDetailPage() {
           empty={!loading && areaData.length === 0}
           emptyMessage={t('projects.detail.noData')}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={areaData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="projectCostGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="oklch(0.62 0.17 300)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="oklch(0.62 0.17 300)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="label"
-                {...CHART_THEME.axis}
-              />
-              <YAxis
-                tickFormatter={(v) => formatCost(Number(v))}
-                {...CHART_THEME.axis}
-              />
-              <Tooltip
-                formatter={(value) => [formatCostChart(Number(value)), 'Cost']}
-                contentStyle={CHART_THEME.tooltip.containerStyle}
-                labelStyle={CHART_THEME.tooltip.labelStyle}
-                itemStyle={CHART_THEME.tooltip.itemStyle}
-              />
-              <Area
-                type="monotone"
-                dataKey="cost"
-                stroke="oklch(0.62 0.17 300)"
-                fill="url(#projectCostGrad)"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <DailyCostChart data={areaData} />
         </ChartCard>
       </div>
 

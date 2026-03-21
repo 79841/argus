@@ -1,6 +1,6 @@
-import { dataClient } from '@/lib/data-client'
-import type { QueryParams } from '@/types/electron'
-import type { OverviewStats } from '@/lib/queries'
+import { dataClient } from '@/shared/lib/data-client'
+import type { QueryParams } from '@/shared/types/electron'
+import type { OverviewStats } from '@/shared/lib/queries'
 
 type IngestStatusResponse = {
   agents?: unknown[]

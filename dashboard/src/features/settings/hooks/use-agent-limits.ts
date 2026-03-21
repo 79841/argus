@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { settingsService } from '@/shared/services'
-import type { AgentLimitState } from '@/types/settings'
+import type { AgentLimitState } from '@/features/settings/types/settings'
 
 const LIMIT_AGENT_TYPES = [
   { id: 'claude', label: 'Claude Code' },

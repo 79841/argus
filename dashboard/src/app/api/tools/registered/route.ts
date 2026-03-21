@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { scanRegisteredTools } from '@/lib/registered-tools'
+import { scanRegisteredTools } from '@/shared/lib/registered-tools'
 
 export const dynamic = 'force-dynamic'
 

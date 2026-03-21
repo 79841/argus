@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getEfficiencyStats, getEfficiencyComparison } from '@/lib/queries'
-import { parseDays } from '@/lib/api-utils'
+import { getEfficiencyStats, getEfficiencyComparison } from '@/shared/lib/queries'
+import { parseDays } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

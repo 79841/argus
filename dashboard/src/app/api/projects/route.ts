@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getProjects, getProjectCosts, getProjectComparison } from '@/lib/queries'
-import { parseAgentType } from '@/lib/api-utils'
+import { getProjects, getProjectCosts, getProjectComparison } from '@/shared/lib/queries'
+import { parseAgentType } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

@@ -4,12 +4,12 @@ import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
 } from 'recharts'
-import { KpiCard } from '@/components/ui/kpi-card'
-import { ChartCard } from '@/components/ui/chart-card'
-import { AGENT_CHART_COLORS, CHART_THEME } from '@/lib/chart-theme'
-import { formatCost, formatCostChart } from '@/lib/format'
+import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
+import { formatCost, formatCostChart } from '@/shared/lib/format'
 import { useCostData } from '../hooks/use-cost-data'
-import type { CostTabProps } from '@/types/usage'
+import type { CostTabProps } from '@/features/usage/types/usage'
 
 export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   const { daily, agentCosts, projectCosts, overview, prevOverview } = useCostData({ agentType, project, dateRange })

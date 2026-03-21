@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
-import { VALID_AGENT_TYPES } from '@/lib/api-utils'
+import { getDb } from '@/shared/lib/db'
+import { VALID_AGENT_TYPES } from '@/shared/lib/api-utils'
 
 export type AgentLimit = {
   agent_type: string

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 const getUserHome = () => os.homedir()
 

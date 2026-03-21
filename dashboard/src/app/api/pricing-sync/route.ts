@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
-import { syncPricingFromLiteLLM } from '@/lib/pricing-sync'
+import { getDb } from '@/shared/lib/db'
+import { syncPricingFromLiteLLM } from '@/shared/lib/pricing-sync'
 
 export const dynamic = 'force-dynamic'
 

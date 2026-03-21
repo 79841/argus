@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { Palette, Bot, Cog, Plug, FolderPlus, Database } from 'lucide-react'
-import { useLocale } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { FilterBar } from '@/components/filter-bar'
+import { useLocale } from '@/shared/lib/i18n'
+import { cn } from '@/shared/lib/utils'
+import { FilterBar } from '@/shared/components/filter-bar'
 import {
   GeneralSection,
   AgentsSection,
@@ -13,7 +13,7 @@ import {
   ProjectConnectionSection,
   DataSection,
 } from '@/features/settings'
-import type { Category } from '@/types/settings'
+import type { Category } from '@/features/settings/types/settings'
 
 const SECTION_MAP: Record<Category, React.FC> = {
   general: GeneralSection,

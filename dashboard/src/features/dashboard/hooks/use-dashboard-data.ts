@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAutoRefresh } from '@/hooks/use-auto-refresh'
+import { useAutoRefresh } from '@/shared/hooks/use-auto-refresh'
 import { overviewService, dailyService, sessionsService } from '@/shared/services'
-import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
+import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/shared/lib/queries'
 
 type DashboardData = {
   stats: OverviewStats | null

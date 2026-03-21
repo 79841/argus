@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessions } from '@/lib/queries'
-import { parseAgentType, parseLimit } from '@/lib/api-utils'
+import { getSessions } from '@/shared/lib/queries'
+import { parseAgentType, parseLimit } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

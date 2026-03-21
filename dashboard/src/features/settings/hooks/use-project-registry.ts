@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { projectsService } from '@/shared/services'
-import type { RegistryProject } from '@/types/settings'
+import type { RegistryProject } from '@/features/settings/types/settings'
 
 export const useProjectRegistry = () => {
   const [projects, setProjects] = useState<RegistryProject[]>([])
