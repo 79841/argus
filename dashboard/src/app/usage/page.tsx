@@ -8,11 +8,7 @@ import { DateRangePicker } from '@/components/date-range-picker'
 import { FilterBar } from '@/components/filter-bar'
 import type { AgentType } from '@/lib/agents'
 import type { DateRange } from '@/components/top-bar-context'
-import { CostTab } from './cost-tab'
-import { TokensTab } from './tokens-tab'
-import { ModelsTab } from './models-tab'
-import { EfficiencyTab } from './efficiency-tab'
-import { ImpactTab } from './impact-tab'
+import { CostTab, TokensTab, ModelsTab, EfficiencyTab, ImpactTab } from '@/features/usage'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -17,16 +16,16 @@ import {
 } from 'recharts'
 import { ChevronLeft } from 'lucide-react'
 import { FilterBar } from '@/components/filter-bar'
-import { projectsService } from '@/shared/services'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { AgentBadge } from '@/components/ui/agent-badge'
 import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
-import type { ProjectDetailStats, ProjectDailyCost } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
+import { useProjectDetail } from '@/features/projects'
+
 const formatTokens = (v: number) =>
   v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v)
 const formatPct = (v: number) => `${(v * 100).toFixed(1)}%`
@@ -49,35 +48,12 @@ const AGENT_COLORS: Record<string, string> = {
   gemini: 'var(--agent-gemini)',
 }
 
-type ProjectData = {
-  stats: ProjectDetailStats
-  daily: ProjectDailyCost[]
-}
-
 export default function ProjectDetailPage() {
   const params = useParams()
   const projectName = decodeURIComponent(params.name as string)
   const { t } = useLocale()
 
-  const [data, setData] = useState<ProjectData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    projectsService.getProjectDetail(projectName)
-      .then((res) => {
-        setData(res as ProjectData)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [projectName])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  const stats = data?.stats
-  const daily = data?.daily ?? []
+  const { loading, stats, daily } = useProjectDetail(projectName)
 
   const pieData = (stats?.agent_breakdown ?? []).map((b) => ({
     name: b.agent_type,

@@ -1,31 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { AGENTS } from '@/lib/agents'
 import type { AgentType } from '@/lib/agents'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AgentDot } from '@/components/ui/agent-dot'
-import { overviewService, settingsService, sessionsService } from '@/shared/services'
 import { formatCost } from '@/lib/format'
-import { POLLING, AGENT_TYPES } from '@/shared/lib/constants'
-import type { AgentStatus, AllTimeTotals, AgentLimit, AgentDailyCost, ActiveSessionInfo } from '@/types/api'
+import { formatRelativeTime } from '@/shared/lib/format'
+import { useBottomBarData } from '@/shared/hooks/use-bottom-bar-data'
 
 const formatTokensShort = (value: number): string => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
   return String(value)
-}
-
-const formatRelativeTime = (iso: string): string => {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 const getStatusDot = (iso: string | null): string => {
@@ -45,56 +32,7 @@ const formatModel = (model: string): string => {
 }
 
 export const BottomBar = () => {
-  const [agents, setAgents] = useState<AgentStatus[]>([])
-  const [totals, setTotals] = useState<AllTimeTotals>({ total_cost: 0, total_tokens: 0 })
-  const [activeSessions, setActiveSessions] = useState<ActiveSessionInfo[]>([])
-  const [limits, setLimits] = useState<AgentLimit[]>([])
-  const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
-
-  useEffect(() => {
-    overviewService.getIngestStatus()
-      .then((data) => setAgents((data.agents ?? []) as AgentStatus[]))
-      .catch(() => {})
-    overviewService.getOverview({ agent_type: 'all' })
-      .then((data) => {
-        setTotals({
-          total_cost: data.all_time_cost ?? 0,
-          total_tokens: data.all_time_tokens ?? 0,
-        })
-      })
-      .catch(() => {})
-    settingsService.getLimits()
-      .then((data) => setLimits((data.limits ?? []) as AgentLimit[]))
-      .catch(() => {})
-    overviewService.getDailyCosts()
-      .then((data) => setDailyCosts((data.costs ?? []) as AgentDailyCost[]))
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    const fetchActive = () => {
-      sessionsService.getActiveSessions()
-        .then((data) => setActiveSessions((data.sessions ?? []) as ActiveSessionInfo[]))
-        .catch(() => {})
-    }
-    fetchActive()
-    const id = setInterval(fetchActive, POLLING.ACTIVE_SESSION_MS)
-    return () => clearInterval(id)
-  }, [])
-
-  const agentTypes: AgentType[] = [...AGENT_TYPES]
-
-  // Build limit progress data
-  const limitBars = agentTypes
-    .map((type) => {
-      const limit = limits.find((l) => l.agent_type === type)
-      if (!limit || limit.daily_cost_limit <= 0) return null
-      const cost = dailyCosts.find((c) => c.agent_type === type)?.daily_cost ?? 0
-      const pct = Math.min((cost / limit.daily_cost_limit) * 100, 100)
-      const exceeded = cost >= limit.daily_cost_limit
-      return { type, pct, cost, limit: limit.daily_cost_limit, exceeded }
-    })
-    .filter(Boolean) as { type: AgentType; pct: number; cost: number; limit: number; exceeded: boolean }[]
+  const { agents, totals, activeSessions, limitBars, agentTypes } = useBottomBarData()
 
   return (
     <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground">

@@ -1,10 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAutoRefresh } from '@/hooks/use-auto-refresh'
-import { overviewService, dailyService, sessionsService } from '@/shared/services'
-import type { OverviewStats, OverviewDelta, AgentTodaySummary, DailyStats, SessionRow } from '@/lib/queries'
 import { AGENTS } from '@/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { KpiCard } from '@/components/ui/kpi-card'
@@ -12,77 +8,13 @@ import { AgentDot } from '@/components/ui/agent-dot'
 import { EmptyState } from '@/components/ui/empty-state'
 import { UsageHeatmap } from '@/components/usage-heatmap'
 import { FilterBar } from '@/components/filter-bar'
-import { formatCost } from '@/lib/format'
-
-const formatRelativeTime = (iso: string): string => {
-  const diff = Date.now() - new Date(iso).getTime()
-  const s = Math.floor(diff / 1000)
-  if (s < 60) return `${s}s ago`
-  const m = Math.floor(s / 60)
-  if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
-}
-
-const formatDuration = (ms: number): string => {
-  if (ms <= 0) return '-'
-  const m = Math.floor(ms / 60000)
-  const s = Math.floor((ms % 60000) / 1000)
-  if (m === 0) return `${s}s`
-  return `${m}m ${s}s`
-}
-
-type DashboardData = {
-  stats: OverviewStats | null
-  delta: OverviewDelta | null
-  agentSummaries: AgentTodaySummary[]
-  daily: DailyStats[]
-  sessions: SessionRow[]
-}
+import { formatCost, formatDuration } from '@/lib/format'
+import { formatRelativeTime } from '@/shared/lib/format'
+import { useDashboardData } from '@/features/dashboard'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [data, setData] = useState<DashboardData>({
-    stats: null,
-    delta: null,
-    agentSummaries: [],
-    daily: [],
-    sessions: [],
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    overviewService.syncPricing().catch(() => {})
-  }, [])
-
-  const fetchData = useCallback((showLoading = true) => {
-    if (showLoading) setLoading(true)
-    Promise.all([
-      overviewService.getOverview(),
-      dailyService.getDailyStats({ days: 112 }),
-      sessionsService.getSessions({ limit: 5 }),
-    ])
-      .then(([overviewData, dailyData, sessionsData]) => {
-        const rawOverview = overviewData as unknown as Record<string, unknown>
-        setData({
-          stats: overviewData as unknown as OverviewStats,
-          delta: (rawOverview.delta as OverviewDelta) ?? null,
-          agentSummaries: (rawOverview.agent_summaries as AgentTodaySummary[]) ?? [],
-          daily: Array.isArray(dailyData) ? (dailyData as DailyStats[]) : [],
-          sessions: Array.isArray(sessionsData) ? (sessionsData as SessionRow[]) : [],
-        })
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    fetchData(true)
-  }, [fetchData])
-
-  useAutoRefresh(useCallback(() => fetchData(false), [fetchData]))
-
+  const { data, loading } = useDashboardData()
   const { stats, delta, agentSummaries, daily, sessions } = data
 
   const AGENT_ORDER = ['claude', 'codex', 'gemini'] as const

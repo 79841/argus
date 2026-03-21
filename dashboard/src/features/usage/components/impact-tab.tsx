@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { ConfigTimeline } from '@/components/config-timeline'
 import { EmptyState } from '@/components/ui/empty-state'
 import { configService } from '@/shared/services'
-import type { DateRange } from '@/components/top-bar-context'
 import type { ConfigChange } from '@/lib/config-tracker'
 import type { ScopeType, ImpactTabProps } from '@/types/usage'
 

@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { AlertTriangle, AlertCircle, Info, CheckCircle2 } from 'lucide-react'
-import { insightsService } from '@/shared/services'
 import { useLocale } from '@/lib/i18n'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
@@ -16,6 +15,7 @@ import type { AgentType } from '@/lib/agents'
 import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/queries'
 import type { Suggestion } from '@/lib/suggestions'
 import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
+import { useInsightsData } from '@/features/insights'
 
 const DATE_OPTIONS = [
   { value: '7', labelKey: 'insights.date.7' },
@@ -68,16 +68,6 @@ const formatDuration = (ms: number) => {
 const shortenModel = (model: string): string =>
   model.replace(/^claude-/, '').replace(/^models\//, '').replace(/-\d{8}$/, '')
 
-type InsightsData = {
-  highCostSessions: HighCostSession[]
-  modelEfficiency: ModelCostEfficiency[]
-  budgetStatus: BudgetStatus[]
-}
-
-type SuggestionsData = {
-  suggestions: Suggestion[]
-}
-
 type SuggestionCardProps = {
   suggestion: Suggestion
   t: (key: string, params?: Record<string, string>) => string
@@ -126,35 +116,8 @@ const SuggestionCard = ({ suggestion, t }: SuggestionCardProps) => {
 export default function InsightsPage() {
   const { t } = useLocale()
   const [days, setDays] = useState('7')
-  const [data, setData] = useState<InsightsData | null>(null)
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [loading, setLoading] = useState(true)
-  const [suggestionsLoading, setSuggestionsLoading] = useState(true)
 
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    insightsService.getInsights({ days: Number(days) })
-      .then((res) => {
-        setData(res as InsightsData)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [days])
-
-  const fetchSuggestions = useCallback(() => {
-    setSuggestionsLoading(true)
-    insightsService.getSuggestions({ days: Number(days) })
-      .then((res) => {
-        setSuggestions((res as SuggestionsData).suggestions ?? [])
-        setSuggestionsLoading(false)
-      })
-      .catch(() => setSuggestionsLoading(false))
-  }, [days])
-
-  useEffect(() => {
-    fetchData()
-    fetchSuggestions()
-  }, [fetchData, fetchSuggestions])
+  const { data, suggestions, loading, suggestionsLoading } = useInsightsData(days)
 
   const totalHighCost = data?.highCostSessions.reduce((s, r) => s + r.total_cost, 0) ?? 0
   const avgSessionCost = data?.highCostSessions.length
@@ -310,10 +273,10 @@ export default function InsightsPage() {
       </div>
 
       {/* Budget Gauges */}
-      {data?.budgetStatus.some(b => b.daily_cost_limit > 0) && (
+      {data?.budgetStatus.some((b: BudgetStatus) => b.daily_cost_limit > 0) && (
         <ChartCard title={t('insights.dailyBudget')}>
           <div className="grid grid-cols-3 gap-4 p-2">
-            {data.budgetStatus.map((b) => {
+            {data.budgetStatus.map((b: BudgetStatus) => {
               const usagePct = Math.min(b.daily_usage_pct, 100)
               const exceeded = b.daily_usage_pct > 100
               return (

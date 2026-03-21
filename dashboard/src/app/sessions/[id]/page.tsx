@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   BarChart,
@@ -15,46 +15,14 @@ import { Badge } from '@/components/ui/badge'
 import { AgentBadge } from '@/components/ui/agent-badge'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { sessionsService } from '@/shared/services'
 import { useLocale } from '@/lib/i18n'
 import { CHART_THEME } from '@/lib/chart-theme'
-import type { SessionDetailEvent, SessionSummary } from '@/lib/queries'
+import type { SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
 import { FilterBar } from '@/components/filter-bar'
 import { formatCost, formatCostDetail, formatCostChart, formatTokens, formatDuration, shortenModel, parseModels, formatTime } from '@/lib/format'
-
-type PromptGroup = {
-  promptId: string
-  events: SessionDetailEvent[]
-  cost: number
-  toolCount: number
-  startTime: string
-}
-
-const groupByPrompt = (events: SessionDetailEvent[]): PromptGroup[] => {
-  const map = new Map<string, SessionDetailEvent[]>()
-  const order: string[] = []
-
-  for (const ev of events) {
-    const key = ev.prompt_id || `_no_prompt_${ev.timestamp}`
-    if (!map.has(key)) {
-      map.set(key, [])
-      order.push(key)
-    }
-    map.get(key)!.push(ev)
-  }
-
-  return order.map((promptId) => {
-    const evts = map.get(promptId)!
-    return {
-      promptId,
-      events: evts,
-      cost: evts.reduce((s, e) => s + (e.cost_usd || 0), 0),
-      toolCount: evts.filter((e) => e.event_name === 'tool_result').length,
-      startTime: evts[0].timestamp,
-    }
-  })
-}
+import { useSessionDetail } from '@/features/sessions'
+import type { PromptGroup } from '@/features/sessions'
 
 const eventLabel = (ev: SessionDetailEvent): string => {
   switch (ev.event_name) {
@@ -234,43 +202,7 @@ export default function SessionDetailPage() {
 
   const sessionId = typeof params.id === 'string' ? decodeURIComponent(params.id) : ''
 
-  const [loading, setLoading] = useState(true)
-  const [summary, setSummary] = useState<SessionSummary | null>(null)
-  const [events, setEvents] = useState<SessionDetailEvent[]>([])
-
-  useEffect(() => {
-    if (!sessionId) return
-
-    setLoading(true)
-    sessionsService.getSessionDetail(sessionId, { summary: 'true' })
-      .then((data) => {
-        const d = data as { summary: SessionSummary | null; events: SessionDetailEvent[] }
-        setSummary(d.summary ?? null)
-        setEvents(Array.isArray(d.events) ? d.events : [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setSummary(null)
-        setEvents([])
-        setLoading(false)
-      })
-  }, [sessionId])
-
-  const promptGroups = groupByPrompt(events)
-
-  const costChartData: CostChartDatum[] = promptGroups.map((g, i) => ({
-    label: `#${i + 1}`,
-    cost: g.cost,
-    toolCount: g.toolCount,
-  }))
-
-  const cacheRate = summary
-    ? Math.round(
-        (summary.input_tokens + summary.cache_read_tokens) > 0
-          ? (summary.cache_read_tokens / (summary.input_tokens + summary.cache_read_tokens)) * 100
-          : 0
-      )
-    : 0
+  const { loading, summary, promptGroups, cacheRate, costChartData } = useSessionDetail(sessionId)
 
   if (loading) {
     return (
