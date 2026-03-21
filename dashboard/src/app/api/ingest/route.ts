@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     let count = 0
     const sessionProjects = new Map<string, string>()
+    const codexSessions = new Set<string>()
 
     const tx = db.transaction(() => {
       for (const resourceLog of data.resourceLogs ?? []) {
@@ -189,7 +191,36 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            if (agentType === 'codex' && sessionId) {
+              codexSessions.add(sessionId)
+            }
+
             count++
+          }
+        }
+      }
+
+      // Backfill synthetic prompt_id for Codex sessions (Codex has no native prompt_id)
+      if (codexSessions.size > 0) {
+        const selectEvents = db.prepare(
+          "SELECT id, event_name, prompt_id FROM agent_logs WHERE session_id = ? AND agent_type = 'codex' ORDER BY timestamp, id"
+        )
+        const updatePromptId = db.prepare(
+          'UPDATE agent_logs SET prompt_id = ? WHERE id = ?'
+        )
+        for (const sid of codexSessions) {
+          const rows = selectEvents.all(sid) as { id: number; event_name: string; prompt_id: string }[]
+          let currentPromptId = ''
+          for (const row of rows) {
+            if (row.prompt_id) continue
+            if (row.event_name === 'user_prompt') {
+              currentPromptId = randomUUID()
+            } else if (!currentPromptId && row.event_name !== 'session_start') {
+              currentPromptId = randomUUID()
+            }
+            if (currentPromptId) {
+              updatePromptId.run(currentPromptId, row.id)
+            }
           }
         }
       }
