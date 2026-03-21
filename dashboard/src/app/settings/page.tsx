@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, Save } from 'lucide-react'
+import { Sun, Moon, Monitor, RefreshCw, Database, Cog, Palette, Bot, Globe, Save, Check, Plug, Unplug, ChevronDown, ChevronRight, FolderPlus, Folder, Trash2, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,7 @@ import { FilterBar } from '@/components/filter-bar'
 type Theme = 'light' | 'dark' | 'system'
 type AgentTheme = 'claude' | 'codex' | 'gemini'
 
-type Category = 'general' | 'agents' | 'pricing' | 'setup' | 'data'
+type Category = 'general' | 'agents' | 'pricing' | 'agentConnection' | 'projectConnection' | 'data'
 
 const AGENT_THEME_STORAGE_KEY = 'argus-agent-theme'
 
@@ -403,108 +403,293 @@ const PricingSection = () => {
   )
 }
 
+type AgentConnectionStatus = {
+  type: string
+  configPath: string
+  displayPath: string
+  installed: boolean
+  configured: boolean
+  endpoint: string | null
+}
+
+const AGENT_LABELS: Record<string, string> = {
+  claude: 'Claude Code',
+  codex: 'Codex CLI',
+  gemini: 'Gemini CLI',
+}
+
 const SetupSection = () => {
   const { t } = useLocale()
+  const [agents, setAgents] = useState<AgentConnectionStatus[]>([])
+  const [endpoint, setEndpoint] = useState('http://localhost:9845')
+  const [loading, setLoading] = useState(true)
+  const [connecting, setConnecting] = useState<string | null>(null)
+  const [showManual, setShowManual] = useState(false)
+
+  useEffect(() => {
+    dataClient.query('setup/status')
+      .then((data) => {
+        const d = data as { agents: AgentConnectionStatus[] }
+        setAgents(d.agents)
+        const connected = d.agents.find((a) => a.configured && a.endpoint)
+        if (connected?.endpoint) setEndpoint(connected.endpoint)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const refreshStatus = async () => {
+    const data = await dataClient.query('setup/status') as { agents: AgentConnectionStatus[] }
+    setAgents(data.agents)
+    const connected = data.agents.find((a) => a.configured && a.endpoint)
+    if (connected?.endpoint) setEndpoint(connected.endpoint)
+  }
+
+  const handleConnect = async (agentTypes: string[]) => {
+    const key = agentTypes.length > 1 ? 'all' : agentTypes[0]
+    setConnecting(key)
+    try {
+      await dataClient.mutate('setup/connect', { agents: agentTypes, endpoint })
+      await refreshStatus()
+    } catch {
+      // ignore
+    } finally {
+      setConnecting(null)
+    }
+  }
+
+  const handleDisconnect = async (type: string) => {
+    setConnecting(type)
+    try {
+      await dataClient.mutate('setup/disconnect', { agents: [type] })
+      await refreshStatus()
+    } catch {
+      // ignore
+    } finally {
+      setConnecting(null)
+    }
+  }
+
+  const hasAnyConnected = agents.some((a) => a.configured)
+  const unconfiguredAgents = agents.filter((a) => !a.configured).map((a) => a.type)
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-claude)' }} />
-            Claude Code
-          </CardTitle>
+          <CardTitle>Agent Connection</CardTitle>
+          <CardDescription>
+            Connect your AI coding agents to Argus for telemetry
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step1')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.claude.step1.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Endpoint</label>
+            <input
+              type="text"
+              value={endpoint}
+              onChange={(e) => setEndpoint(e.target.value)}
+              disabled={hasAnyConnected}
+              className={cn(
+                'w-full rounded-md border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring',
+                hasAnyConnected
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-background'
+              )}
+              placeholder="http://localhost:9845"
+            />
+            {hasAnyConnected && (
+              <p className="text-xs text-muted-foreground">
+                Disconnect all agents to change the endpoint.
+              </p>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+          ) : (
+            <div className="rounded-md border border-border divide-y divide-border">
+              {agents.map((agent) => {
+                const isConnecting = connecting === agent.type
+                const label = AGENT_LABELS[agent.type] ?? agent.type
+                return (
+                  <div key={agent.type} className="flex items-center justify-between px-4 py-3 gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={cn(
+                          'w-3 h-3 rounded-full shrink-0',
+                          agent.configured ? 'opacity-100' : 'opacity-40'
+                        )}
+                        style={{ backgroundColor: `var(--agent-${agent.type})` }}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{agent.displayPath}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {agent.configured ? (
+                        <>
+                          <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                            <Check className="size-3.5" />
+                            Connected
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isConnecting}
+                            onClick={() => handleDisconnect(agent.type)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Unplug className="size-3.5 mr-1" />
+                            {isConnecting ? 'Disconnecting...' : 'Disconnect'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm text-muted-foreground">Not configured</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isConnecting}
+                            onClick={() => handleConnect([agent.type])}
+                          >
+                            <Plug className="size-3.5 mr-1" />
+                            {isConnecting ? 'Connecting...' : 'Connect'}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {unconfiguredAgents.length > 0 && !loading && (
+            <div>
+              <Button
+                variant="outline"
+                disabled={connecting === 'all'}
+                onClick={() => handleConnect(unconfiguredAgents)}
+              >
+                <Plug className="size-4 mr-2" />
+                {connecting === 'all' ? 'Connecting...' : 'Connect All'}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div>
+        <button
+          onClick={() => setShowManual((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-1"
+        >
+          {showManual ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          Manual Setup Guide
+        </button>
+
+        {showManual && (
+          <div className="mt-4 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-claude)' }} />
+                  Claude Code
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step1')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.claude.step1.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step2')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.claude.step2.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step2')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.claude.step2.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
   }
 }`}</code></pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step3')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.claude.step3.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step3')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.claude.step3.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_LOG_TOOL_DETAILS": "1"
   }
 }`}</code></pre>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t('settings.setup.claude.step3.note')}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step4')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.setup.claude.step4.desc')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {t('settings.setup.claude.step3.note')}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.claude.step4')}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.setup.claude.step4.desc')}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-codex)' }} />
-            Codex
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step1')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.codex.step1.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-codex)' }} />
+                  Codex
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step1')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.codex.step1.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
 exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol = "json" } }`}</code></pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step2')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.setup.codex.step2.desc')}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step3')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.setup.codex.step3.desc')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step2')}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.setup.codex.step2.desc')}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.codex.step3')}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.setup.codex.step3.desc')}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-gemini)' }} />
-            Gemini CLI
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step1')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.gemini.step1.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--agent-gemini)' }} />
+                  Gemini CLI
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step1')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.gemini.step1.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "telemetry": {
     "enabled": true,
     "target": "local",
@@ -512,60 +697,271 @@ exporter = { otlp-http = { endpoint = "http://localhost:9845/v1/logs", protocol 
     "otlpProtocol": "http"
   }
 }`}</code></pre>
-            <p className="text-sm text-muted-foreground mt-2">{t('settings.setup.gemini.step1.note')}</p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
+                  <p className="text-sm text-muted-foreground mt-2">{t('settings.setup.gemini.step1.note')}</p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
 export GEMINI_TELEMETRY_TARGET=local
 export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step2')}</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('settings.setup.gemini.step2.desc')}
-            </p>
-            <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step2')}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {t('settings.setup.gemini.step2.desc')}
+                  </p>
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
 direnv allow`}</code></pre>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step3')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.setup.gemini.step3.desc')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">{t('settings.setup.gemini.step3')}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.setup.gemini.step3.desc')}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('settings.setup.dashboard.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`cd dashboard
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('settings.setup.dashboard.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`cd dashboard
 pnpm install
 pnpm dev`}</code></pre>
-          <p className="text-sm text-muted-foreground">
-            {t('settings.setup.dashboard.desc')}
-          </p>
-        </CardContent>
-      </Card>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.setup.dashboard.desc')}
+                </p>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('settings.setup.events.title')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.setup.events.description')}
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li><code className="bg-muted px-1 rounded">api_request</code> — API request (model, tokens, cost)</li>
+                    <li><code className="bg-muted px-1 rounded">user_prompt</code> — User prompt</li>
+                    <li><code className="bg-muted px-1 rounded">tool_result</code> — Tool execution result</li>
+                    <li><code className="bg-muted px-1 rounded">tool_decision</code> — Tool approval/rejection</li>
+                    <li><code className="bg-muted px-1 rounded">api_error</code> — API error</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+type RegistryProject = {
+  project_name: string
+  project_path: string
+  created_at: string
+}
+
+const TRACKING_STATUS: { agent: string; label: string; supported: boolean; note: string }[] = [
+  { agent: 'claude', label: 'Claude', supported: true, note: 'auto' },
+  { agent: 'codex', label: 'Codex', supported: true, note: 'auto' },
+  { agent: 'gemini', label: 'Gemini', supported: false, note: '미지원' },
+]
+
+const ProjectConnectionSection = () => {
+  const { t } = useLocale()
+  const [projects, setProjects] = useState<RegistryProject[]>([])
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [pathInput, setPathInput] = useState('')
+  const [nameInput, setNameInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const loadProjects = useCallback(async () => {
+    try {
+      const data = await dataClient.query('projects/registry') as { projects?: RegistryProject[] }
+      setProjects(data.projects ?? [])
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadProjects() }, [loadProjects])
+
+  const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined
+
+  const handleAdd = async () => {
+    if (!pathInput.trim()) return
+    setError(null)
+    const name = nameInput.trim() || pathInput.trim().split(/[/\\]/).pop() || 'untitled'
+    setAdding(true)
+    try {
+      const res = await dataClient.mutate('projects/registry', {
+        name,
+        path: pathInput.trim(),
+      }) as { error?: string }
+      if (res.error) {
+        setError(res.error)
+        setAdding(false)
+        return
+      }
+      setPathInput('')
+      setNameInput('')
+      setAdding(false)
+      await loadProjects()
+    } catch {
+      setError('Failed to connect project')
+      setAdding(false)
+    }
+  }
+
+  const handleBrowse = async () => {
+    if (isElectron && window.electronAPI?.selectFolder) {
+      const folder = await window.electronAPI.selectFolder('Select Project Folder')
+      if (folder) {
+        setPathInput(folder)
+        const name = folder.split(/[/\\]/).pop() || ''
+        setNameInput(name)
+        setError(null)
+      }
+    }
+  }
+
+  const handleDisconnect = async (name: string) => {
+    try {
+      await dataClient.mutate('projects/registry/delete', { name })
+      await loadProjects()
+    } catch {
+      // ignore
+    }
+  }
+
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  return (
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{t('settings.setup.events.title')}</CardTitle>
+          <CardTitle>{t('settings.projectConnection.title')}</CardTitle>
+          <CardDescription>{t('settings.projectConnection.description')}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {t('settings.setup.events.description')}
-            </p>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li><code className="bg-muted px-1 rounded">api_request</code> — API request (model, tokens, cost)</li>
-              <li><code className="bg-muted px-1 rounded">user_prompt</code> — User prompt</li>
-              <li><code className="bg-muted px-1 rounded">tool_result</code> — Tool execution result</li>
-              <li><code className="bg-muted px-1 rounded">tool_decision</code> — Tool approval/rejection</li>
-              <li><code className="bg-muted px-1 rounded">api_error</code> — API error</li>
-            </ul>
-          </div>
+        <CardContent className="space-y-4">
+          {/* Add Project */}
+          {!showAddForm ? (
+            <Button variant="outline" onClick={() => setShowAddForm(true)}>
+              <FolderPlus className="size-4 mr-2" />
+              {t('settings.projectConnection.add')}
+            </Button>
+          ) : (
+            <div className="rounded-lg border border-border p-4 space-y-3">
+              <div className="space-y-2">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">{t('settings.projectConnection.path')}</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={pathInput}
+                      onChange={(e) => {
+                        setPathInput(e.target.value)
+                        if (!nameInput || nameInput === pathInput.split(/[/\\]/).pop()) {
+                          setNameInput(e.target.value.split(/[/\\]/).pop() || '')
+                        }
+                        setError(null)
+                      }}
+                      placeholder="/Users/..."
+                      className="flex-1 rounded-md border border-border px-3 py-2 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    {isElectron && (
+                      <Button variant="outline" size="sm" onClick={handleBrowse}>
+                        <Folder className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">{t('settings.projectConnection.name')}</label>
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => { setNameInput(e.target.value); setError(null) }}
+                    placeholder="project-name"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" size="sm" onClick={() => { setShowAddForm(false); setPathInput(''); setNameInput(''); setError(null) }}>
+                  {t('settings.projectConnection.cancel')}
+                </Button>
+                <Button size="sm" onClick={handleAdd} disabled={adding || !pathInput.trim()}>
+                  {adding ? 'Connecting...' : t('settings.projectConnection.connect')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Project list */}
+          {loading ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+          ) : projects.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {t('settings.projectConnection.empty')}
+            </div>
+          ) : (
+            <div className="rounded-md border border-border divide-y divide-border">
+              {projects.map((project) => (
+                <div key={project.project_name} className="px-4 py-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{project.project_name}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{project.project_path}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDisconnect(project.project_name)}
+                      className="text-muted-foreground hover:text-destructive shrink-0"
+                    >
+                      <Trash2 className="size-3.5 mr-1" />
+                      Disconnect
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {TRACKING_STATUS.map((ts) => (
+                      <span key={ts.agent} className="flex items-center gap-1 text-xs">
+                        <span
+                          className={cn('w-2 h-2 rounded-full', ts.supported ? 'opacity-100' : 'opacity-30')}
+                          style={{ backgroundColor: `var(--agent-${ts.agent})` }}
+                        />
+                        <span className={ts.supported ? 'text-muted-foreground' : 'text-muted-foreground/50'}>
+                          {ts.label}
+                        </span>
+                        {ts.supported ? (
+                          <Check className="size-3 text-green-600 dark:text-green-400" />
+                        ) : (
+                          <AlertTriangle className="size-3 text-yellow-500" />
+                        )}
+                        <span className={cn('text-[10px]', ts.supported ? 'text-muted-foreground' : 'text-yellow-500')}>
+                          {ts.note}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            {t('settings.projectConnection.persist')}
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -619,7 +1015,8 @@ const SECTION_MAP: Record<Category, React.FC> = {
   general: GeneralSection,
   agents: AgentsSection,
   pricing: PricingSection,
-  setup: SetupSection,
+  agentConnection: SetupSection,
+  projectConnection: ProjectConnectionSection,
   data: DataSection,
 }
 
@@ -632,7 +1029,8 @@ export default function SettingsPage() {
     { key: 'general', labelKey: 'settings.general', icon: Palette },
     { key: 'agents', labelKey: 'settings.agents', icon: Bot },
     { key: 'pricing', labelKey: 'settings.pricing', icon: Cog },
-    { key: 'setup', labelKey: 'settings.setup', icon: Globe },
+    { key: 'agentConnection', labelKey: 'settings.agentConnection', icon: Plug },
+    { key: 'projectConnection', labelKey: 'settings.projectConnection', icon: FolderPlus },
     { key: 'data', labelKey: 'settings.data', icon: Database },
   ]
 

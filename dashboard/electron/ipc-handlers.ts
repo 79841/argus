@@ -36,6 +36,7 @@ import { getDb } from '../src/lib/db'
 import { scanRegisteredTools } from '../src/lib/registered-tools'
 import { getConfigHistory } from '../src/lib/config-tracker'
 import { syncPricingFromLiteLLM } from '../src/lib/pricing-sync'
+import { getSetupStatus, connectAgents, disconnectAgents } from '../src/lib/setup'
 
 type QueryParams = Record<string, unknown>
 
@@ -221,6 +222,9 @@ const handleQuery = async (name: string, params?: QueryParams): Promise<unknown>
       return handleConfigGet(filePath, params)
     }
 
+    case 'setup/status':
+      return { agents: getSetupStatus() }
+
     default:
       throw new Error(`Unknown query: ${name}`)
   }
@@ -292,6 +296,18 @@ const handleMutate = async (name: string, body?: unknown): Promise<unknown> => {
         'INSERT OR REPLACE INTO project_registry (project_name, project_path) VALUES (?, ?)'
       ).run(projectName, resolved)
       return { success: true, name: projectName, path: resolved }
+    }
+
+    case 'setup/connect': {
+      const { agents, endpoint } = body as { agents: string[]; endpoint?: string }
+      const validAgents = agents.filter((a: string) => ['claude', 'codex', 'gemini'].includes(a)) as Array<'claude' | 'codex' | 'gemini'>
+      return { results: connectAgents(validAgents, endpoint ?? 'http://localhost:9845') }
+    }
+
+    case 'setup/disconnect': {
+      const { agents } = body as { agents: string[] }
+      const validAgents = agents.filter((a: string) => ['claude', 'codex', 'gemini'].includes(a)) as Array<'claude' | 'codex' | 'gemini'>
+      return { results: disconnectAgents(validAgents) }
     }
 
     default:

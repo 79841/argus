@@ -16,9 +16,6 @@ import {
   Pencil,
   Loader2,
   Search,
-  FolderInput,
-  X,
-  Folder,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
 import { dataClient } from '@/lib/data-client'
@@ -108,16 +105,6 @@ const groupByAgent = (list: FileEntry[]) => {
   return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
 }
 
-const isElectron = () =>
-  typeof window !== 'undefined' && window.electronAPI !== undefined
-
-const selectFolder = async (): Promise<string | null> => {
-  if (isElectron() && window.electronAPI?.selectFolder) {
-    return window.electronAPI.selectFolder('Select Project Folder')
-  }
-  return null
-}
-
 export default function RulesPage() {
   const { t } = useLocale()
   const [dbProjects, setDbProjects] = useState<DbProject[]>([])
@@ -133,34 +120,20 @@ export default function RulesPage() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
-  const [loadingProject, setLoadingProject] = useState<string | null>(null)
-  const [pathInput, setPathInput] = useState('')
-  const [loadError, setLoadError] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   const loadAll = useCallback(async () => {
     try {
-      const [projectsRes, registryRes, configRes] = await Promise.all([
-        dataClient.query('projects') as Promise<
-          { project_name: string }[] | { projects?: { project_name: string }[] }
-        >,
+      const [registryRes, configRes] = await Promise.all([
         dataClient.query('projects/registry') as Promise<{ projects?: RegistryEntry[] }>,
         dataClient.query('config') as Promise<{ files?: FileEntry[] }>,
       ])
-
-      const projectsList = Array.isArray(projectsRes)
-        ? projectsRes
-        : (projectsRes as { projects?: { project_name: string }[] }).projects ?? []
-      const dbNames = projectsList.map((p) => p.project_name)
-      const registry = new Map(
-        (registryRes.projects ?? []).map((r) => [r.project_name, r.project_path])
-      )
-
+      const registry = registryRes.projects ?? []
       setDbProjects(
-        dbNames.map((name) => ({
-          project_name: name,
-          loaded: registry.has(name),
-          project_path: registry.get(name) ?? '',
+        registry.map((r) => ({
+          project_name: r.project_name,
+          loaded: true,
+          project_path: r.project_path,
         }))
       )
       setFiles(configRes.files ?? [])
@@ -175,50 +148,6 @@ export default function RulesPage() {
   useEffect(() => {
     loadAll()
   }, [loadAll])
-
-  const handleLoad = async (projectName: string, folderPath: string) => {
-    if (!folderPath.trim()) return
-    setLoadError(null)
-    try {
-      const res = await dataClient.mutate('projects/registry', {
-        name: projectName,
-        path: folderPath.trim(),
-      }) as { error?: string }
-      if (res.error) {
-        setLoadError(res.error)
-        return
-      }
-      setLoadingProject(null)
-      setPathInput('')
-      setLoading(true)
-      await loadAll()
-    } catch {
-      setLoadError('Failed to load project')
-    }
-  }
-
-  const handleBrowse = async (projectName: string) => {
-    const folder = await selectFolder()
-    if (folder) {
-      setPathInput(folder)
-      await handleLoad(projectName, folder)
-    }
-  }
-
-  const handleUnload = async (projectName: string) => {
-    try {
-      await dataClient.mutate('projects/registry/delete', { name: projectName })
-      setLoading(true)
-      if (selectedFile?.projectName === projectName) {
-        setSelectedFile(null)
-        setFileContent('')
-        setEditContent('')
-      }
-      await loadAll()
-    } catch {
-      // ignore
-    }
-  }
 
   const loadFile = useCallback(async (file: FileEntry) => {
     setSelectedFile(file)
@@ -292,8 +221,8 @@ export default function RulesPage() {
     return {
       projectName: dp.project_name,
       projectRoot: dp.project_path,
-      loaded: dp.loaded,
-      agents: dp.loaded ? groupByAgent(projectFiles) : [],
+      loaded: true,
+      agents: groupByAgent(projectFiles),
     }
   })
 
@@ -321,136 +250,26 @@ export default function RulesPage() {
             {projectGroups.map((project) => {
               const projectKey = `project:${project.projectName}`
               const projectCollapsed = collapsedGroups.has(projectKey)
-              const isEditing = loadingProject === project.projectName
 
               return (
                 <div key={project.projectName}>
                   {/* Project header */}
-                  <div className="flex items-center group">
+                  <div className="flex items-center">
                     <button
-                      onClick={() => project.loaded && toggleGroup(projectKey)}
-                      className={cn(
-                        'flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium transition-colors min-w-0',
-                        project.loaded
-                          ? 'text-foreground hover:bg-muted'
-                          : 'text-muted-foreground/50'
-                      )}
-                      disabled={!project.loaded}
+                      onClick={() => toggleGroup(projectKey)}
+                      className="flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium text-foreground hover:bg-muted transition-colors min-w-0"
                     >
-                      {project.loaded ? (
-                        projectCollapsed ? (
-                          <ChevronRight className="size-3.5 shrink-0" />
-                        ) : (
-                          <ChevronDown className="size-3.5 shrink-0" />
-                        )
+                      {projectCollapsed ? (
+                        <ChevronRight className="size-3.5 shrink-0" />
                       ) : (
-                        <Folder className="size-3.5 shrink-0 opacity-40" />
+                        <ChevronDown className="size-3.5 shrink-0" />
                       )}
                       <span className="truncate">{project.projectName}</span>
                     </button>
-
-                    {/* Load / Unload action */}
-                    {project.loaded ? (
-                      <button
-                        onClick={() => handleUnload(project.projectName)}
-                        className="opacity-0 group-hover:opacity-100 p-1 mr-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
-                        title={t('rules.unload')}
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          if (isEditing) {
-                            setLoadingProject(null)
-                            setPathInput('')
-                            setLoadError(null)
-                          } else if (isElectron()) {
-                            handleBrowse(project.projectName)
-                          } else {
-                            setLoadingProject(project.projectName)
-                            setPathInput('')
-                            setLoadError(null)
-                          }
-                        }}
-                        className={cn(
-                          'p-1 mr-1 rounded transition-all shrink-0',
-                          isEditing
-                            ? 'opacity-100 text-foreground bg-muted'
-                            : 'opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted'
-                        )}
-                        title={t('rules.load')}
-                      >
-                        <FolderInput className="size-3.5" />
-                      </button>
-                    )}
                   </div>
 
-                  {/* Load project panel */}
-                  {isEditing && (
-                    <div className="mx-2 mt-1 mb-2 p-3 rounded-lg border bg-muted/30 space-y-2">
-                      <p className="text-xs text-muted-foreground">
-                        {t('rules.load.placeholder')}
-                      </p>
-                      <div className="flex gap-1.5">
-                        <input
-                          type="text"
-                          value={pathInput}
-                          onChange={(e) => {
-                            setPathInput(e.target.value)
-                            setLoadError(null)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleLoad(project.projectName, pathInput)
-                            if (e.key === 'Escape') {
-                              setLoadingProject(null)
-                              setPathInput('')
-                              setLoadError(null)
-                            }
-                          }}
-                          placeholder="/Users/..."
-                          className="flex-1 text-xs px-2.5 py-1.5 rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-                          autoFocus
-                        />
-                        {isElectron() && (
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            onClick={() => handleBrowse(project.projectName)}
-                          >
-                            <Folder className="size-3" />
-                          </Button>
-                        )}
-                      </div>
-                      {loadError && (
-                        <p className="text-xs text-destructive">{loadError}</p>
-                      )}
-                      <div className="flex justify-end gap-1.5">
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          onClick={() => {
-                            setLoadingProject(null)
-                            setPathInput('')
-                            setLoadError(null)
-                          }}
-                        >
-                          {t('rules.load.cancel')}
-                        </Button>
-                        <Button
-                          size="xs"
-                          onClick={() => handleLoad(project.projectName, pathInput)}
-                          disabled={!pathInput.trim()}
-                        >
-                          {t('rules.load.btn')}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Agent/file tree for loaded projects */}
-                  {project.loaded &&
-                    !projectCollapsed &&
+                  {/* Agent/file tree */}
+                  {!projectCollapsed &&
                     project.agents.map(({ agent, files: agentFiles }) => {
                       const agentKey = `${projectKey}-${agent}`
                       const agentCollapsed = collapsedGroups.has(agentKey)
@@ -549,7 +368,10 @@ export default function RulesPage() {
             )}
 
             {projectGroups.length === 0 && userAgents.length === 0 && (
-              <p className="text-sm text-muted-foreground px-2 py-4">{t('rules.empty')}</p>
+              <div className="px-2 py-4 space-y-1">
+                <p className="text-sm text-muted-foreground">{t('rules.empty')}</p>
+                <p className="text-xs text-muted-foreground">{t('rules.connectGuide')}</p>
+              </div>
             )}
           </nav>
         )}
