@@ -1,77 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import {
-  FileText,
-  Settings,
-  Plug,
-  FolderOpen,
-  ChevronDown,
-  ChevronRight,
-  Save,
-  Eye,
-  Pencil,
-  Loader2,
-  Search,
-} from 'lucide-react'
-import { useLocale } from '@/lib/i18n'
-import { MarkdownViewer } from '@/components/markdown-viewer'
-import type { Heading } from '@/components/markdown-viewer'
-import { TocSidebar } from '@/components/toc-sidebar'
-import { ContentSearch } from '@/components/content-search'
-import { JsonHighlight, TomlHighlight } from '@/components/syntax-highlight'
-import { FilterBar } from '@/components/filter-bar'
-import type { Agent, FileEntry } from '@/types/rules'
-import { useConfigFiles } from '@/features/rules'
-
-const AGENT_LABELS: Record<Agent, string> = {
-  claude: 'Claude',
-  codex: 'Codex',
-  gemini: 'Gemini',
-}
-
-const AGENT_CSS_VARS: Record<Agent, string> = {
-  claude: 'var(--agent-claude)',
-  codex: 'var(--agent-codex)',
-  gemini: 'var(--agent-gemini)',
-}
-
-const getFileIcon = (filePath: string) => {
-  const name = filePath.split(/[/\\]/).pop() ?? ''
-  if (name === '.mcp.json') return <Plug className="size-4 shrink-0 text-muted-foreground" />
-  if (name.endsWith('.json') || name.endsWith('.toml'))
-    return <Settings className="size-4 shrink-0 text-muted-foreground" />
-  if (/[/\\]agents[/\\]/.test(filePath) || /[/\\]skills[/\\]/.test(filePath))
-    return <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
-  return <FileText className="size-4 shrink-0 text-muted-foreground" />
-}
-
-const getFileName = (filePath: string): string => {
-  const parts = filePath.split(/[/\\]/)
-  const name = parts[parts.length - 1]
-  if (/[/\\]agents[/\\]/.test(filePath)) return `agent: ${name.replace('.md', '')}`
-  if (/[/\\]skills[/\\]/.test(filePath) && name === 'SKILL.md') {
-    const skillName = parts[parts.length - 2]
-    return `skill: ${skillName}`
-  }
-  return filePath.startsWith('~/') ? filePath : name
-}
-
-const isMarkdown = (p: string) => p.endsWith('.md')
-const isJson = (p: string) => p.endsWith('.json')
-const isToml = (p: string) => p.endsWith('.toml')
-
-const fileKey = (file: FileEntry) => `${file.projectRoot}:${file.path}`
+import { useState, useEffect } from 'react'
+import { useLocale } from '@/shared/lib/i18n'
+import { FilterBar } from '@/shared/components/filter-bar'
+import type { Heading } from '@/features/rules/components/markdown-viewer'
+import { useConfigFiles, FileTree, FileViewer } from '@/features/rules'
 
 export default function RulesPage() {
   const { t } = useLocale()
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
 
   const {
     loading,
@@ -83,7 +22,6 @@ export default function RulesPage() {
     saving,
     saveSuccess,
     projectGroups,
-    userFiles,
     userAgents,
     setEditContent,
     setViewMode,
@@ -113,275 +51,43 @@ export default function RulesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
 
-  const showToc =
-    viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
-
   return (
     <div className="flex h-full flex-col">
-      <FilterBar><span className="text-sm font-semibold">Rules</span><span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span></FilterBar>
+      <FilterBar>
+        <span className="text-sm font-semibold">Rules</span>
+        <span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span>
+      </FilterBar>
       <div className="flex flex-1 min-h-0">
-      {/* Left: File Tree */}
-      <div className="w-[35%] border-r border-[var(--border-subtle)] flex flex-col overflow-auto">
+        <div className="w-[35%] border-r border-[var(--border-subtle)] flex flex-col overflow-auto">
+          <FileTree
+            loading={loading}
+            projectGroups={projectGroups}
+            userAgents={userAgents}
+            selectedFile={selectedFile}
+            collapsedGroups={collapsedGroups}
+            onToggleGroup={toggleGroup}
+            onLoadFile={loadFile}
+          />
+        </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center flex-1 text-muted-foreground text-sm">
-            <Loader2 className="size-4 animate-spin mr-2" />
-            {t('rules.loading')}
-          </div>
-        ) : (
-          <nav className="p-2 space-y-0.5">
-            {/* Project groups */}
-            {projectGroups.map((project) => {
-              const projectKey = `project:${project.projectName}`
-              const projectCollapsed = collapsedGroups.has(projectKey)
-
-              return (
-                <div key={project.projectName}>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => toggleGroup(projectKey)}
-                      className="flex flex-1 items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium text-foreground hover:bg-muted transition-colors min-w-0"
-                    >
-                      {projectCollapsed ? (
-                        <ChevronRight className="size-3.5 shrink-0" />
-                      ) : (
-                        <ChevronDown className="size-3.5 shrink-0" />
-                      )}
-                      <span className="truncate">{project.projectName}</span>
-                    </button>
-                  </div>
-
-                  {!projectCollapsed &&
-                    project.agents.map(({ agent, files: agentFiles }) => {
-                      const agentKey = `${projectKey}-${agent}`
-                      const agentCollapsed = collapsedGroups.has(agentKey)
-                      return (
-                        <div key={agent} className="ml-4">
-                          <button
-                            onClick={() => toggleGroup(agentKey)}
-                            className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium hover:bg-muted transition-colors"
-                            style={{ color: AGENT_CSS_VARS[agent] }}
-                          >
-                            {agentCollapsed ? (
-                              <ChevronRight className="size-3.5" />
-                            ) : (
-                              <ChevronDown className="size-3.5" />
-                            )}
-                            {AGENT_LABELS[agent]}
-                          </button>
-
-                          {!agentCollapsed &&
-                            agentFiles.map((file) => (
-                              <button
-                                key={file.path}
-                                onClick={() => loadFile(file)}
-                                className={cn(
-                                  'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-sm transition-colors text-left',
-                                  selectedFile && fileKey(selectedFile) === fileKey(file)
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                                )}
-                              >
-                                {getFileIcon(file.path)}
-                                <span className="truncate">{getFileName(file.path)}</span>
-                              </button>
-                            ))}
-                        </div>
-                      )
-                    })}
-                </div>
-              )
-            })}
-
-            {/* User scope */}
-            {userAgents.length > 0 && (
-              <div>
-                <button
-                  onClick={() => toggleGroup('user')}
-                  className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  {collapsedGroups.has('user') ? (
-                    <ChevronRight className="size-3.5" />
-                  ) : (
-                    <ChevronDown className="size-3.5" />
-                  )}
-                  {t('rules.scope.user')}
-                </button>
-
-                {!collapsedGroups.has('user') &&
-                  userAgents.map(({ agent, files: agentFiles }) => {
-                    const agentKey = `user-${agent}`
-                    const agentCollapsed = collapsedGroups.has(agentKey)
-                    return (
-                      <div key={agent} className="ml-4">
-                        <button
-                          onClick={() => toggleGroup(agentKey)}
-                          className="flex w-full items-center gap-1.5 px-2 py-1.5 rounded text-sm font-medium hover:bg-muted transition-colors"
-                          style={{ color: AGENT_CSS_VARS[agent] }}
-                        >
-                          {agentCollapsed ? (
-                            <ChevronRight className="size-3.5" />
-                          ) : (
-                            <ChevronDown className="size-3.5" />
-                          )}
-                          {AGENT_LABELS[agent]}
-                        </button>
-
-                        {!agentCollapsed &&
-                          agentFiles.map((file) => (
-                            <button
-                              key={file.path}
-                              onClick={() => loadFile(file)}
-                              className={cn(
-                                'flex w-full items-center gap-2 px-2 py-1.5 ml-4 rounded text-sm transition-colors text-left',
-                                selectedFile && fileKey(selectedFile) === fileKey(file)
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                              )}
-                            >
-                              {getFileIcon(file.path)}
-                              <span className="truncate">{getFileName(file.path)}</span>
-                            </button>
-                          ))}
-                      </div>
-                    )
-                  })}
-              </div>
-            )}
-
-            {projectGroups.length === 0 && userAgents.length === 0 && (
-              <div className="px-2 py-4 space-y-1">
-                <p className="text-sm text-muted-foreground">{t('rules.empty')}</p>
-                <p className="text-xs text-muted-foreground">{t('rules.connectGuide')}</p>
-              </div>
-            )}
-          </nav>
-        )}
-      </div>
-
-      {/* Right: File Viewer/Editor */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {!selectedFile ? (
-          <div className="flex flex-col items-center justify-center flex-1 text-center text-muted-foreground px-8">
-            <FileText className="size-12 mb-4 opacity-30" />
-            <p className="text-sm font-medium">{t('rules.file.placeholder')}</p>
-            <p className="text-xs mt-1">{t('rules.file.placeholder.desc')}</p>
-          </div>
-        ) : (
-          <>
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-mono text-muted-foreground truncate">
-                  {selectedFile.projectName
-                    ? `${selectedFile.projectName}/${selectedFile.path}`
-                    : selectedFile.path}
-                </span>
-                <Badge variant="outline" className="text-xs shrink-0">
-                  {selectedFile.scope === 'project'
-                    ? selectedFile.projectName || 'Project'
-                    : 'User'}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {viewMode === 'preview' && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => setSearchOpen((v) => !v)}
-                  >
-                    <Search className="size-3" />
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant={viewMode === 'preview' ? 'default' : 'ghost'}
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setViewMode('preview')}
-                >
-                  <Eye className="size-3 mr-1" />
-                  {t('rules.btn.preview')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={viewMode === 'edit' ? 'default' : 'ghost'}
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setViewMode('edit')}
-                >
-                  <Pencil className="size-3 mr-1" />
-                  {t('rules.btn.edit')}
-                </Button>
-                {viewMode === 'edit' && (
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="h-7 px-2 text-xs"
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <Loader2 className="size-3 animate-spin mr-1" />
-                    ) : (
-                      <Save className="size-3 mr-1" />
-                    )}
-                    {t('rules.btn.save')}
-                  </Button>
-                )}
-                {saveSuccess && (
-                  <span className="text-xs text-emerald-500 font-medium">
-                    {t('rules.btn.saved')}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 flex overflow-hidden">
-              <div ref={contentRef} className="flex-1 overflow-auto p-4 relative">
-                <ContentSearch
-                  containerRef={contentRef}
-                  open={searchOpen}
-                  onOpenChange={setSearchOpen}
-                />
-                {contentLoading ? (
-                  <div className="flex items-center justify-center h-32 text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin mr-2" />
-                    {t('rules.file.loading')}
-                  </div>
-                ) : viewMode === 'edit' ? (
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full h-full min-h-[400px] font-mono text-xs bg-transparent border rounded p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                    spellCheck={false}
-                  />
-                ) : isMarkdown(selectedFile.path) ? (
-                  <MarkdownViewer
-                    content={fileContent}
-                    className="space-y-0.5"
-                    onHeadingsChange={setHeadings}
-                  />
-                ) : isJson(selectedFile.path) ? (
-                  <JsonHighlight content={fileContent} />
-                ) : isToml(selectedFile.path) ? (
-                  <TomlHighlight content={fileContent} />
-                ) : (
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed">
-                    {fileContent}
-                  </pre>
-                )}
-              </div>
-
-              {showToc && (
-                <div className="w-48 shrink-0 overflow-y-auto">
-                  <TocSidebar headings={headings} containerRef={contentRef} />
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <FileViewer
+            selectedFile={selectedFile}
+            fileContent={fileContent}
+            editContent={editContent}
+            viewMode={viewMode}
+            contentLoading={contentLoading}
+            saving={saving}
+            saveSuccess={saveSuccess}
+            headings={headings}
+            searchOpen={searchOpen}
+            onEditContentChange={setEditContent}
+            onViewModeChange={setViewMode}
+            onSave={handleSave}
+            onSearchOpenChange={setSearchOpen}
+            onHeadingsChange={setHeadings}
+          />
+        </div>
       </div>
     </div>
   )

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { dailyService, overviewService } from '@/shared/services'
-import { AGENTS } from '@/lib/agents'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/types/common'
-import type { DailyStats, OverviewStats } from '@/lib/queries'
-import type { DailyTokenPoint, AgentTokenPoint } from '@/types/usage'
+import { AGENTS } from '@/shared/lib/agents'
+import type { AgentType } from '@/shared/lib/agents'
+import type { DateRange } from '@/shared/types/common'
+import type { DailyStats, OverviewStats } from '@/shared/lib/queries'
+import type { DailyTokenPoint, AgentTokenPoint } from '@/features/usage/types/usage'
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
 

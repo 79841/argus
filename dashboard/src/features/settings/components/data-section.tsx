@@ -1,7 +1,7 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { useLocale } from '@/lib/i18n'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { useLocale } from '@/shared/lib/i18n'
 
 export const DataSection = () => {
   const { t } = useLocale()

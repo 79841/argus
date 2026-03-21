@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { sessionsService } from '@/shared/services'
-import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/components/top-bar-context'
-import type { SortOption } from '@/types/common'
+import type { SessionRow, SessionDetailEvent } from '@/shared/lib/queries'
+import type { AgentType } from '@/shared/lib/agents'
+import type { DateRange } from '@/shared/components/top-bar-context'
+import type { SortOption } from '@/shared/types/common'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const daysAgoISO = (days: number) => {

@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Button } from '@/shared/components/ui/button'
+import { cn } from '@/shared/lib/utils'
 import { overviewService } from '@/shared/services'
 
 export const PricingSection = () => {

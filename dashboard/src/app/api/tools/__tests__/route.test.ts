@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import type { ToolUsageRow, ToolDetailRow, DailyToolRow, IndividualToolRow } from '@/lib/queries'
+import type { ToolUsageRow, ToolDetailRow, DailyToolRow, IndividualToolRow } from '@/shared/lib/queries'
 
-vi.mock('@/lib/queries', () => ({
+vi.mock('@/shared/lib/queries', () => ({
   getToolUsageStats: vi.fn(),
   getToolDetailStats: vi.fn(),
   getDailyToolStats: vi.fn(),
   getIndividualToolStats: vi.fn(),
 }))
 
-vi.mock('@/lib/api-utils', () => ({
+vi.mock('@/shared/lib/api-utils', () => ({
   parseAgentType: vi.fn((v: string | null) => v || 'all'),
   parseDays: vi.fn((v: string | null, def: number) => (v ? parseInt(v) : def)),
 }))
 
-import * as queries from '@/lib/queries'
-import * as apiUtils from '@/lib/api-utils'
+import * as queries from '@/shared/lib/queries'
+import * as apiUtils from '@/shared/lib/api-utils'
 
 const { GET } = await import('../route')
 

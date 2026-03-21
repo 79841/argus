@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfigCompareStats } from '@/lib/queries'
+import { getConfigCompareStats } from '@/shared/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {

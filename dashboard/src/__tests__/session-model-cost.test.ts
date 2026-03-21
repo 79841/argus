@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { computeModelCostBreakdown } from '@/lib/session-model-cost'
-import type { SessionDetailEvent } from '@/lib/queries'
+import { computeModelCostBreakdown } from '@/features/sessions/lib/session-model-cost'
+import type { SessionDetailEvent } from '@/shared/lib/queries'
 
 const makeEvent = (overrides: Partial<SessionDetailEvent> = {}): SessionDetailEvent => ({
   timestamp: '2026-03-16T10:00:00Z',

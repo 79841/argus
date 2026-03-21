@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSuggestionMetrics } from '@/lib/queries'
-import { generateSuggestions } from '@/lib/suggestions'
-import { parseDays } from '@/lib/api-utils'
+import { getSuggestionMetrics } from '@/shared/lib/queries'
+import { generateSuggestions } from '@/shared/lib/suggestions'
+import { parseDays } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

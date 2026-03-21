@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getToolUsageStats, getToolDetailStats, getDailyToolStats, getIndividualToolStats } from '@/lib/queries'
-import { parseAgentType, parseDays } from '@/lib/api-utils'
+import { getToolUsageStats, getToolDetailStats, getDailyToolStats, getIndividualToolStats } from '@/shared/lib/queries'
+import { parseAgentType, parseDays } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

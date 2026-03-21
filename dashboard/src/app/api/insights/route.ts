@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/lib/queries'
-import { parseDays, parseLimit } from '@/lib/api-utils'
+import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/shared/lib/queries'
+import { parseDays, parseLimit } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 

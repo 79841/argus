@@ -1,13 +1,13 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
   extractProjectFromArgs,
-} from '@/lib/ingest-utils'
-import type { OtlpLogsRequest } from '@/lib/ingest-utils'
+} from '@/shared/lib/ingest-utils'
+import type { OtlpLogsRequest } from '@/shared/lib/ingest-utils'
 
 export async function POST(request: NextRequest) {
   let data: OtlpLogsRequest

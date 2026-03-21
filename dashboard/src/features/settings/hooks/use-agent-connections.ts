@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { settingsService } from '@/shared/services'
-import type { AgentConnectionStatus } from '@/types/settings'
+import type { AgentConnectionStatus } from '@/features/settings/types/settings'
 
 export const useAgentConnections = () => {
   const [agents, setAgents] = useState<AgentConnectionStatus[]>([])

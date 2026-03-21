@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } from '@/lib/queries'
+import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } from '@/shared/lib/queries'
 import { toolsService } from '@/shared/services'
-import type { AgentType } from '@/lib/agents'
+import type { AgentType } from '@/shared/lib/agents'
 
 type ToolsKpi = {
   total_calls: number

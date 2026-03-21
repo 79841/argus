@@ -1,7 +1,7 @@
-import { dataClient } from '@/lib/data-client'
-import type { QueryParams } from '@/types/electron'
-import type { ProjectRow, ProjectComparisonRow } from '@/lib/queries'
-import type { RegistryEntry } from '@/types/rules'
+import { dataClient } from '@/shared/lib/data-client'
+import type { QueryParams } from '@/shared/types/electron'
+import type { ProjectRow, ProjectComparisonRow } from '@/shared/lib/queries'
+import type { RegistryEntry } from '@/features/rules/types/rules'
 
 type ProjectDetailResponse = {
   stats: unknown

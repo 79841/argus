@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSetupStatus } from '@/lib/setup'
+import { getSetupStatus } from '@/shared/lib/setup'
 
 export async function GET() {
   const agents = getSetupStatus()

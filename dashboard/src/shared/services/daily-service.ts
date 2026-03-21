@@ -1,6 +1,6 @@
-import { dataClient } from '@/lib/data-client'
-import type { QueryParams } from '@/types/electron'
-import type { DailyStats } from '@/lib/queries'
+import { dataClient } from '@/shared/lib/data-client'
+import type { QueryParams } from '@/shared/types/electron'
+import type { DailyStats } from '@/shared/lib/queries'
 
 export const dailyService = {
   getDailyStats: (params?: QueryParams): Promise<DailyStats[]> =>

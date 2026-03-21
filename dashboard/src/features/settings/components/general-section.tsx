@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Sun, Moon, Monitor, Globe } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { useTheme } from '@/components/theme-provider'
-import { useLocale } from '@/lib/i18n'
-import type { Locale } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/components/ui/select'
+import { useTheme } from '@/shared/components/theme-provider'
+import { useLocale } from '@/shared/lib/i18n'
+import type { Locale } from '@/shared/lib/i18n'
+import { cn } from '@/shared/lib/utils'
 import { STORAGE_KEYS, POLLING } from '@/shared/lib/constants'
-import type { Theme, AgentTheme } from '@/types/settings'
+import type { Theme, AgentTheme } from '@/features/settings/types/settings'
 
 const AGENT_THEMES: { value: AgentTheme; label: string }[] = [
   { value: 'claude', label: 'Claude' },

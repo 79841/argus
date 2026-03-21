@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import Database from 'better-sqlite3'
-import { initSchema } from '@/lib/db'
+import { initSchema } from '@/shared/lib/db'
 
 let db: ReturnType<typeof Database>
 
@@ -40,7 +40,7 @@ afterAll(() => {
 
 describe('getSessionSummary', () => {
   it('세션 요약 통계를 반환한다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('session-a', db)
 
     expect(summary).not.toBeNull()
@@ -54,7 +54,7 @@ describe('getSessionSummary', () => {
   })
 
   it('api_request 이벤트 기준으로 토큰/비용을 집계한다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('session-a', db)
 
     expect(summary).not.toBeNull()
@@ -66,7 +66,7 @@ describe('getSessionSummary', () => {
   })
 
   it('tool_result 이벤트 수를 tool_count로 반환한다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('session-a', db)
 
     expect(summary).not.toBeNull()
@@ -74,7 +74,7 @@ describe('getSessionSummary', () => {
   })
 
   it('duration_ms는 첫 이벤트와 마지막 이벤트 사이 시간이다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('session-a', db)
 
     expect(summary).not.toBeNull()
@@ -82,14 +82,14 @@ describe('getSessionSummary', () => {
   })
 
   it('존재하지 않는 세션 ID에 대해 null을 반환한다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('non-existent-session', db)
 
     expect(summary).toBeNull()
   })
 
   it('agent_type과 model을 포함한다', async () => {
-    const { getSessionSummary } = await import('@/lib/queries')
+    const { getSessionSummary } = await import('@/shared/lib/queries')
     const summary = await getSessionSummary('session-a', db)
 
     expect(summary).not.toBeNull()
@@ -100,7 +100,7 @@ describe('getSessionSummary', () => {
 
 describe('getSessionDetail', () => {
   it('세션의 모든 이벤트를 시간 순으로 반환한다', async () => {
-    const { getSessionDetail } = await import('@/lib/queries')
+    const { getSessionDetail } = await import('@/shared/lib/queries')
     const events = await getSessionDetail('session-a', db)
 
     expect(events.length).toBeGreaterThan(0)
@@ -111,7 +111,7 @@ describe('getSessionDetail', () => {
   })
 
   it('이벤트에 필수 필드가 포함된다', async () => {
-    const { getSessionDetail } = await import('@/lib/queries')
+    const { getSessionDetail } = await import('@/shared/lib/queries')
     const events = await getSessionDetail('session-a', db)
 
     expect(events.length).toBeGreaterThan(0)
@@ -130,7 +130,7 @@ describe('getSessionDetail', () => {
   })
 
   it('존재하지 않는 세션은 빈 배열을 반환한다', async () => {
-    const { getSessionDetail } = await import('@/lib/queries')
+    const { getSessionDetail } = await import('@/shared/lib/queries')
     const events = await getSessionDetail('non-existent-session', db)
 
     expect(events).toEqual([])

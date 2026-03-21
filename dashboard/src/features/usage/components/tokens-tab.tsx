@@ -4,11 +4,11 @@ import {
   BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { KpiCard } from '@/components/ui/kpi-card'
-import { ChartCard } from '@/components/ui/chart-card'
-import { TOKEN_COLORS, CHART_THEME } from '@/lib/chart-theme'
+import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { TOKEN_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { useTokensData } from '../hooks/use-tokens-data'
-import type { TokensTabProps } from '@/types/usage'
+import type { TokensTabProps } from '@/features/usage/types/usage'
 
 const fmtTokens = (n: number) =>
   n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : n.toString()

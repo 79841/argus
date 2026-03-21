@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { Check, Plug, Unplug, ChevronDown, ChevronRight } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { useLocale } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Button } from '@/shared/components/ui/button'
+import { useLocale } from '@/shared/lib/i18n'
+import { cn } from '@/shared/lib/utils'
 import { useAgentConnections } from '../hooks/use-agent-connections'
 
 const AGENT_LABELS: Record<string, string> = {

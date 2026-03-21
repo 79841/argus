@@ -1,10 +1,10 @@
 'use client'
 
 import { Check, AlertTriangle, FolderPlus, Folder, Trash2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { useLocale } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Button } from '@/shared/components/ui/button'
+import { useLocale } from '@/shared/lib/i18n'
+import { cn } from '@/shared/lib/utils'
 import { useProjectRegistry } from '../hooks/use-project-registry'
 
 const TRACKING_STATUS: { agent: string; label: string; supported: boolean; note: string }[] = [

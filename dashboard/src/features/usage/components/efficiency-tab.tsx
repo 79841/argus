@@ -4,15 +4,15 @@ import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { KpiCard } from '@/components/ui/kpi-card'
-import { ChartCard } from '@/components/ui/chart-card'
-import { DataTable } from '@/components/ui/data-table'
-import { AgentBadge } from '@/components/ui/agent-badge'
-import { AGENTS } from '@/lib/agents'
-import { AGENT_CHART_COLORS, CHART_THEME } from '@/lib/chart-theme'
+import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { ChartCard } from '@/shared/components/ui/chart-card'
+import { DataTable } from '@/shared/components/ui/data-table'
+import { AgentBadge } from '@/shared/components/ui/agent-badge'
+import { AGENTS } from '@/shared/lib/agents'
+import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { useEfficiencyData } from '../hooks/use-efficiency-data'
-import type { AgentType } from '@/lib/agents'
-import type { EfficiencyTabProps } from '@/types/usage'
+import type { AgentType } from '@/shared/lib/agents'
+import type { EfficiencyTabProps } from '@/features/usage/types/usage'
 
 const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
 

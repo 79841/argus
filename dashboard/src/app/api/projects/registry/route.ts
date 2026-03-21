@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 type RegistryRow = {
   project_name: string

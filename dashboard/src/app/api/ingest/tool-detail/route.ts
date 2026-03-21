@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 type ToolDetailPayload = {
   session_id?: string

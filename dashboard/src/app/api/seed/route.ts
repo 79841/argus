@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 const MODELS = [
   'claude-sonnet-4-20250514',

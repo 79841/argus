@@ -16,10 +16,10 @@
   },
   "include": [
     "../electron/**/*.ts",
-    "../src/lib/db.ts",
-    "../src/lib/queries.ts",
-    "../src/lib/config-tracker.ts",
-    "../src/lib/registered-tools.ts",
-    "../src/lib/pricing-sync.ts"
+    "../src/shared/lib/db.ts",
+    "../src/shared/lib/queries/index.ts",
+    "../src/shared/lib/config-tracker.ts",
+    "../src/shared/lib/registered-tools.ts",
+    "../src/shared/lib/pricing-sync.ts"
   ]
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { projectsService } from '@/shared/services'
-import type { ProjectDetailStats, ProjectDailyCost } from '@/lib/queries'
+import type { ProjectDetailStats, ProjectDailyCost } from '@/shared/lib/queries'
 
 type ProjectData = {
   stats: ProjectDetailStats

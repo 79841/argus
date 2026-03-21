@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfigHistory } from '@/lib/config-tracker'
+import { getConfigHistory } from '@/shared/lib/config-tracker'
 import path from 'path'
 
 export async function GET(request: NextRequest) {

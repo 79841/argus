@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { AgentFilter } from '@/components/agent-filter'
-import { ProjectFilter } from '@/components/project-filter'
-import { DateRangePicker } from '@/components/date-range-picker'
-import { FilterBar } from '@/components/filter-bar'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/components/top-bar-context'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs'
+import { AgentFilter } from '@/shared/components/agent-filter'
+import { ProjectFilter } from '@/shared/components/project-filter'
+import { DateRangePicker } from '@/shared/components/date-range-picker'
+import { FilterBar } from '@/shared/components/filter-bar'
+import type { AgentType } from '@/shared/lib/agents'
+import type { DateRange } from '@/shared/components/top-bar-context'
 import { CostTab, TokensTab, ModelsTab, EfficiencyTab, ImpactTab } from '@/features/usage'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)

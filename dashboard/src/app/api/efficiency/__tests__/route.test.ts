@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
+import type { EfficiencyRow, EfficiencyComparisonRow } from '@/shared/lib/queries'
 
-vi.mock('@/lib/queries', () => ({
+vi.mock('@/shared/lib/queries', () => ({
   getEfficiencyStats: vi.fn(),
   getEfficiencyComparison: vi.fn(),
 }))
 
-vi.mock('@/lib/api-utils', () => ({
+vi.mock('@/shared/lib/api-utils', () => ({
   parseDays: vi.fn((v: string | null, def: number) => (v ? parseInt(v) : def)),
 }))
 
-import * as queries from '@/lib/queries'
+import * as queries from '@/shared/lib/queries'
 
 const { GET } = await import('../route')
 

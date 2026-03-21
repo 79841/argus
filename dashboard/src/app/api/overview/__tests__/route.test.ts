@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
-vi.mock('@/lib/queries', () => ({
+vi.mock('@/shared/lib/queries', () => ({
   getOverviewStats: vi.fn(),
   getAllTimeStats: vi.fn(),
   getOverviewDelta: vi.fn(),
@@ -9,7 +9,7 @@ vi.mock('@/lib/queries', () => ({
 }))
 
 const { GET } = await import('../route')
-import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries } from '@/lib/queries'
+import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries } from '@/shared/lib/queries'
 
 const mkRequest = (params: Record<string, string> = {}): NextRequest => {
   const url = new URL('http://localhost:9845/api/overview')

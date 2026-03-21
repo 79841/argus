@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/types/common'
+import type { AgentType } from '@/shared/lib/agents'
+import type { DateRange } from '@/shared/types/common'
 
 export type { DateRange }
 

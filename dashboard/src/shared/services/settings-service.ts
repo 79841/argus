@@ -1,5 +1,5 @@
-import { dataClient } from '@/lib/data-client'
-import type { AgentConnectionStatus } from '@/types/settings'
+import { dataClient } from '@/shared/lib/data-client'
+import type { AgentConnectionStatus } from '@/features/settings/types/settings'
 
 type LimitsResponse = {
   limits?: {

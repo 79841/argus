@@ -26,12 +26,12 @@ import {
   getModelCostEfficiency,
   getBudgetStatus,
   getSuggestionMetrics,
-} from '../../../src/lib/queries'
-import { generateSuggestions } from '../../../src/lib/suggestions'
-import { getDb } from '../../../src/lib/db'
-import { scanRegisteredTools } from '../../../src/lib/registered-tools'
-import { getConfigHistory } from '../../../src/lib/config-tracker'
-import { getSetupStatus } from '../../../src/lib/setup'
+} from '../../../src/shared/lib/queries'
+import { generateSuggestions } from '../../../src/shared/lib/suggestions'
+import { getDb } from '../../../src/shared/lib/db'
+import { scanRegisteredTools } from '../../../src/shared/lib/registered-tools'
+import { getConfigHistory } from '../../../src/shared/lib/config-tracker'
+import { getSetupStatus } from '../../../src/shared/lib/setup'
 import { str, num } from '../../infrastructure/helpers'
 import { handleConfigGet, getProjectRoot } from '../config/config.service'
 import type { QueryParams } from '../config/config.types'

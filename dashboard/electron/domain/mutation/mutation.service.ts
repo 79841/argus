@@ -1,8 +1,8 @@
 import path from 'path'
 import fs from 'fs'
-import { getDb } from '../../../src/lib/db'
-import { syncPricingFromLiteLLM } from '../../../src/lib/pricing-sync'
-import { connectAgents, disconnectAgents } from '../../../src/lib/setup'
+import { getDb } from '../../../src/shared/lib/db'
+import { syncPricingFromLiteLLM } from '../../../src/shared/lib/pricing-sync'
+import { connectAgents, disconnectAgents } from '../../../src/shared/lib/setup'
 import { isPathSafe, resolvePath } from '../config/config.service'
 import { AGENT_TYPES } from '../../../src/shared/lib/constants'
 

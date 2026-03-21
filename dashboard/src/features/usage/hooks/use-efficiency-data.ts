@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { efficiencyService } from '@/shared/services'
-import { calculateEfficiency } from '@/lib/efficiency'
-import type { DateRange } from '@/types/common'
-import type { EfficiencyRow, EfficiencyComparisonRow } from '@/lib/queries'
-import type { EfficiencyAgentRow, EfficiencyTrendPoint } from '@/types/usage'
+import { calculateEfficiency } from '@/features/usage/lib/efficiency'
+import type { DateRange } from '@/shared/types/common'
+import type { EfficiencyRow, EfficiencyComparisonRow } from '@/shared/lib/queries'
+import type { EfficiencyAgentRow, EfficiencyTrendPoint } from '@/features/usage/types/usage'
 
 type UseEfficiencyDataParams = {
   project: string
