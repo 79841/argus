@@ -7,6 +7,7 @@ export type SessionRow = {
   agent_type: string
   model: string
   started_at: string
+  last_activity: string
   cost: number
   input_tokens: number
   output_tokens: number
@@ -69,6 +70,7 @@ export const getSessions = (agentType: string, project: string = 'all', from?: s
       COALESCE(sum(input_tokens), 0) as input_tokens,
       COALESCE(sum(output_tokens), 0) as output_tokens,
       COALESCE(sum(cache_read_tokens), 0) as cache_read_tokens,
+      max(timestamp) as last_activity,
       CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as duration_ms,
       count(*) as request_count,
       project_name
@@ -79,7 +81,7 @@ export const getSessions = (agentType: string, project: string = 'all', from?: s
       ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY session_id, agent_type
-    ORDER BY started_at DESC
+    ORDER BY last_activity DESC
     LIMIT ?
   `).all(...dateParams, ...agentParams(agentType), ...projectParams(project), limit) as SessionRow[]
 }

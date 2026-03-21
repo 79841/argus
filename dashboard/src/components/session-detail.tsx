@@ -162,7 +162,7 @@ const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
               <div className="min-w-0 flex-1">
                 <div className="font-medium">{eventLabel(ev)}</div>
                 {ev.event_name === 'user_prompt' && (
-                  ev.body && !['<REDACTED>', '[REDACTED]', 'claude_code.user_prompt'].includes(ev.body) ? (
+                  ev.body && !ev.body.includes('REDACTED') && !ev.body.endsWith('.user_prompt') ? (
                     <p className="mt-1 whitespace-pre-wrap break-words rounded bg-violet-50 px-2 py-1.5 text-xs text-foreground dark:bg-violet-950/30">
                       {ev.body}
                     </p>

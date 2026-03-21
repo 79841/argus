@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
               const promptText = getAttr(attrs, 'prompt')
               if (promptText && !['<REDACTED>', '[REDACTED]'].includes(promptText)) {
                 body = promptText
-              } else if (!body || body === `claude_code.${eventName}` || ['<REDACTED>', '[REDACTED]'].includes(body)) {
+              } else if (!body || body.endsWith(`.${eventName}`) || ['<REDACTED>', '[REDACTED]'].includes(body)) {
                 body = ''
               }
             }
@@ -212,7 +212,10 @@ export async function POST(request: NextRequest) {
           const rows = selectEvents.all(sid) as { id: number; event_name: string; prompt_id: string }[]
           let currentPromptId = ''
           for (const row of rows) {
-            if (row.prompt_id) continue
+            if (row.prompt_id) {
+              currentPromptId = row.prompt_id
+              continue
+            }
             if (row.event_name === 'user_prompt') {
               currentPromptId = randomUUID()
             } else if (!currentPromptId && row.event_name !== 'session_start') {

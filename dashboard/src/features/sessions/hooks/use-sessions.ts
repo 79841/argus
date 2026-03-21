@@ -99,7 +99,7 @@ export const useSessions = (): UseSessionsReturn => {
     return [...filtered].sort((a, b) => {
       if (sortBy === 'cost') return b.cost - a.cost
       if (sortBy === 'tokens') return (b.input_tokens + b.output_tokens) - (a.input_tokens + a.output_tokens)
-      return new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+      return new Date(b.last_activity || b.started_at).getTime() - new Date(a.last_activity || a.started_at).getTime()
     })
   }, [sessions, search, sortBy])
 

@@ -133,7 +133,7 @@ export default function SessionsPage() {
                             <span className="text-emerald-600 dark:text-emerald-400">{t('sessions.cache')}{cacheRate}%</span>
                           </>
                         )}
-                        <span className="ml-auto shrink-0">{formatRelativeTime(s.started_at, t)}</span>
+                        <span className="ml-auto shrink-0">{formatRelativeTime(s.last_activity || s.started_at, t)}</span>
                       </div>
                     </button>
                     {/* External link to detail page */}

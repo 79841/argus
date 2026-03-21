@@ -12,11 +12,16 @@ export type PromptGroup = {
   startTime: string
 }
 
+const TIMELINE_EVENTS = new Set([
+  'user_prompt', 'api_request', 'api_error', 'tool_result', 'tool_decision',
+])
+
 export const groupByPrompt = (events: SessionDetailEvent[]): PromptGroup[] => {
   const map = new Map<string, SessionDetailEvent[]>()
   const order: string[] = []
 
   for (const ev of events) {
+    if (!ev.prompt_id && !TIMELINE_EVENTS.has(ev.event_name)) continue
     const key = ev.prompt_id || `_no_prompt_${ev.timestamp}`
     if (!map.has(key)) {
       map.set(key, [])

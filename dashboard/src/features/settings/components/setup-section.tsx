@@ -214,7 +214,10 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.codex.step1.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel.exporter.otlp-http]
+                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+log_user_prompt = true
+
+[otel.exporter.otlp-http]
 endpoint = "http://localhost:9845/v1/logs"
 protocol = "json"
 

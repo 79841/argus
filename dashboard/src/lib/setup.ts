@@ -65,7 +65,7 @@ const ARGUS_GEMINI_TELEMETRY = (endpoint: string) => ({
 })
 
 const CODEX_OTEL_SECTION = (endpoint: string) =>
-  `\n[otel.exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.trace_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.metrics_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n`
+  `\n[otel]\nlog_user_prompt = true\n\n[otel.exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.trace_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.metrics_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n`
 
 // Claude
 
