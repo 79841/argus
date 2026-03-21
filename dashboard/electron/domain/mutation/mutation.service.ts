@@ -4,6 +4,7 @@ import { getDb } from '../../../src/lib/db'
 import { syncPricingFromLiteLLM } from '../../../src/lib/pricing-sync'
 import { connectAgents, disconnectAgents } from '../../../src/lib/setup'
 import { isPathSafe, resolvePath } from '../config/config.service'
+import { AGENT_TYPES } from '../../../src/shared/lib/constants'
 
 export const handleMutate = async (name: string, body?: unknown): Promise<unknown> => {
   switch (name) {
@@ -75,13 +76,13 @@ export const handleMutate = async (name: string, body?: unknown): Promise<unknow
 
     case 'setup/connect': {
       const { agents, endpoint } = body as { agents: string[]; endpoint?: string }
-      const validAgents = agents.filter((a: string) => ['claude', 'codex', 'gemini'].includes(a)) as Array<'claude' | 'codex' | 'gemini'>
+      const validAgents = agents.filter((a: string) => (AGENT_TYPES as readonly string[]).includes(a)) as Array<'claude' | 'codex' | 'gemini'>
       return { results: connectAgents(validAgents, endpoint ?? 'http://localhost:9845') }
     }
 
     case 'setup/disconnect': {
       const { agents } = body as { agents: string[] }
-      const validAgents = agents.filter((a: string) => ['claude', 'codex', 'gemini'].includes(a)) as Array<'claude' | 'codex' | 'gemini'>
+      const validAgents = agents.filter((a: string) => (AGENT_TYPES as readonly string[]).includes(a)) as Array<'claude' | 'codex' | 'gemini'>
       return { results: disconnectAgents(validAgents) }
     }
 

@@ -17,8 +17,6 @@ export const resolvePath = (filePath: string): string => {
   return path.join(getProjectRoot(), filePath)
 }
 
-export const isProjectPath = (filePath: string): boolean => !filePath.startsWith('~/')
-
 export const isPathSafe = (filePath: string): boolean => {
   if (filePath.startsWith('~/')) {
     const resolved = path.resolve(resolvePath(filePath))
@@ -87,7 +85,6 @@ export const getProjectFiles = (projectRoot: string, projectName: string): Proje
     }))
 
   const dynamicFiles = scanDynamicFiles(projectRoot)
-    .filter((f) => fs.existsSync(path.join(projectRoot, f.path)))
     .map((f) => ({
       path: f.path,
       agent: f.agent,
@@ -122,21 +119,27 @@ export const handleConfigGet = (filePath: string | null, params?: QueryParams): 
 
   const projectRoot = params?.projectRoot ? str(params.projectRoot) : null
 
+  const readFileSafe = (fullPath: string): string => {
+    try {
+      return fs.readFileSync(fullPath, 'utf-8')
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') throw new Error('File not found')
+      throw e
+    }
+  }
+
   if (filePath.startsWith('~/')) {
     const fullPath = resolvePath(filePath)
-    if (!fs.existsSync(fullPath)) throw new Error('File not found')
-    return { path: filePath, content: fs.readFileSync(fullPath, 'utf-8'), scope: 'user' }
+    return { path: filePath, content: readFileSafe(fullPath), scope: 'user' }
   }
 
   if (projectRoot) {
     const resolved = path.resolve(projectRoot, filePath)
     if (!resolved.startsWith(path.resolve(projectRoot))) throw new Error('Invalid file path')
-    if (!fs.existsSync(resolved)) throw new Error('File not found')
-    return { path: filePath, content: fs.readFileSync(resolved, 'utf-8'), scope: 'project' }
+    return { path: filePath, content: readFileSafe(resolved), scope: 'project' }
   }
 
   if (!isPathSafe(filePath)) throw new Error('Invalid file path')
   const fullPath = resolvePath(filePath)
-  if (!fs.existsSync(fullPath)) throw new Error('File not found')
-  return { path: filePath, content: fs.readFileSync(fullPath, 'utf-8'), scope: 'project' }
+  return { path: filePath, content: readFileSafe(fullPath), scope: 'project' }
 }

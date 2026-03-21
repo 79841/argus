@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { sessionsService } from '@/shared/services'
 import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
@@ -85,25 +85,26 @@ export const useSessions = (): UseSessionsReturn => {
       })
   }, [])
 
-  const filteredSessions = sessions.filter((s) => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return (
-      s.session_id.toLowerCase().includes(q) ||
-      s.project_name?.toLowerCase().includes(q) ||
-      s.model?.toLowerCase().includes(q) ||
-      s.agent_type.toLowerCase().includes(q)
-    )
-  })
+  const sortedSessions = useMemo(() => {
+    const filtered = sessions.filter((s) => {
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        s.session_id.toLowerCase().includes(q) ||
+        s.project_name?.toLowerCase().includes(q) ||
+        s.model?.toLowerCase().includes(q) ||
+        s.agent_type.toLowerCase().includes(q)
+      )
+    })
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'cost') return b.cost - a.cost
+      if (sortBy === 'tokens') return (b.input_tokens + b.output_tokens) - (a.input_tokens + a.output_tokens)
+      return new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+    })
+  }, [sessions, search, sortBy])
 
-  const sortedSessions = [...filteredSessions].sort((a, b) => {
-    if (sortBy === 'cost') return b.cost - a.cost
-    if (sortBy === 'tokens') return (b.input_tokens + b.output_tokens) - (a.input_tokens + a.output_tokens)
-    return new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-  })
-
-  const selectedSession = sessions.find((s) => s.session_id === selectedId)
-  const totalCost = sessions.reduce((s, r) => s + r.cost, 0)
+  const selectedSession = useMemo(() => sessions.find((s) => s.session_id === selectedId), [sessions, selectedId])
+  const totalCost = useMemo(() => sessions.reduce((s, r) => s + r.cost, 0), [sessions])
 
   return {
     sessions,

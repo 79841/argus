@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { projectsService, configService } from '@/shared/services'
 import type { FileEntry, DbProject, ProjectGroup, Agent } from '@/types/rules'
 
@@ -26,6 +26,7 @@ type UseConfigFilesReturn = {
   saveSuccess: boolean
   projectGroups: ProjectGroup[]
   userFiles: FileEntry[]
+  userAgents: Array<{ agent: Agent; files: FileEntry[] }>
   setEditContent: (content: string) => void
   setViewMode: (mode: 'preview' | 'edit') => void
   loadFile: (file: FileEntry) => Promise<void>
@@ -112,7 +113,7 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
     }
   }
 
-  const projectGroups: ProjectGroup[] = dbProjects.map((dp) => {
+  const projectGroups = useMemo<ProjectGroup[]>(() => dbProjects.map((dp) => {
     const projectFiles = files.filter(
       (f) => f.scope === 'project' && f.projectName === dp.project_name
     )
@@ -122,9 +123,11 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
       loaded: true,
       agents: groupByAgent(projectFiles),
     }
-  })
+  }), [dbProjects, files])
 
-  const userFiles = files.filter((f) => f.scope === 'user')
+  const userFiles = useMemo(() => files.filter((f) => f.scope === 'user'), [files])
+
+  const userAgents = useMemo(() => groupByAgent(userFiles), [userFiles])
 
   return {
     dbProjects,
@@ -139,6 +142,7 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
     saveSuccess,
     projectGroups,
     userFiles,
+    userAgents,
     setEditContent,
     setViewMode,
     loadFile,

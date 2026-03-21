@@ -84,6 +84,7 @@ export default function RulesPage() {
     saveSuccess,
     projectGroups,
     userFiles,
+    userAgents,
     setEditContent,
     setViewMode,
     loadFile,
@@ -111,15 +112,6 @@ export default function RulesPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
-
-  const userAgents = (() => {
-    const map = new Map<Agent, FileEntry[]>()
-    for (const f of userFiles) {
-      if (!map.has(f.agent)) map.set(f.agent, [])
-      map.get(f.agent)!.push(f)
-    }
-    return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
-  })()
 
   const showToc =
     viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3

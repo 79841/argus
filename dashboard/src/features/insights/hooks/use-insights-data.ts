@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { insightsService } from '@/shared/services'
 import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/lib/queries'
 import type { Suggestion } from '@/lib/suggestions'
@@ -24,30 +24,23 @@ export const useInsightsData = (days: string): UseInsightsDataReturn => {
   const [loading, setLoading] = useState(true)
   const [suggestionsLoading, setSuggestionsLoading] = useState(true)
 
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    insightsService.getInsights({ days: Number(days) })
-      .then((res) => {
-        setData(res as InsightsData)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [days])
-
-  const fetchSuggestions = useCallback(() => {
-    setSuggestionsLoading(true)
-    insightsService.getSuggestions({ days: Number(days) })
-      .then((res) => {
-        setSuggestions(res.suggestions ?? [])
-        setSuggestionsLoading(false)
-      })
-      .catch(() => setSuggestionsLoading(false))
-  }, [days])
-
   useEffect(() => {
-    fetchData()
-    fetchSuggestions()
-  }, [fetchData, fetchSuggestions])
+    setLoading(true)
+    setSuggestionsLoading(true)
+
+    Promise.all([
+      insightsService.getInsights({ days: Number(days) }),
+      insightsService.getSuggestions({ days: Number(days) }),
+    ]).then(([insightsRes, suggestionsRes]) => {
+      setData(insightsRes as InsightsData)
+      setSuggestions(suggestionsRes.suggestions ?? [])
+    }).catch(() => {
+      // ignore
+    }).finally(() => {
+      setLoading(false)
+      setSuggestionsLoading(false)
+    })
+  }, [days])
 
   return { data, suggestions, loading, suggestionsLoading }
 }

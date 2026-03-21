@@ -16,7 +16,7 @@ export const useProjectRegistry = () => {
   const loadProjects = useCallback(async () => {
     try {
       const data = await projectsService.getProjectRegistry()
-      setProjects((data.projects ?? []) as unknown as RegistryProject[])
+      setProjects((data.projects ?? []) as RegistryProject[])
     } catch {
       // ignore
     } finally {
