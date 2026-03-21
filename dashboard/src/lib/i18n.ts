@@ -27,6 +27,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.pricing': '요금',
     'settings.data': '데이터',
     'settings.setup': '설정 가이드',
+    'settings.agentConnection': '에이전트 연결',
+    'settings.projectConnection': '프로젝트 연결',
 
     // General section
     'settings.theme': '테마',
@@ -76,7 +78,18 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.setup.gemini.step2.desc': '프로젝트별 데이터를 구분하려면 direnv를 사용합니다:',
     'settings.setup.gemini.step3': '3. 확인',
     'settings.setup.gemini.step3.desc': 'Gemini CLI를 실행하고 대시보드에서 데이터가 수집되는지 확인합니다.',
-    'settings.setup.dashboard.desc': 'http://localhost:3000에서 대시보드에 접속할 수 있습니다. 에이전트의 OTLP 엔드포인트도 동일한 주소를 사용합니다.',
+    'settings.setup.dashboard.desc': 'http://localhost:9845에서 대시보드에 접속할 수 있습니다. 에이전트의 OTLP 엔드포인트도 동일한 주소를 사용합니다.',
+
+    // Settings — Project Connection section
+    'settings.projectConnection.title': '프로젝트 연결',
+    'settings.projectConnection.description': '연결된 프로젝트는 앱 전체에서 비용 추적, 세션 필터링, 설정 파일 관리에 사용됩니다.',
+    'settings.projectConnection.add': '프로젝트 추가',
+    'settings.projectConnection.path': '프로젝트 경로',
+    'settings.projectConnection.name': '프로젝트 이름',
+    'settings.projectConnection.cancel': '취소',
+    'settings.projectConnection.connect': '연결',
+    'settings.projectConnection.empty': '연결된 프로젝트가 없습니다.',
+    'settings.projectConnection.persist': '연결된 프로젝트는 앱을 재시작해도 유지됩니다.',
 
     // Sessions page
     'sessions.search.placeholder': '세션 ID, 프로젝트, 모델 검색...',
@@ -152,6 +165,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'rules.load.cancel': '취소',
     'rules.unload': '해제',
     'rules.notLoaded': '경로를 지정하면 rule 파일이 표시됩니다',
+    'rules.connectGuide': 'Settings > 프로젝트 연결에서 프로젝트를 추가하세요.',
 
     // Projects page
     'projects.title': 'Projects',
@@ -265,6 +279,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.pricing': 'Pricing',
     'settings.data': 'Data',
     'settings.setup': 'Setup',
+    'settings.agentConnection': 'Agent Connection',
+    'settings.projectConnection': 'Project Connection',
 
     // General section
     'settings.theme': 'Theme',
@@ -314,7 +330,18 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.setup.gemini.step2.desc': 'To separate data per project, use direnv:',
     'settings.setup.gemini.step3': '3. Verify',
     'settings.setup.gemini.step3.desc': 'Run Gemini CLI and verify that data is being collected on the dashboard.',
-    'settings.setup.dashboard.desc': 'Access the dashboard at http://localhost:3000. The agent\'s OTLP endpoint uses the same address.',
+    'settings.setup.dashboard.desc': 'Access the dashboard at http://localhost:9845. The agent\'s OTLP endpoint uses the same address.',
+
+    // Settings — Project Connection section
+    'settings.projectConnection.title': 'Project Connection',
+    'settings.projectConnection.description': 'Connected projects are used across the app for cost tracking, session filtering, and config file management.',
+    'settings.projectConnection.add': 'Add Project',
+    'settings.projectConnection.path': 'Project Path',
+    'settings.projectConnection.name': 'Project Name',
+    'settings.projectConnection.cancel': 'Cancel',
+    'settings.projectConnection.connect': 'Connect',
+    'settings.projectConnection.empty': 'No projects connected.',
+    'settings.projectConnection.persist': 'Connected projects persist across app restarts.',
 
     // Sessions page
     'sessions.search.placeholder': 'Search session ID, project, model...',
@@ -390,6 +417,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'rules.load.cancel': 'Cancel',
     'rules.unload': 'Unload',
     'rules.notLoaded': 'Specify path to view rule files',
+    'rules.connectGuide': 'Add projects in Settings > Project Connection.',
 
     // Projects page
     'projects.title': 'Projects',
