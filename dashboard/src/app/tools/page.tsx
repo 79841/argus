@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } from '@/lib/queries'
+import { useState } from 'react'
+import type { ToolDetailRow, DailyToolRow, ToolUsageRow } from '@/lib/queries'
 import { ToolDetailTable } from '@/components/tool-detail-table'
 import { IndividualToolTable } from '@/components/individual-tool-table'
 import { RegisteredToolsCard } from '@/components/registered-tools-card'
@@ -30,23 +30,8 @@ import {
 import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
 import type { AgentType } from '@/lib/agents'
-import { dataClient } from '@/lib/data-client'
 import { formatDuration } from '@/lib/format'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type ToolsKpi = {
-  total_calls: number
-  success_rate: number
-  avg_duration_ms: number
-  unique_tools: number
-}
-
-type TreemapItem = {
-  name: string
-  size: number
-  fill: string
-}
+import { useToolsData } from '@/features/tools'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -95,6 +80,14 @@ const DEFAULT_COLORS = ['#64748b', '#94a3b8', '#78716c', '#a8a29e', '#71717a']
 const formatNumber = (n: number): string => n.toLocaleString()
 
 const formatPercent = (n: number): string => `${(n * 100).toFixed(1)}%`
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type TreemapItem = {
+  name: string
+  size: number
+  fill: string
+}
 
 // ─── Top Tools Bar Chart ──────────────────────────────────────────────────────
 
@@ -185,18 +178,13 @@ const CategoryTreemapContent = (props: {
     )
   }
 
-  // 셀 크기에 비례해 폰트 크기 조정 (최소 9, 최대 13)
   const nameFontSize = Math.min(13, Math.max(9, Math.floor(width / 10)))
   const subFontSize = Math.min(11, Math.max(8, nameFontSize - 2))
-
-  // 폰트 크기 기준 한 줄에 표시 가능한 글자 수 (영문 기준 약 0.6배)
   const charsPerPx = 0.6 / nameFontSize
   const maxChars = Math.floor(width * charsPerPx * (width - 8))
   const displayName = name.length > maxChars && maxChars > 3
     ? name.slice(0, maxChars - 1) + '…'
     : name
-
-  // 크기가 충분할 때만 수치 표시
   const showSub = height >= 50 && width >= 60
 
   return (
@@ -381,61 +369,7 @@ export default function ToolsPage() {
   const [agentType, setAgentType] = useState<AgentType>('all')
   const [days, setDays] = useState('7')
 
-  const [tools, setTools] = useState<ToolDetailRow[]>([])
-  const [topTools, setTopTools] = useState<ToolUsageRow[]>([])
-  const [daily, setDaily] = useState<DailyToolRow[]>([])
-  const [individual, setIndividual] = useState<IndividualToolRow[]>([])
-  const [kpi, setKpi] = useState<ToolsKpi | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-
-    Promise.all([
-      dataClient.query('tools', { agent_type: agentType, days: Number(days), detail: true }),
-      dataClient.query('tools', { agent_type: agentType, days: Number(days) }),
-    ])
-      .then(([detail, simple]) => {
-        const d = detail as Record<string, unknown[]>
-        const s = simple as Record<string, unknown[]>
-        const detailTools: ToolDetailRow[] = (d.tools ?? []) as ToolDetailRow[]
-        const dailyData: DailyToolRow[] = (d.daily ?? []) as DailyToolRow[]
-        const individualData: IndividualToolRow[] = (d.individual ?? []) as IndividualToolRow[]
-        const simpleTools: ToolUsageRow[] = (s.tools ?? []) as ToolUsageRow[]
-
-        setTools(detailTools)
-        setDaily(dailyData)
-        setIndividual(individualData)
-        setTopTools(simpleTools)
-
-        const totalCalls = simpleTools.reduce((s, r) => s + r.invocation_count, 0)
-        const totalSuccess = simpleTools.reduce((s, r) => s + r.success_count, 0)
-        const avgDuration =
-          simpleTools.length > 0
-            ? simpleTools.reduce((s, r) => s + r.avg_duration_ms * r.invocation_count, 0) /
-              Math.max(totalCalls, 1)
-            : 0
-        setKpi({
-          total_calls: totalCalls,
-          success_rate: totalCalls > 0 ? totalSuccess / totalCalls : 0,
-          avg_duration_ms: avgDuration,
-          unique_tools: simpleTools.length,
-        })
-        setLoading(false)
-      })
-      .catch(() => {
-        setTools([])
-        setDaily([])
-        setIndividual([])
-        setTopTools([])
-        setKpi(null)
-        setLoading(false)
-      })
-  }, [agentType, days])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  const { tools, topTools, daily, individual, kpi, loading } = useToolsData(agentType, days)
 
   return (
     <div className="flex h-full flex-col">

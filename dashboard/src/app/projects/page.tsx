@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BarChart,
@@ -11,16 +10,15 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
-import { dataClient } from '@/lib/data-client'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { CHART_THEME } from '@/lib/chart-theme'
 import { useLocale } from '@/lib/i18n'
-import type { ProjectComparisonRow } from '@/lib/queries'
 import { formatCost, formatCostDetail, formatCostChart } from '@/lib/format'
 import { FilterBar } from '@/components/filter-bar'
+import { useProjectsData } from '@/features/projects'
 
 const formatDate = (iso: string) => {
   if (!iso) return '—'
@@ -38,28 +36,7 @@ const COLORS = [
 export default function ProjectsPage() {
   const router = useRouter()
   const { t } = useLocale()
-  const [projects, setProjects] = useState<ProjectComparisonRow[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    dataClient.query('projects', { view: 'comparison' })
-      .then((res) => {
-        setProjects(res as ProjectComparisonRow[])
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  const totalCost = projects.reduce((s, p) => s + p.total_cost, 0)
-  const mostActive = projects.reduce<ProjectComparisonRow | null>((best, p) => {
-    if (!best) return p
-    return p.session_count > best.session_count ? p : best
-  }, null)
+  const { projects, loading, totalCost, mostActive } = useProjectsData()
 
   const columns = [
     {

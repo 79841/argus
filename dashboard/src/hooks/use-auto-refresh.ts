@@ -1,13 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-
-const STORAGE_KEY = 'argus-auto-refresh'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 const getIntervalFromStorage = (): number => {
   if (typeof window === 'undefined') return 0
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEYS.AUTO_REFRESH)
     if (stored === null) return 0
     const parsed = Number(stored)
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0

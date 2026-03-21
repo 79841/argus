@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -8,12 +7,11 @@ import {
 import { ChartCard } from '@/components/ui/chart-card'
 import { DataTable } from '@/components/ui/data-table'
 import { AgentBadge } from '@/components/ui/agent-badge'
-import { dataClient } from '@/lib/data-client'
 import { CHART_THEME } from '@/lib/chart-theme'
-import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/components/top-bar-context'
-import type { ModelUsage } from '@/lib/queries'
 import { formatCostChart } from '@/lib/format'
+import { useModelsData } from '../hooks/use-models-data'
+import type { AgentType } from '@/lib/agents'
+import type { ModelsTabProps } from '@/types/usage'
 
 const SERIES_PIE_COLORS = [
   'oklch(0.55 0 0)',
@@ -26,39 +24,20 @@ const SERIES_PIE_COLORS = [
   'oklch(0.40 0 0)',
 ]
 
-type ModelTableRow = {
-  model: string
-  agent_type: string
-  request_count: number
-  cost: number
-  avg_cost: number
-}
-
-type ModelsTabProps = {
-  agentType: AgentType
-  project: string
-  dateRange: DateRange
-}
+const modelColumns = [
+  { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
+  {
+    key: 'agent_type',
+    label: 'Agent',
+    format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
+  },
+  { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
+  { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
+  { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
+]
 
 export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
-  const [models, setModels] = useState<ModelTableRow[]>([])
-
-  useEffect(() => {
-    dataClient.query('models', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
-      .then((rows) => {
-        const typedRows = rows as ModelUsage[]
-        setModels(
-          typedRows.map(r => ({
-            model: r.model,
-            agent_type: r.agent_type,
-            request_count: r.request_count,
-            cost: r.cost,
-            avg_cost: r.request_count > 0 ? r.cost / r.request_count : 0,
-          }))
-        )
-      })
-      .catch(() => {})
-  }, [agentType, project, dateRange])
+  const { models } = useModelsData({ agentType, project, dateRange })
 
   const totalCost = models.reduce((s, m) => s + m.cost, 0)
   const pieData = models.slice(0, 8).map((m, i) => ({
@@ -66,18 +45,6 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
     value: m.cost,
     color: SERIES_PIE_COLORS[i % SERIES_PIE_COLORS.length],
   }))
-
-  const modelColumns = [
-    { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
-    {
-      key: 'agent_type',
-      label: 'Agent',
-      format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
-    },
-    { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
-    { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
-    { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
-  ]
 
   return (
     <div className="space-y-4">

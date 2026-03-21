@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
@@ -11,100 +10,36 @@ import { AgentDot } from '@/components/ui/agent-dot'
 import { FilterBar } from '@/components/filter-bar'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SessionDetail } from '@/components/session-detail'
-import type { SessionRow, SessionDetailEvent } from '@/lib/queries'
 import type { AgentType } from '@/lib/agents'
-import type { DateRange } from '@/components/top-bar-context'
+import type { SortOption } from '@/types/common'
 import { useLocale } from '@/lib/i18n'
-import { dataClient } from '@/lib/data-client'
 import { formatCost, formatTokens, formatDuration, shortenModel, parseModels } from '@/lib/format'
-
-const todayISO = () => new Date().toISOString().slice(0, 10)
-const daysAgoISO = (days: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (days - 1))
-  return d.toISOString().slice(0, 10)
-}
-
-type SortOption = 'latest' | 'cost' | 'tokens'
-
-const formatRelativeTime = (ts: string, tFn: (key: string) => string): string => {
-  const now = Date.now()
-  const then = new Date(ts).getTime()
-  const diff = Math.floor((now - then) / 1000)
-  if (diff < 60) return `${diff}${tFn('sessions.reltime.sec')}`
-  if (diff < 3600) return `${Math.floor(diff / 60)}${tFn('sessions.reltime.min')}`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}${tFn('sessions.reltime.hour')}`
-  return `${Math.floor(diff / 86400)}${tFn('sessions.reltime.day')}`
-}
-
-const computeCacheRate = (s: SessionRow): number => {
-  const total = s.input_tokens + s.cache_read_tokens
-  if (total === 0) return 0
-  return Math.round((s.cache_read_tokens / total) * 100)
-}
+import { formatRelativeTime } from '@/shared/lib/format'
+import { useSessions } from '@/features/sessions'
 
 export default function SessionsPage() {
   const { t } = useLocale()
-  const [agentType, setAgentType] = useState<AgentType>('all')
-  const [project, setProject] = useState<string>('all')
-  const [dateRange, setDateRange] = useState<DateRange>({ from: daysAgoISO(7), to: todayISO() })
-  const [search, setSearch] = useState<string>('')
-  const [sortBy, setSortBy] = useState<SortOption>('latest')
-
-  const [sessions, setSessions] = useState<SessionRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [detailEvents, setDetailEvents] = useState<SessionDetailEvent[]>([])
-  const [detailLoading, setDetailLoading] = useState(false)
-
-  useEffect(() => {
-    setLoading(true)
-    setSelectedId(null)
-    setDetailEvents([])
-    dataClient.query('sessions', { agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
-      .then((data) => {
-        setSessions(Array.isArray(data) ? data : [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setSessions([])
-        setLoading(false)
-      })
-  }, [agentType, project, dateRange])
-
-  const handleSelect = useCallback((sessionId: string) => {
-    setSelectedId(sessionId)
-    setDetailLoading(true)
-    dataClient.query(`sessions/${encodeURIComponent(sessionId)}`)
-      .then((data) => {
-        setDetailEvents(Array.isArray(data) ? data : [])
-        setDetailLoading(false)
-      })
-      .catch(() => {
-        setDetailEvents([])
-        setDetailLoading(false)
-      })
-  }, [])
-
-  const filteredSessions = sessions.filter((s) => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return (
-      s.session_id.toLowerCase().includes(q) ||
-      s.project_name?.toLowerCase().includes(q) ||
-      s.model?.toLowerCase().includes(q) ||
-      s.agent_type.toLowerCase().includes(q)
-    )
-  })
-
-  const sortedSessions = [...filteredSessions].sort((a, b) => {
-    if (sortBy === 'cost') return b.cost - a.cost
-    if (sortBy === 'tokens') return (b.input_tokens + b.output_tokens) - (a.input_tokens + a.output_tokens)
-    return new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-  })
-
-  const selectedSession = sessions.find((s) => s.session_id === selectedId)
-  const totalCost = sessions.reduce((s, r) => s + r.cost, 0)
+  const {
+    loading,
+    selectedId,
+    selectedSession,
+    detailEvents,
+    detailLoading,
+    agentType,
+    project,
+    dateRange,
+    search,
+    sortBy,
+    sortedSessions,
+    totalCost,
+    setAgentType,
+    setProject,
+    setDateRange,
+    setSearch,
+    setSortBy,
+    handleSelect,
+    computeCacheRate,
+  } = useSessions()
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

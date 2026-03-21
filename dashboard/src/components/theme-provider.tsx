@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -23,7 +24,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'system' }: ThemeProvid
   const [theme, setTheme] = useState<Theme>(defaultTheme)
 
   useEffect(() => {
-    const stored = localStorage.getItem('argus-theme') as Theme | null
+    const stored = localStorage.getItem(STORAGE_KEYS.THEME) as Theme | null
     if (stored) setTheme(stored)
   }, [])
 
@@ -38,7 +39,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'system' }: ThemeProvid
       root.classList.add(theme)
     }
 
-    localStorage.setItem('argus-theme', theme)
+    localStorage.setItem(STORAGE_KEYS.THEME, theme)
   }, [theme])
 
   return (

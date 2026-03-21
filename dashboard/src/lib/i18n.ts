@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 export type Locale = 'ko' | 'en'
-
-const STORAGE_KEY = 'argus-locale'
 
 const translations: Record<Locale, Record<string, string>> = {
   ko: {
@@ -515,7 +514,7 @@ const translations: Record<Locale, Record<string, string>> = {
 
 export const getLocale = (): Locale => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY) as Locale | null
+    const stored = localStorage.getItem(STORAGE_KEYS.LOCALE) as Locale | null
     if (stored && (stored === 'ko' || stored === 'en')) return stored
   } catch {
     // ignore
@@ -525,7 +524,7 @@ export const getLocale = (): Locale => {
 
 export const setLocale = (locale: Locale) => {
   try {
-    localStorage.setItem(STORAGE_KEY, locale)
+    localStorage.setItem(STORAGE_KEYS.LOCALE, locale)
     window.dispatchEvent(new CustomEvent('argus-locale-change', { detail: locale }))
   } catch {
     // ignore

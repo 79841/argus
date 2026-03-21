@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -18,44 +18,14 @@ import {
   Search,
 } from 'lucide-react'
 import { useLocale } from '@/lib/i18n'
-import { dataClient } from '@/lib/data-client'
 import { MarkdownViewer } from '@/components/markdown-viewer'
 import type { Heading } from '@/components/markdown-viewer'
 import { TocSidebar } from '@/components/toc-sidebar'
 import { ContentSearch } from '@/components/content-search'
 import { JsonHighlight, TomlHighlight } from '@/components/syntax-highlight'
 import { FilterBar } from '@/components/filter-bar'
-
-type Scope = 'project' | 'user'
-type Agent = 'claude' | 'codex' | 'gemini'
-type ViewMode = 'preview' | 'edit'
-
-type FileEntry = {
-  path: string
-  agent: Agent
-  scope: Scope
-  exists: boolean
-  projectRoot: string
-  projectName: string
-}
-
-type RegistryEntry = {
-  project_name: string
-  project_path: string
-}
-
-type DbProject = {
-  project_name: string
-  loaded: boolean
-  project_path: string
-}
-
-type ProjectGroup = {
-  projectName: string
-  projectRoot: string
-  loaded: boolean
-  agents: { agent: Agent; files: FileEntry[] }[]
-}
+import type { Agent, FileEntry } from '@/types/rules'
+import { useConfigFiles } from '@/features/rules'
 
 const AGENT_LABELS: Record<Agent, string> = {
   claude: 'Claude',
@@ -96,101 +66,30 @@ const isToml = (p: string) => p.endsWith('.toml')
 
 const fileKey = (file: FileEntry) => `${file.projectRoot}:${file.path}`
 
-const groupByAgent = (list: FileEntry[]) => {
-  const map = new Map<Agent, FileEntry[]>()
-  for (const f of list) {
-    if (!map.has(f.agent)) map.set(f.agent, [])
-    map.get(f.agent)!.push(f)
-  }
-  return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
-}
-
 export default function RulesPage() {
   const { t } = useLocale()
-  const [dbProjects, setDbProjects] = useState<DbProject[]>([])
-  const [files, setFiles] = useState<FileEntry[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedFile, setSelectedFile] = useState<FileEntry | null>(null)
-  const [fileContent, setFileContent] = useState('')
-  const [editContent, setEditContent] = useState('')
-  const [viewMode, setViewMode] = useState<ViewMode>('preview')
-  const [contentLoading, setContentLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
-  const loadAll = useCallback(async () => {
-    try {
-      const [registryRes, configRes] = await Promise.all([
-        dataClient.query('projects/registry') as Promise<{ projects?: RegistryEntry[] }>,
-        dataClient.query('config') as Promise<{ files?: FileEntry[] }>,
-      ])
-      const registry = registryRes.projects ?? []
-      setDbProjects(
-        registry.map((r) => ({
-          project_name: r.project_name,
-          loaded: true,
-          project_path: r.project_path,
-        }))
-      )
-      setFiles(configRes.files ?? [])
-    } catch {
-      setDbProjects([])
-      setFiles([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadAll()
-  }, [loadAll])
-
-  const loadFile = useCallback(async (file: FileEntry) => {
-    setSelectedFile(file)
-    setViewMode('preview')
-    setContentLoading(true)
-    setSaveSuccess(false)
-    setHeadings([])
-    setSearchOpen(false)
-    try {
-      const params: Record<string, string> = { path: file.path }
-      if (file.projectRoot) params.projectRoot = file.projectRoot
-      const data = (await dataClient.query('config', params)) as { content?: string }
-      const content = data.content ?? ''
-      setFileContent(content)
-      setEditContent(content)
-    } catch {
-      setFileContent('')
-      setEditContent('')
-    } finally {
-      setContentLoading(false)
-    }
-  }, [])
-
-  const handleSave = async () => {
-    if (!selectedFile) return
-    setSaving(true)
-    setSaveSuccess(false)
-    try {
-      await dataClient.mutate('config', {
-        path: selectedFile.path,
-        content: editContent,
-        projectRoot: selectedFile.projectRoot || undefined,
-      })
-      setFileContent(editContent)
-      setSaveSuccess(true)
-      setViewMode('preview')
-      setTimeout(() => setSaveSuccess(false), 3000)
-    } catch {
-      // ignore
-    } finally {
-      setSaving(false)
-    }
-  }
+  const {
+    loading,
+    selectedFile,
+    fileContent,
+    editContent,
+    viewMode,
+    contentLoading,
+    saving,
+    saveSuccess,
+    projectGroups,
+    userFiles,
+    userAgents,
+    setEditContent,
+    setViewMode,
+    loadFile,
+    handleSave,
+  } = useConfigFiles()
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups((prev) => {
@@ -213,21 +112,6 @@ export default function RulesPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
-
-  const projectGroups: ProjectGroup[] = dbProjects.map((dp) => {
-    const projectFiles = files.filter(
-      (f) => f.scope === 'project' && f.projectName === dp.project_name
-    )
-    return {
-      projectName: dp.project_name,
-      projectRoot: dp.project_path,
-      loaded: true,
-      agents: groupByAgent(projectFiles),
-    }
-  })
-
-  const userFiles = files.filter((f) => f.scope === 'user')
-  const userAgents = groupByAgent(userFiles)
 
   const showToc =
     viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
@@ -253,7 +137,6 @@ export default function RulesPage() {
 
               return (
                 <div key={project.projectName}>
-                  {/* Project header */}
                   <div className="flex items-center">
                     <button
                       onClick={() => toggleGroup(projectKey)}
@@ -268,7 +151,6 @@ export default function RulesPage() {
                     </button>
                   </div>
 
-                  {/* Agent/file tree */}
                   {!projectCollapsed &&
                     project.agents.map(({ agent, files: agentFiles }) => {
                       const agentKey = `${projectKey}-${agent}`

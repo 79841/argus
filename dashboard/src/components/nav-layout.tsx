@@ -9,8 +9,7 @@ import { WindowControls } from '@/components/window-controls'
 import { TopBarPortalProvider, useTopBarPortal } from '@/components/top-bar-portal'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-
-const NAV_STORAGE_KEY = 'argus-nav-collapsed'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 type TopBarProps = {
   onToggleNav: () => void
@@ -75,7 +74,7 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(NAV_STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEYS.NAV_COLLAPSED)
       if (stored !== null) setCollapsed(JSON.parse(stored))
     } catch {}
 
@@ -88,7 +87,7 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
     const next = !collapsed
     setCollapsed(next)
     try {
-      localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify(next))
+      localStorage.setItem(STORAGE_KEYS.NAV_COLLAPSED, JSON.stringify(next))
       window.dispatchEvent(new CustomEvent('argus-nav-toggle', { detail: next }))
     } catch {}
   }
