@@ -57,7 +57,7 @@ export type EfficiencyAgentRow = {
 
 export type EfficiencyTrendPoint = {
   date: string
-  [agent: string]: number | string
+  [agent: string]: number | string | null
 }
 
 export type EfficiencyTabProps = {

@@ -182,6 +182,34 @@ export const getAgentDailyCosts = (): AgentDailyCost[] => {
   `).all() as AgentDailyCost[]
 }
 
+export type AgentDistribution = {
+  agent_type: string
+  sessions: number
+  tokens: number
+  cost: number
+}
+
+export const getAgentDistribution = (from?: string, to?: string): AgentDistribution[] => {
+  const db = getDb()
+  const useDate = from && to
+  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) = date('now')"
+  const dateParams = useDate ? [from, to] : []
+
+  return db.prepare(`
+    SELECT
+      agent_type,
+      count(DISTINCT session_id) as sessions,
+      COALESCE(sum(input_tokens + output_tokens), 0) as tokens,
+      COALESCE(sum(cost_usd), 0) as cost
+    FROM agent_logs
+    WHERE ${API_REQUEST_FILTER}
+      ${dateClause}
+      AND agent_type IN ('claude', 'codex', 'gemini')
+    GROUP BY agent_type
+    ORDER BY cost DESC
+  `).all(...dateParams) as AgentDistribution[]
+}
+
 export const getIngestStatus = (): IngestStatusRow[] => {
   const db = getDb()
   return db.prepare(`

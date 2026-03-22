@@ -45,7 +45,16 @@ export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParam
           })
           trendMap[row.date][row.agent_type] = eff.score
         }
-        setTrend(Object.values(trendMap).sort((a, b) => String(a.date).localeCompare(String(b.date))))
+
+        const filled: EfficiencyTrendPoint[] = []
+        const cur = new Date(dateRange.from)
+        const end = new Date(dateRange.to)
+        while (cur <= end) {
+          const key = cur.toISOString().slice(0, 10)
+          filled.push(trendMap[key] ?? { date: key })
+          cur.setDate(cur.getDate() + 1)
+        }
+        setTrend(filled)
 
         const rows = comparison.current.map(cur => {
           const eff = calculateEfficiency({

@@ -1,23 +1,23 @@
 ---
-title: "Argus API Reference"
-description: "HTTP API endpoints for the Argus dashboard"
+title: "API 레퍼런스"
+description: "Argus 대시보드 HTTP API 엔드포인트"
 ---
 
-Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints are unauthenticated and intended for local use only.
+Argus는 Next.js API Routes를 통해 HTTP API 엔드포인트를 제공합니다. 모든 엔드포인트는 인증 없이 로컬 전용으로 사용하도록 설계되었습니다.
 
 **Base URL:** `http://localhost:9845`
 
 ---
 
-## Table of Contents
+## 목차
 
-1. [Data Collection](#1-data-collection)
+1. [데이터 수집](#1-데이터-수집)
    - [POST /api/ingest](#post-apiingest)
    - [POST /api/ingest/tool-detail](#post-apiingesttool-detail)
    - [POST /v1/logs](#post-v1logs)
    - [POST /v1/metrics](#post-v1metrics)
    - [POST /v1/traces](#post-v1traces)
-2. [Dashboard Data](#2-dashboard-data)
+2. [대시보드 데이터](#2-대시보드-데이터)
    - [GET /api/overview](#get-apioverview)
    - [GET /api/daily](#get-apidaily)
    - [GET /api/sessions](#get-apisessions)
@@ -31,7 +31,7 @@ Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints 
    - [GET /api/projects/:name](#get-apiprojectsname)
    - [GET /api/insights](#get-apiinsights)
    - [GET /api/suggestions](#get-apisuggestions)
-3. [Configuration](#3-configuration)
+3. [설정](#3-설정)
    - [GET /api/config](#get-apiconfig)
    - [POST /api/config](#post-apiconfig)
    - [GET /api/config-history](#get-apiconfig-history)
@@ -39,7 +39,7 @@ Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints 
    - [GET /api/settings/limits](#get-apisettingslimits)
    - [POST /api/settings/limits](#post-apisettingslimits)
    - [POST /api/pricing-sync](#post-apipricing-sync)
-4. [System](#4-system)
+4. [시스템](#4-시스템)
    - [GET /api/health](#get-apihealth)
    - [POST /api/seed](#post-apiseed)
    - [GET /api/ingest-status](#get-apiingest-status)
@@ -48,17 +48,17 @@ Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints 
 
 ---
 
-## 1. Data Collection
+## 1. 데이터 수집
 
 ### POST /api/ingest
 
-Receives OTLP JSON log data from AI coding agents and stores it in SQLite. This is the primary ingestion endpoint.
+AI 코딩 에이전트에서 OTLP JSON 로그 데이터를 수신하여 SQLite에 저장합니다. 주요 수집 엔드포인트입니다.
 
-The endpoint automatically detects the agent type (Claude Code, Codex CLI, Gemini CLI) from the `service.name` resource attribute. It also extracts orchestration tool details (MCP servers, Skills, Agents) from Claude Code `tool_result` events.
+이 엔드포인트는 `service.name` 리소스 속성에서 에이전트 유형(Claude Code, Codex CLI, Gemini CLI)을 자동 감지합니다. 또한 Claude Code `tool_result` 이벤트에서 오케스트레이션 도구 상세(MCP 서버, Skills, Agents)를 추출합니다.
 
-**Request Body**
+**요청 본문**
 
-OTLP `ExportLogsServiceRequest` JSON format:
+OTLP `ExportLogsServiceRequest` JSON 형식:
 
 ```json
 {
@@ -92,17 +92,17 @@ OTLP `ExportLogsServiceRequest` JSON format:
 }
 ```
 
-**Response**
+**응답**
 
 ```json
 { "accepted": 42 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| accepted | number | Number of log records successfully ingested |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| accepted | number | 성공적으로 수집된 로그 레코드 수 |
 
-**Error Response** (400)
+**오류 응답** (400)
 
 ```json
 { "error": "Error message" }
@@ -112,9 +112,9 @@ OTLP `ExportLogsServiceRequest` JSON format:
 
 ### POST /api/ingest/tool-detail
 
-Manually inserts a single tool detail record (for tracking individual MCP tool calls, skills, or agents).
+단일 도구 상세 레코드를 수동 삽입합니다 (개별 MCP 도구 호출, 스킬, 에이전트 추적용).
 
-**Request Body**
+**요청 본문**
 
 ```json
 {
@@ -130,19 +130,19 @@ Manually inserts a single tool detail record (for tracking individual MCP tool c
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| session_id | string | `""` | Session identifier |
-| tool_name | string | `""` | Parent tool name (e.g., `mcp:linear`, `Agent`, `Skill`) |
-| detail_name | string | `""` | Specific tool/skill/agent name |
-| detail_type | string | `""` | One of `mcp`, `skill`, `agent` |
-| duration_ms | number | `0` | Execution duration in milliseconds |
-| success | boolean | `null` | Whether the tool call succeeded |
-| project_name | string | `""` | Project name |
-| agent_type | string | `"claude"` | Agent type (`claude`, `codex`, `gemini`) |
-| metadata | object | `{}` | Additional key-value metadata |
+| 필드 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| session_id | string | `""` | 세션 식별자 |
+| tool_name | string | `""` | 상위 도구 이름 (예: `mcp:linear`, `Agent`, `Skill`) |
+| detail_name | string | `""` | 구체적인 도구/스킬/에이전트 이름 |
+| detail_type | string | `""` | `mcp`, `skill`, `agent` 중 하나 |
+| duration_ms | number | `0` | 실행 소요 시간 (밀리초) |
+| success | boolean | `null` | 도구 호출 성공 여부 |
+| project_name | string | `""` | 프로젝트 이름 |
+| agent_type | string | `"claude"` | 에이전트 유형 (`claude`, `codex`, `gemini`) |
+| metadata | object | `{}` | 추가 키-값 메타데이터 |
 
-**Response**
+**응답**
 
 ```json
 { "accepted": 1 }
@@ -152,18 +152,18 @@ Manually inserts a single tool detail record (for tracking individual MCP tool c
 
 ### POST /v1/logs
 
-OTLP standard log ingestion endpoint. Accepts both JSON and Protobuf (`application/x-protobuf`) formats. Internally proxies to `POST /api/ingest` after decoding.
+OTLP 표준 로그 수집 엔드포인트입니다. JSON과 Protobuf (`application/x-protobuf`) 형식을 모두 지원합니다. 디코딩 후 내부적으로 `POST /api/ingest`로 프록시합니다.
 
-Claude Code sends telemetry directly to this endpoint when configured with:
+Claude Code는 다음과 같이 설정하면 이 엔드포인트로 직접 텔레메트리를 전송합니다:
 ```bash
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ```
 
-**Request Body**
+**요청 본문**
 
-Same OTLP `ExportLogsServiceRequest` format as `/api/ingest`, in either JSON or Protobuf encoding.
+`/api/ingest`와 동일한 OTLP `ExportLogsServiceRequest` 형식 (JSON 또는 Protobuf 인코딩).
 
-**Response**
+**응답**
 
 ```json
 { "accepted": 42 }
@@ -173,16 +173,16 @@ Same OTLP `ExportLogsServiceRequest` format as `/api/ingest`, in either JSON or 
 
 ### POST /v1/metrics
 
-OTLP standard metrics ingestion endpoint. Accepts both JSON and Protobuf formats. Processes Gemini CLI tool duration/session metrics and Claude Code productivity metrics (lines of code, commits, pull requests, active time).
+OTLP 표준 메트릭 수집 엔드포인트입니다. JSON과 Protobuf 형식을 모두 지원합니다. Gemini CLI 도구 소요 시간/세션 메트릭과 Claude Code 생산성 메트릭(코드 라인 수, 커밋, 풀 리퀘스트, 활동 시간)을 처리합니다.
 
-**Request Body**
+**요청 본문**
 
-OTLP `ExportMetricsServiceRequest` format.
+OTLP `ExportMetricsServiceRequest` 형식.
 
-**Supported Metrics**
+**지원 메트릭**
 
-| Metric Name | Agent | Mapped Event |
-|-------------|-------|--------------|
+| 메트릭 이름 | 에이전트 | 매핑 이벤트 |
+|-------------|----------|-------------|
 | `gemini_cli.tool.duration` | gemini | `tool_result` |
 | `gemini_cli.tool_call.duration` | gemini | `tool_result` |
 | `gemini_cli.session.count` | gemini | `session_start` |
@@ -192,7 +192,7 @@ OTLP `ExportMetricsServiceRequest` format.
 | `claude_code.pull_request.count` | claude | `pull_request_count` |
 | `claude_code.active_time.total` | claude | `active_time` |
 
-**Response**
+**응답**
 
 ```json
 { "accepted": 5 }
@@ -202,9 +202,9 @@ OTLP `ExportMetricsServiceRequest` format.
 
 ### POST /v1/traces
 
-OTLP standard traces endpoint. Accepts and discards all data (Argus only processes logs and metrics).
+OTLP 표준 트레이스 엔드포인트입니다. 모든 데이터를 수신하고 폐기합니다 (Argus는 로그와 메트릭만 처리합니다).
 
-**Response**
+**응답**
 
 ```json
 {}
@@ -212,22 +212,22 @@ OTLP standard traces endpoint. Accepts and discards all data (Argus only process
 
 ---
 
-## 2. Dashboard Data
+## 2. 대시보드 데이터
 
 ### GET /api/overview
 
-Returns today's summary statistics, with optional date range filtering.
+오늘의 요약 통계를 반환하며, 선택적으로 날짜 범위 필터링을 지원합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | `"all"` | Agent filter (`all`, `claude`, `codex`, `gemini`) |
-| project | string | `"all"` | Project filter |
-| from | string | -- | Start date (`YYYY-MM-DD`). Requires `to`. |
-| to | string | -- | End date (`YYYY-MM-DD`). Requires `from`. |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | `"all"` | 에이전트 필터 (`all`, `claude`, `codex`, `gemini`) |
+| project | string | `"all"` | 프로젝트 필터 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`). `to`와 함께 사용. |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`). `from`과 함께 사용. |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -257,37 +257,37 @@ Returns today's summary statistics, with optional date range filtering.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| total_sessions | number | Distinct session count |
-| total_cost | number | Total cost in USD |
-| total_requests | number | Total API request count |
-| total_input_tokens | number | Total input tokens |
-| total_output_tokens | number | Total output tokens |
-| total_cache_read_tokens | number | Total cache read tokens |
-| cache_hit_rate | number | Cache hit ratio (0-1) |
-| all_time_cost | number | Cumulative all-time cost |
-| all_time_tokens | number | Cumulative all-time tokens |
-| delta | OverviewDelta | Day-over-day percentage changes (null if no previous data) |
-| agent_summaries | AgentTodaySummary[] | Per-agent today summary |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| total_sessions | number | 고유 세션 수 |
+| total_cost | number | 총 비용 (USD) |
+| total_requests | number | 총 API 요청 수 |
+| total_input_tokens | number | 총 입력 토큰 |
+| total_output_tokens | number | 총 출력 토큰 |
+| total_cache_read_tokens | number | 총 캐시 읽기 토큰 |
+| cache_hit_rate | number | 캐시 히트 비율 (0-1) |
+| all_time_cost | number | 누적 전체 비용 |
+| all_time_tokens | number | 누적 전체 토큰 |
+| delta | OverviewDelta | 일별 변화율 (이전 데이터 없으면 null) |
+| agent_summaries | AgentTodaySummary[] | 에이전트별 오늘 요약 |
 
 ---
 
 ### GET /api/daily
 
-Returns daily aggregated statistics for the specified period.
+지정된 기간의 일별 집계 통계를 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | `"all"` | Agent filter (`all`, `claude`, `codex`, `gemini`) |
-| days | number | `30` | Number of days to look back |
-| project | string | `"all"` | Project filter |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | `"all"` | 에이전트 필터 (`all`, `claude`, `codex`, `gemini`) |
+| days | number | `30` | 조회할 일수 |
+| project | string | `"all"` | 프로젝트 필터 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
 
-**Response**
+**응답**
 
 ```json
 [
@@ -307,19 +307,19 @@ Returns daily aggregated statistics for the specified period.
 
 ### GET /api/sessions
 
-Returns a list of sessions with aggregated metrics.
+집계된 지표와 함께 세션 목록을 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | `"all"` | Agent filter |
-| project | string | `"all"` | Project filter |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
-| limit | number | `100` | Maximum number of sessions to return |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | `"all"` | 에이전트 필터 |
+| project | string | `"all"` | 프로젝트 필터 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
+| limit | number | `100` | 반환할 최대 세션 수 |
 
-**Response**
+**응답**
 
 ```json
 [
@@ -343,21 +343,21 @@ Returns a list of sessions with aggregated metrics.
 
 ### GET /api/sessions/:id
 
-Returns detailed events for a specific session. Optionally includes a session summary.
+특정 세션의 상세 이벤트를 반환합니다. 선택적으로 세션 요약을 포함합니다.
 
-**Path Parameters**
+**경로 파라미터**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | string | Session ID |
+| 이름 | 타입 | 설명 |
+|------|------|------|
+| id | string | 세션 ID |
 
-**Query Parameters**
+**쿼리 파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| summary | string | -- | Set to `"true"` to include session summary |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| summary | string | -- | `"true"`로 설정하면 세션 요약 포함 |
 
-**Response (default)**
+**응답 (기본)**
 
 ```json
 [
@@ -377,7 +377,7 @@ Returns detailed events for a specific session. Optionally includes a session su
 ]
 ```
 
-**Response (summary=true)**
+**응답 (summary=true)**
 
 ```json
 {
@@ -403,13 +403,13 @@ Returns detailed events for a specific session. Optionally includes a session su
 
 ### GET /api/sessions/active
 
-Returns sessions that had API requests within the last 5 minutes.
+최근 5분 내에 API 요청이 있는 세션을 반환합니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -430,18 +430,18 @@ None.
 
 ### GET /api/models
 
-Returns model usage breakdown with request counts and costs.
+모델 사용량 분석을 요청 수 및 비용과 함께 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | `"all"` | Agent filter |
-| project | string | `"all"` | Project filter |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | `"all"` | 에이전트 필터 |
+| project | string | `"all"` | 프로젝트 필터 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
 
-**Response**
+**응답**
 
 ```json
 [
@@ -458,18 +458,18 @@ Returns model usage breakdown with request counts and costs.
 
 ### GET /api/efficiency
 
-Returns per-agent efficiency metrics (daily breakdown + period comparison).
+에이전트별 효율성 지표를 반환합니다 (일별 분석 + 기간 비교).
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| days | number | `7` | Number of days to analyze |
-| project | string | `"all"` | Project filter |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| days | number | `7` | 분석할 일수 |
+| project | string | `"all"` | 프로젝트 필터 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -507,20 +507,20 @@ Returns per-agent efficiency metrics (daily breakdown + period comparison).
 
 ### GET /api/tools
 
-Returns tool usage statistics. When `detail=true`, includes categorized tool details (Built-in / Orchestration / MCP), daily trends, and individual tool breakdowns.
+도구 사용 통계를 반환합니다. `detail=true`일 때 카테고리별 도구 상세(Built-in / Orchestration / MCP), 일별 추이, 개별 도구 분석을 포함합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | `"all"` | Agent filter |
-| days | number | `7` | Number of days to look back |
-| project | string | `"all"` | Project filter |
-| detail | string | -- | Set to `"true"` for detailed breakdown |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | `"all"` | 에이전트 필터 |
+| days | number | `7` | 조회할 일수 |
+| project | string | `"all"` | 프로젝트 필터 |
+| detail | string | -- | `"true"`로 설정하면 상세 분석 포함 |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
 
-**Response (default)**
+**응답 (기본)**
 
 ```json
 {
@@ -536,7 +536,7 @@ Returns tool usage statistics. When `detail=true`, includes categorized tool det
 }
 ```
 
-**Response (detail=true)**
+**응답 (detail=true)**
 
 ```json
 {
@@ -577,22 +577,22 @@ Returns tool usage statistics. When `detail=true`, includes categorized tool det
 }
 ```
 
-Tool categories:
-- **Built-in**: Standard agent tools (Read, Edit, Bash, etc.)
-- **Orchestration**: Agent and Skill invocations
-- **MCP**: Tools prefixed with `mcp`
+도구 카테고리:
+- **Built-in**: 표준 에이전트 도구 (Read, Edit, Bash 등)
+- **Orchestration**: Agent 및 Skill 호출
+- **MCP**: `mcp` 접두사가 있는 도구
 
 ---
 
 ### GET /api/tools/registered
 
-Scans the project filesystem and returns registered tools (agents, skills, MCP servers, hooks) from Claude Code configuration files.
+프로젝트 파일시스템을 스캔하여 Claude Code 설정 파일에서 등록된 도구(에이전트, 스킬, MCP 서버, 훅)를 반환합니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -613,29 +613,29 @@ None.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| name | string | Tool name |
-| type | string | `agent`, `skill`, `mcp`, or `hook` |
-| scope | string | `project` or `global` |
-| filePath | string | Absolute path to the configuration file |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| name | string | 도구 이름 |
+| type | string | `agent`, `skill`, `mcp`, 또는 `hook` |
+| scope | string | `project` 또는 `global` |
+| filePath | string | 설정 파일의 절대 경로 |
 
 ---
 
 ### GET /api/projects
 
-Returns project-level analytics. Behavior varies based on query parameters.
+프로젝트별 분석을 반환합니다. 쿼리 파라미터에 따라 동작이 달라집니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| agent_type | string | -- | Agent filter (triggers cost view) |
-| from | string | -- | Start date (`YYYY-MM-DD`) |
-| to | string | -- | End date (`YYYY-MM-DD`) |
-| view | string | -- | Set to `"comparison"` for comparison view |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| agent_type | string | -- | 에이전트 필터 (비용 뷰 트리거) |
+| from | string | -- | 시작 날짜 (`YYYY-MM-DD`) |
+| to | string | -- | 종료 날짜 (`YYYY-MM-DD`) |
+| view | string | -- | `"comparison"`으로 설정하면 비교 뷰 |
 
-**Response (no parameters -- project list)**
+**응답 (파라미터 없음 -- 프로젝트 목록)**
 
 ```json
 [
@@ -647,7 +647,7 @@ Returns project-level analytics. Behavior varies based on query parameters.
 ]
 ```
 
-**Response (view=comparison)**
+**응답 (view=comparison)**
 
 ```json
 [
@@ -662,7 +662,7 @@ Returns project-level analytics. Behavior varies based on query parameters.
 ]
 ```
 
-**Response (with agent_type, from, or to)**
+**응답 (agent_type, from, to 포함)**
 
 ```json
 [
@@ -678,15 +678,15 @@ Returns project-level analytics. Behavior varies based on query parameters.
 
 ### GET /api/projects/:name
 
-Returns detailed statistics and daily cost trend for a specific project.
+특정 프로젝트의 상세 통계와 일별 비용 추이를 반환합니다.
 
-**Path Parameters**
+**경로 파라미터**
 
-| Name | Type | Description |
-|------|------|-------------|
-| name | string | URL-encoded project name |
+| 이름 | 타입 | 설명 |
+|------|------|------|
+| name | string | URL 인코딩된 프로젝트 이름 |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -721,16 +721,16 @@ Returns detailed statistics and daily cost trend for a specific project.
 
 ### GET /api/insights
 
-Returns cost insights including high-cost sessions, model cost efficiency, and budget status.
+고비용 세션, 모델 비용 효율성, 예산 상태를 포함한 비용 인사이트를 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| days | number | `7` | Number of days to analyze |
-| limit | number | `10` | Maximum number of high-cost sessions |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| days | number | `7` | 분석할 일수 |
+| limit | number | `10` | 고비용 세션 최대 수 |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -776,25 +776,25 @@ Returns cost insights including high-cost sessions, model cost efficiency, and b
 }
 ```
 
-**High-cost session causes:**
-- `expensive_model` -- Uses a high-cost model (Opus, o3, GPT-5.4)
-- `many_tool_calls` -- 15+ tool calls in the session
-- `many_requests` -- 10+ API requests in the session
-- `no_cache` -- Zero cache read tokens with >10k input tokens
+**고비용 세션 원인:**
+- `expensive_model` -- 고가 모델 사용 (Opus, o3, GPT-5.4)
+- `many_tool_calls` -- 세션 내 15회 이상 도구 호출
+- `many_requests` -- 세션 내 10회 이상 API 요청
+- `no_cache` -- 입력 토큰 10K 이상인데 캐시 읽기 토큰 0
 
 ---
 
 ### GET /api/suggestions
 
-Returns AI-generated optimization suggestions based on usage metrics.
+사용량 지표를 기반으로 AI 생성 최적화 제안을 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| days | number | `7` | Number of days of data to analyze |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| days | number | `7` | 분석할 데이터 일수 |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -828,34 +828,34 @@ Returns AI-generated optimization suggestions based on usage metrics.
 }
 ```
 
-| Severity | Description |
-|----------|-------------|
-| `info` | Informational suggestion |
-| `warning` | Actionable optimization opportunity |
-| `critical` | Significant cost or performance issue |
+| 심각도 | 설명 |
+|--------|------|
+| `info` | 정보성 제안 |
+| `warning` | 실행 가능한 최적화 기회 |
+| `critical` | 중대한 비용 또는 성능 문제 |
 
-| Category | Description |
-|----------|-------------|
-| `cost` | Cost optimization |
-| `cache` | Cache utilization |
-| `tools` | Tool failure rate |
-| `performance` | Session performance |
+| 카테고리 | 설명 |
+|----------|------|
+| `cost` | 비용 최적화 |
+| `cache` | 캐시 활용 |
+| `tools` | 도구 실패율 |
+| `performance` | 세션 성능 |
 
 ---
 
-## 3. Configuration
+## 3. 설정
 
 ### GET /api/config
 
-Lists all detected agent configuration files, or reads the content of a specific file.
+감지된 모든 에이전트 설정 파일을 나열하거나, 특정 파일의 내용을 읽습니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| path | string | -- | File path to read (omit to list all files) |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| path | string | -- | 읽을 파일 경로 (생략하면 모든 파일 나열) |
 
-**Response (list mode -- no path parameter)**
+**응답 (목록 모드 -- path 파라미터 없음)**
 
 ```json
 {
@@ -876,15 +876,15 @@ Lists all detected agent configuration files, or reads the content of a specific
 }
 ```
 
-**Detected files:**
+**감지 파일:**
 
-| Agent | Project Files | User Files |
-|-------|--------------|------------|
+| 에이전트 | 프로젝트 파일 | 사용자 파일 |
+|----------|--------------|------------|
 | Claude | `CLAUDE.md`, `.claude/settings.json`, `.mcp.json`, `.claude/agents/*.md`, `.claude/skills/*/SKILL.md` | `~/.claude/settings.json` |
 | Codex | `codex.md`, `AGENTS.md` | `~/.codex/config.toml`, `~/.codex/instructions.md` |
 | Gemini | `GEMINI.md` | `~/.gemini/settings.json` |
 
-**Response (read mode -- with path parameter)**
+**응답 (읽기 모드 -- path 파라미터 포함)**
 
 ```json
 {
@@ -894,13 +894,13 @@ Lists all detected agent configuration files, or reads the content of a specific
 }
 ```
 
-**Error (404)**
+**오류 (404)**
 
 ```json
 { "error": "File not found", "content": "" }
 ```
 
-**Error (400)**
+**오류 (400)**
 
 ```json
 { "error": "Invalid file path" }
@@ -910,9 +910,9 @@ Lists all detected agent configuration files, or reads the content of a specific
 
 ### POST /api/config
 
-Writes content to a configuration file. Creates parent directories if needed.
+설정 파일에 내용을 씁니다. 필요 시 상위 디렉토리를 생성합니다.
 
-**Request Body**
+**요청 본문**
 
 ```json
 {
@@ -921,32 +921,32 @@ Writes content to a configuration file. Creates parent directories if needed.
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| path | string | Relative file path (project) or `~/...` (user) |
-| content | string | File content to write |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| path | string | 상대 파일 경로 (프로젝트) 또는 `~/...` (사용자) |
+| content | string | 작성할 파일 내용 |
 
-**Response**
+**응답**
 
 ```json
 { "success": true, "path": ".claude/settings.json" }
 ```
 
-Path traversal (`..`) is rejected with a 400 error.
+경로 탐색 (`..`)은 400 오류로 거부됩니다.
 
 ---
 
 ### GET /api/config-history
 
-Returns Git commit history for tracked agent configuration files.
+추적되는 에이전트 설정 파일의 Git 커밋 이력을 반환합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| days | number | `30` | Number of days of history to scan |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| days | number | `30` | 스캔할 이력 일수 |
 
-**Response**
+**응답**
 
 ```json
 [
@@ -965,16 +965,16 @@ Returns Git commit history for tracked agent configuration files.
 
 ### GET /api/config-history/compare
 
-Compares performance metrics before and after a configuration change date.
+설정 변경 날짜 전후의 성능 지표를 비교합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| date | string | **(required)** | Change date (`YYYY-MM-DD`) |
-| days | number | `7` | Number of days before/after to compare |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| date | string | **(필수)** | 변경 날짜 (`YYYY-MM-DD`) |
+| days | number | `7` | 비교할 전후 일수 |
 
-**Response**
+**응답**
 
 ```json
 {
@@ -993,7 +993,7 @@ Compares performance metrics before and after a configuration change date.
 }
 ```
 
-**Error (400)**
+**오류 (400)**
 
 ```json
 { "error": "date parameter is required" }
@@ -1003,9 +1003,9 @@ Compares performance metrics before and after a configuration change date.
 
 ### GET /api/settings/limits
 
-Returns per-agent cost limits.
+에이전트별 비용 한도를 반환합니다.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -1023,9 +1023,9 @@ Returns per-agent cost limits.
 
 ### POST /api/settings/limits
 
-Upserts per-agent cost limits (insert or update on conflict).
+에이전트별 비용 한도를 업서트합니다 (삽입 또는 충돌 시 업데이트).
 
-**Request Body**
+**요청 본문**
 
 ```json
 {
@@ -1044,7 +1044,7 @@ Upserts per-agent cost limits (insert or update on conflict).
 }
 ```
 
-**Response**
+**응답**
 
 ```json
 { "ok": true }
@@ -1054,35 +1054,35 @@ Upserts per-agent cost limits (insert or update on conflict).
 
 ### POST /api/pricing-sync
 
-Syncs token pricing data from the LiteLLM pricing database into the local `pricing_model` table.
+LiteLLM 가격 데이터베이스에서 토큰 가격 데이터를 로컬 `pricing_model` 테이블로 동기화합니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 { "synced": 15 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| synced | number | Number of pricing records updated |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| synced | number | 업데이트된 가격 레코드 수 |
 
 ---
 
-## 4. System
+## 4. 시스템
 
 ### GET /api/health
 
-Simple health check endpoint.
+간단한 헬스 체크 엔드포인트입니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -1095,33 +1095,33 @@ None.
 
 ### POST /api/seed
 
-Seeds the database with randomized test data for all three agents (Claude Code, Codex CLI, Gemini CLI) over the last 7 days. Includes API requests, user prompts, tool results, and orchestration tool details.
+최근 7일간 세 에이전트(Claude Code, Codex CLI, Gemini CLI)의 랜덤 테스트 데이터를 데이터베이스에 시드합니다. API 요청, 사용자 프롬프트, 도구 결과, 오케스트레이션 도구 상세를 포함합니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 { "seeded": 2500 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| seeded | number | Number of agent_log records created |
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| seeded | number | 생성된 agent_log 레코드 수 |
 
 ---
 
 ### GET /api/ingest-status
 
-Returns ingestion status per agent type -- last received timestamp and event counts.
+에이전트 유형별 수집 상태를 반환합니다 -- 마지막 수신 타임스탬프와 이벤트 수.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -1140,13 +1140,13 @@ None.
 
 ### GET /api/daily-costs
 
-Returns today's cost totals per agent type.
+에이전트 유형별 오늘의 비용 합계를 반환합니다.
 
-**Parameters**
+**파라미터**
 
-None.
+없음.
 
-**Response**
+**응답**
 
 ```json
 {
@@ -1167,21 +1167,21 @@ None.
 
 ### GET /api/screenshot
 
-Captures a screenshot of the dashboard using headless Chrome. Requires Google Chrome installed on macOS.
+헤드리스 Chrome을 사용하여 대시보드 스크린샷을 캡처합니다. macOS에 Google Chrome이 설치되어 있어야 합니다.
 
-**Parameters**
+**파라미터**
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| path | string | `"/"` | Dashboard page path to capture |
-| width | string | `"1280"` | Viewport width in pixels |
-| height | string | `"800"` | Viewport height in pixels |
+| 이름 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| path | string | `"/"` | 캡처할 대시보드 페이지 경로 |
+| width | string | `"1280"` | 뷰포트 너비 (픽셀) |
+| height | string | `"800"` | 뷰포트 높이 (픽셀) |
 
-**Response**
+**응답**
 
-Binary PNG image with `Content-Type: image/png`.
+`Content-Type: image/png`의 바이너리 PNG 이미지.
 
-**Error (500)**
+**오류 (500)**
 
 ```json
 { "error": "Chrome not found" }
@@ -1193,15 +1193,15 @@ Binary PNG image with `Content-Type: image/png`.
 
 ---
 
-## Common Error Responses
+## 공통 오류 응답
 
-Most endpoints return a 500 error on internal failures:
+대부분의 엔드포인트는 내부 오류 시 500을 반환합니다:
 
 ```json
 { "error": "Internal server error" }
 ```
 
-Ingestion endpoints (`/api/ingest`, `/v1/logs`, `/v1/metrics`) return 400 on parse errors:
+수집 엔드포인트(`/api/ingest`, `/v1/logs`, `/v1/metrics`)는 파싱 오류 시 400을 반환합니다:
 
 ```json
 { "error": "Error message describing the parse failure" }

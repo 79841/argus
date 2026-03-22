@@ -3,7 +3,18 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import remarkGfm from 'remark-gfm'
-import { getAllDocs, getAdjacentDocs, getDoc } from '@/lib/docs'
+import {
+  getAllDocs,
+  getAdjacentDocs,
+  getDoc,
+  getDocUrl,
+  getOtherLocale,
+  isValidLocale,
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+} from '@/lib/docs'
+import type { Locale } from '@/lib/docs'
 import { highlightCode } from '@/lib/highlight'
 import { HighlightedCode } from '@/components/highlighted-code'
 import { getMdxComponents } from '@/components/mdx-components'
@@ -12,22 +23,30 @@ import { extractTocItems } from '@/lib/toc-utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Props = {
-  params: Promise<{ slug: string }>
+  params: Promise<{ locale: string; slug: string }>
 }
 
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  return getAllDocs().map((doc) => ({ slug: doc.slug }))
+  return SUPPORTED_LOCALES.flatMap((locale) =>
+    getAllDocs(locale).map((doc) => ({ locale, slug: doc.slug })),
+  )
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const doc = getDoc(slug)
+  const { locale, slug } = await params
+  if (!isValidLocale(locale)) return {}
+  const doc = getDoc(slug, locale)
   if (!doc) return {}
   return {
     title: doc.title,
     description: doc.description,
+    alternates: {
+      languages: Object.fromEntries(
+        SUPPORTED_LOCALES.map((l) => [l, getDocUrl(slug, l)]),
+      ),
+    },
   }
 }
 
@@ -49,11 +68,12 @@ async function buildHighlightedPre(content: string) {
 }
 
 export default async function DocPage({ params }: Props) {
-  const { slug } = await params
-  const doc = getDoc(slug)
+  const { locale: rawLocale, slug } = await params
+  const locale: Locale = isValidLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
+  const doc = getDoc(slug, locale)
   if (!doc) notFound()
 
-  const { prev, next } = getAdjacentDocs(slug)
+  const { prev, next } = getAdjacentDocs(slug, locale)
   const tocItems = extractTocItems(doc.content)
   const highlighted = await buildHighlightedPre(doc.content)
 
@@ -72,13 +92,23 @@ export default async function DocPage({ params }: Props) {
     },
   }
 
+  const otherLocale = getOtherLocale(locale)
+
   return (
     <div className="flex gap-8">
       <article className="min-w-0 flex-1">
         <header className="mb-8">
-          <p className="mb-2 text-sm font-medium text-primary-600 dark:text-primary-400">
-            {doc.group}
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium text-primary-600 dark:text-primary-400">
+              {doc.group}
+            </p>
+            <Link
+              href={getDocUrl(slug, otherLocale)}
+              className="rounded-md border border-surface-200 px-2 py-1 text-xs font-medium text-surface-600 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
+            >
+              {LOCALE_LABELS[otherLocale]}
+            </Link>
+          </div>
           <h1 className="text-3xl font-bold tracking-tight text-surface-900 dark:text-surface-50">
             {doc.title}
           </h1>
@@ -99,7 +129,7 @@ export default async function DocPage({ params }: Props) {
           <nav className="mt-12 flex items-center justify-between border-t border-surface-200 pt-6 dark:border-surface-700">
             {prev ? (
               <Link
-                href={`/docs/${prev.slug}`}
+                href={getDocUrl(prev.slug, locale)}
                 className="group flex items-center gap-2 rounded-lg border border-surface-200 px-4 py-3 text-sm transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-surface-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/10"
               >
                 <ChevronLeft size={16} className="text-surface-400 group-hover:text-primary-600" />
@@ -114,7 +144,7 @@ export default async function DocPage({ params }: Props) {
 
             {next ? (
               <Link
-                href={`/docs/${next.slug}`}
+                href={getDocUrl(next.slug, locale)}
                 className="group flex items-center gap-2 rounded-lg border border-surface-200 px-4 py-3 text-sm transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-surface-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/10"
               >
                 <span className="text-right">

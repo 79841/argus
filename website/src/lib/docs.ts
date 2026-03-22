@@ -2,23 +2,22 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
-const DOCS_DIR = path.join(process.cwd(), "content/docs");
+export {
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+  LOCALE_LABELS,
+  isValidLocale,
+  getDocUrl,
+  getOtherLocale,
+} from "./docs-shared";
+export type { Locale, DocMeta, SidebarItem } from "./docs-shared";
+import type { Locale, DocMeta, SidebarItem } from "./docs-shared";
+import { DEFAULT_LOCALE } from "./docs-shared";
 
-export type DocMeta = {
-  slug: string;
-  title: string;
-  description?: string;
-  order: number;
-  group: string;
-};
+const DOCS_DIR = path.join(process.cwd(), "content/docs");
 
 export type Doc = DocMeta & {
   content: string;
-};
-
-type SidebarItem = {
-  label: string;
-  items: DocMeta[];
 };
 
 const DOC_CONFIG: Record<string, { group: string; order: number }> = {
@@ -33,15 +32,22 @@ const DOC_CONFIG: Record<string, { group: string; order: number }> = {
 
 const GROUP_ORDER = ["Getting Started", "Dashboard", "Reference"];
 
-export function getAllDocs(): DocMeta[] {
-  if (!fs.existsSync(DOCS_DIR)) return [];
+function getDocsDir(locale: Locale): string {
+  return path.join(DOCS_DIR, locale);
+}
 
-  const files = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith(".md"));
+export function getAllDocs(locale: Locale = DEFAULT_LOCALE): DocMeta[] {
+  let files: string[];
+  try {
+    files = fs.readdirSync(getDocsDir(locale)).filter((f) => f.endsWith(".md"));
+  } catch {
+    return [];
+  }
 
   return files
     .map((file) => {
       const slug = file.replace(/\.md$/, "");
-      const raw = fs.readFileSync(path.join(DOCS_DIR, file), "utf-8");
+      const raw = fs.readFileSync(path.join(getDocsDir(locale), file), "utf-8");
       const { data } = matter(raw);
       const config = DOC_CONFIG[slug] ?? { group: "Other", order: 99 };
 
@@ -56,11 +62,20 @@ export function getAllDocs(): DocMeta[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export function getDoc(slug: string): Doc | null {
-  const filePath = path.join(DOCS_DIR, `${slug}.md`);
-  if (!fs.existsSync(filePath)) return null;
+export function getDoc(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Doc | null {
+  let raw: string;
+  try {
+    raw = fs.readFileSync(
+      path.join(getDocsDir(locale), `${slug}.md`),
+      "utf-8",
+    );
+  } catch {
+    return null;
+  }
 
-  const raw = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(raw);
   const config = DOC_CONFIG[slug] ?? { group: "Other", order: 99 };
 
@@ -74,8 +89,8 @@ export function getDoc(slug: string): Doc | null {
   };
 }
 
-export function getSidebar(): SidebarItem[] {
-  const docs = getAllDocs();
+export function getSidebar(locale: Locale = DEFAULT_LOCALE): SidebarItem[] {
+  const docs = getAllDocs(locale);
   const groups = new Map<string, DocMeta[]>();
 
   for (const doc of docs) {
@@ -90,11 +105,14 @@ export function getSidebar(): SidebarItem[] {
   }));
 }
 
-export function getAdjacentDocs(slug: string): {
+export function getAdjacentDocs(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): {
   prev: DocMeta | null;
   next: DocMeta | null;
 } {
-  const docs = getAllDocs();
+  const docs = getAllDocs(locale);
   const idx = docs.findIndex((d) => d.slug === slug);
 
   return {
