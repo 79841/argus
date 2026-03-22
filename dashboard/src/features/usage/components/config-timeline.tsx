@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { ConfigChange } from '@/shared/lib/config-tracker'
-import type { ConfigCompareResult } from '@/shared/lib/queries'
+import type { ImpactCompareResult } from '@/shared/lib/queries'
 import { Badge } from '@/shared/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { DiffLine } from '@/shared/components/ui/diff-line'
@@ -36,7 +36,7 @@ const ChangeIndicator = ({ before, after, format }: { before: number; after: num
 }
 
 const ComparePanel = ({ date }: { date: string }) => {
-  const [data, setData] = useState<ConfigCompareResult | null>(null)
+  const [data, setData] = useState<ImpactCompareResult | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const ComparePanel = ({ date }: { date: string }) => {
   const metrics = [
     { label: 'Avg Cost / req', before: data.before.avg_cost, after: data.after.avg_cost, format: formatCostChart },
     { label: 'Cache Rate', before: data.before.cache_rate, after: data.after.cache_rate, format: formatPercent },
-    { label: 'Tool Fail Rate', before: data.before.tool_fail_rate, after: data.after.tool_fail_rate, format: formatPercent },
+    { label: 'Tool Success Rate', before: data.before.tool_success_rate, after: data.after.tool_success_rate, format: formatPercent },
   ]
 
   return (

@@ -15,6 +15,5 @@ export type {
   EfficiencyAgentRow,
   EfficiencyTrendPoint,
   EfficiencyTabProps,
-  ScopeType,
   ImpactTabProps,
 } from '@/features/usage/types/usage'
