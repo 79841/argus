@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const repoPath = path.resolve(process.cwd(), '..')
     const data = await getConfigHistory(repoPath, days)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/config-history] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

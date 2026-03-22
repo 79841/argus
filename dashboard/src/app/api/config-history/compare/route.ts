@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
 
     const data = await getConfigCompareStats(date, days)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/config-history/compare] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -221,7 +221,8 @@ export async function POST() {
   tx()
 
   return NextResponse.json({ seeded: count })
-  } catch {
+  } catch (error) {
+    console.error('[/api/seed] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

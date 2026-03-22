@@ -17,7 +17,8 @@ export async function GET(
     const projectDaily = daily.filter((d) => d.project_name === projectName)
 
     return NextResponse.json({ stats, daily: projectDaily })
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects/[name]] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

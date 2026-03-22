@@ -23,7 +23,8 @@ export async function GET(
 
     const events = await getSessionDetail(id)
     return NextResponse.json(events)
-  } catch {
+  } catch (error) {
+    console.error('[/api/sessions/[id]] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

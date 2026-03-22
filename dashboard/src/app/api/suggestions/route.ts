@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const suggestions = generateSuggestions(metrics)
 
     return NextResponse.json({ suggestions, metrics })
-  } catch {
+  } catch (error) {
+    console.error('[/api/suggestions] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

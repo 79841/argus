@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
       delta,
       agent_summaries: agentSummaries,
     })
-  } catch {
+  } catch (error) {
+    console.error('[/api/overview] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

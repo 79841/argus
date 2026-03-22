@@ -149,7 +149,8 @@ export async function GET(request: NextRequest) {
     const content = fs.readFileSync(fullPath, 'utf-8')
     const scope = filePath.startsWith('~/') ? 'user' : 'project'
     return NextResponse.json({ path: filePath, content, scope })
-  } catch {
+  } catch (error) {
+    console.error('[/api/config GET] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -188,7 +189,8 @@ export async function POST(request: NextRequest) {
 
     fs.writeFileSync(fullPath, content, 'utf-8')
     return NextResponse.json({ success: true, path: filePath })
-  } catch {
+  } catch (error) {
+    console.error('[/api/config POST] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

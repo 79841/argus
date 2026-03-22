@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
         body: text,
       })
       return ingestPOST(jsonRequest)
-    } catch {
+    } catch (jsonErr) {
+      console.error('[/v1/logs] error:', jsonErr)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   }

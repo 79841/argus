@@ -7,7 +7,8 @@ export async function GET() {
   try {
     const sessions = await getActiveSessions()
     return NextResponse.json({ sessions })
-  } catch {
+  } catch (error) {
+    console.error('[/api/sessions/active] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -13,7 +13,8 @@ export async function GET() {
     const db = getDb()
     const rows = db.prepare('SELECT agent_type, daily_cost_limit, monthly_cost_limit FROM agent_limits').all() as AgentLimit[]
     return NextResponse.json({ limits: rows })
-  } catch {
+  } catch (error) {
+    console.error('[/api/settings/limits GET] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (error) {
+    console.error('[/api/settings/limits POST] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

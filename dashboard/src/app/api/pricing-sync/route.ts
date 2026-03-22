@@ -9,7 +9,8 @@ export async function POST() {
     const db = getDb()
     const count = await syncPricingFromLiteLLM(db)
     return NextResponse.json({ synced: count })
-  } catch {
+  } catch (error) {
+    console.error('[/api/pricing-sync] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -241,7 +241,8 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ accepted: count })
-  } catch {
+  } catch (error) {
+    console.error('[/api/ingest] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

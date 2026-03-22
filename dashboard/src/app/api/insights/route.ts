@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({ highCostSessions, modelEfficiency, budgetStatus })
-  } catch {
+  } catch (error) {
+    console.error('[/api/insights] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

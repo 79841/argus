@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
 
     const tools = await getToolUsageStats(agentType, days, project, from, to)
     return NextResponse.json({ tools })
-  } catch {
+  } catch (error) {
+    console.error('[/api/tools] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

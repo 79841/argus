@@ -7,7 +7,8 @@ export async function GET() {
   try {
     const costs = await getAgentDailyCosts()
     return NextResponse.json({ costs })
-  } catch {
+  } catch (error) {
+    console.error('[/api/daily-costs] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

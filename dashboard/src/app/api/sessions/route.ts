@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const limit = parseLimit(sp.get('limit'), 100)
     const data = await getSessions(agentType, project, from, to, limit)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/sessions] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
           enums: String,
           defaults: true,
         }) as OtlpMetricsRequest
-      } catch {
+      } catch (protoErr) {
+        console.error('[/v1/metrics] protobuf decode error:', protoErr)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
       }
     }
@@ -219,7 +220,8 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ accepted: count })
-  } catch {
+  } catch (error) {
+    console.error('[/v1/metrics] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
