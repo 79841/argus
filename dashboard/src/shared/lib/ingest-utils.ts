@@ -113,6 +113,9 @@ export const normalizeModelId = (model: string): string => {
   return model.replace(/^models\//, '')
 }
 
+let _pricingStmt: ReturnType<Database.Database['prepare']> | null = null
+let _pricingDb: Database.Database | null = null
+
 export const calculateCost = (
   db: Database.Database,
   model: string,
@@ -124,11 +127,16 @@ export const calculateCost = (
   if (!model) return 0
   const normalized = normalizeModelId(model)
 
-  const pricing = db.prepare(
-    `SELECT input_per_mtok, output_per_mtok, cache_read_per_mtok FROM pricing_model
-     WHERE model_id = ? OR ? LIKE model_id || '-%'
-     ORDER BY length(model_id) DESC, effective_date DESC LIMIT 1`
-  ).get(normalized, normalized) as { input_per_mtok: number; output_per_mtok: number; cache_read_per_mtok: number } | undefined
+  if (!_pricingStmt || _pricingDb !== db) {
+    _pricingStmt = db.prepare(
+      `SELECT input_per_mtok, output_per_mtok, cache_read_per_mtok FROM pricing_model
+       WHERE model_id = ? OR ? LIKE model_id || '-%'
+       ORDER BY length(model_id) DESC, effective_date DESC LIMIT 1`
+    )
+    _pricingDb = db
+  }
+
+  const pricing = _pricingStmt.get(normalized, normalized) as { input_per_mtok: number; output_per_mtok: number; cache_read_per_mtok: number } | undefined
 
   if (!pricing) return 0
   return (

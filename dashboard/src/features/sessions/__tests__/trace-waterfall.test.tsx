@@ -3,11 +3,15 @@ import { describe, it, expect, vi } from 'vitest'
 import { TraceWaterfall } from '@/features/sessions/components/trace-waterfall'
 import type { SessionDetailEvent } from '@/shared/lib/queries'
 
-vi.mock('@/shared/lib/format', () => ({
-  formatDuration: (v: number) => `${v}ms`,
-  formatTime: (v: string) => v,
-  shortenModel: (v: string) => v,
-}))
+vi.mock('@/shared/lib/format', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  return {
+    ...actual,
+    formatDuration: (v: number) => `${v}ms`,
+    formatTime: (v: string) => v,
+    shortenModel: (v: string) => v,
+  }
+})
 
 vi.mock('@/lib/trace-waterfall', () => ({
   groupEventsForWaterfall: (events: SessionDetailEvent[]) => {

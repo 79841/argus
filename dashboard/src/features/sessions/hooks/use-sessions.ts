@@ -2,23 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { sessionsService } from '@/shared/services'
+import { todayISO, daysAgoISO } from '@/shared/lib/format'
 import type { SessionRow, SessionDetailEvent } from '@/shared/lib/queries'
 import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/components/top-bar-context'
 import type { SortOption } from '@/shared/types/common'
-
-const todayISO = () => new Date().toISOString().slice(0, 10)
-const daysAgoISO = (days: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (days - 1))
-  return d.toISOString().slice(0, 10)
-}
-
-const computeCacheRate = (s: SessionRow): number => {
-  const total = s.input_tokens + s.cache_read_tokens
-  if (total === 0) return 0
-  return Math.round((s.cache_read_tokens / total) * 100)
-}
 
 type UseSessionsReturn = {
   sessions: SessionRow[]
@@ -40,7 +28,6 @@ type UseSessionsReturn = {
   setSearch: (v: string) => void
   setSortBy: (v: SortOption) => void
   handleSelect: (sessionId: string) => void
-  computeCacheRate: (s: SessionRow) => number
 }
 
 export const useSessions = (): UseSessionsReturn => {
@@ -126,6 +113,5 @@ export const useSessions = (): UseSessionsReturn => {
     setSearch,
     setSortBy,
     handleSelect,
-    computeCacheRate,
   }
 }

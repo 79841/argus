@@ -9,11 +9,15 @@ vi.mock('@/shared/lib/data-client', () => ({
   },
 }))
 
-vi.mock('@/shared/lib/format', () => ({
-  formatCost: (v: number) => `$${v.toFixed(4)}`,
-}))
+vi.mock('@/shared/lib/format', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  return {
+    ...actual,
+    formatCost: (v: number) => `$${v.toFixed(4)}`,
+  }
+})
 
-vi.mock('@/components/ui/tooltip', () => ({
+vi.mock('@/shared/components/ui/tooltip', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   TooltipTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
@@ -23,7 +27,7 @@ vi.mock('@/components/ui/tooltip', () => ({
   ),
 }))
 
-vi.mock('@/components/ui/agent-dot', () => ({
+vi.mock('@/shared/components/ui/agent-dot', () => ({
   AgentDot: ({ agent, size, pulse }: { agent: string; size?: string; pulse?: boolean }) => (
     <span data-testid="agent-dot" data-agent={agent} />
   ),

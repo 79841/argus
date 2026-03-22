@@ -54,6 +54,9 @@ export const SERIES_COLORS = [
   'oklch(0.45 0 0)',
   'oklch(0.75 0 0)',
   'oklch(0.35 0 0)',
+  'oklch(0.60 0 0)',
+  'oklch(0.70 0 0)',
+  'oklch(0.40 0 0)',
 ] as const
 
 export const TOKEN_COLORS = {

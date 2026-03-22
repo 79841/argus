@@ -36,10 +36,20 @@ export const formatTime = (ts: string): string => {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-/**
- * ISO timestamp를 "Xs ago", "Xm ago", "Xh ago", "Xd ago" 형태로 변환한다.
- * sessions 페이지처럼 i18n key를 받는 오버로드도 지원한다.
- */
+export const todayISO = (): string => new Date().toISOString().slice(0, 10)
+
+export const daysAgoISO = (days: number): string => {
+  const d = new Date()
+  d.setDate(d.getDate() - (days - 1))
+  return d.toISOString().slice(0, 10)
+}
+
+export const computeCacheRate = (inputTokens: number, cacheReadTokens: number): number => {
+  const total = inputTokens + cacheReadTokens
+  if (total === 0) return 0
+  return (cacheReadTokens / total) * 100
+}
+
 export const formatRelativeTime = (iso: string, tFn?: (key: string) => string): string => {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
 

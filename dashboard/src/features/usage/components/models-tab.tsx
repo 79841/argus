@@ -7,22 +7,11 @@ import {
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
-import { CHART_THEME } from '@/shared/lib/chart-theme'
+import { CHART_THEME, SERIES_COLORS } from '@/shared/lib/chart-theme'
 import { formatCostChart } from '@/shared/lib/format'
 import { useModelsData } from '../hooks/use-models-data'
 import type { AgentType } from '@/shared/lib/agents'
 import type { ModelsTabProps } from '@/features/usage/types/usage'
-
-const SERIES_PIE_COLORS = [
-  'oklch(0.55 0 0)',
-  'oklch(0.65 0 0)',
-  'oklch(0.45 0 0)',
-  'oklch(0.75 0 0)',
-  'oklch(0.35 0 0)',
-  'oklch(0.60 0 0)',
-  'oklch(0.70 0 0)',
-  'oklch(0.40 0 0)',
-]
 
 const modelColumns = [
   { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
@@ -43,7 +32,7 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
   const pieData = models.slice(0, 8).map((m, i) => ({
     name: m.model,
     value: m.cost,
-    color: SERIES_PIE_COLORS[i % SERIES_PIE_COLORS.length],
+    color: SERIES_COLORS[i % SERIES_COLORS.length],
   }))
 
   return (
@@ -89,7 +78,7 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
               <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [Number(v).toLocaleString(), 'Requests']} />
               <Bar dataKey="request_count" name="Requests" radius={[0, 4, 4, 0]}>
                 {models.slice(0, 8).map((_, i) => (
-                  <Cell key={i} fill={SERIES_PIE_COLORS[i % SERIES_PIE_COLORS.length]} />
+                  <Cell key={i} fill={SERIES_COLORS[i % SERIES_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>

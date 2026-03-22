@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { sessionsService } from '@/shared/services'
+import { computeCacheRate } from '@/shared/lib/format'
 import type { SessionDetailEvent, SessionSummary } from '@/shared/lib/queries'
 
 export type PromptGroup = {
@@ -83,11 +84,7 @@ export const useSessionDetail = (sessionId: string): UseSessionDetailReturn => {
   }))
 
   const cacheRate = summary
-    ? Math.round(
-        (summary.input_tokens + summary.cache_read_tokens) > 0
-          ? (summary.cache_read_tokens / (summary.input_tokens + summary.cache_read_tokens)) * 100
-          : 0
-      )
+    ? Math.round(computeCacheRate(summary.input_tokens, summary.cache_read_tokens))
     : 0
 
   return {

@@ -9,12 +9,11 @@ import { ChartCard } from '@/shared/components/ui/chart-card'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { AGENTS } from '@/shared/lib/agents'
+import { AGENT_TYPES } from '@/shared/lib/constants'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { useEfficiencyData } from '../hooks/use-efficiency-data'
 import type { AgentType } from '@/shared/lib/agents'
 import type { EfficiencyTabProps } from '@/features/usage/types/usage'
-
-const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
 
 const efficiencyColumns = [
   {

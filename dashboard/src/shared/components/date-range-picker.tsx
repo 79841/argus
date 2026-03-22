@@ -2,18 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import type { DateRange } from '@/shared/components/top-bar-context'
+import { todayISO, daysAgoISO } from '@/shared/lib/format'
 
 type Preset = {
   label: string
   getRange: () => DateRange
-}
-
-const todayISO = () => new Date().toISOString().slice(0, 10)
-
-const daysAgoISO = (days: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (days - 1))
-  return d.toISOString().slice(0, 10)
 }
 
 const yesterdayISO = () => {

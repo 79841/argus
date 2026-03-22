@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react'
 import { dailyService, overviewService, projectsService } from '@/shared/services'
 import { AGENTS } from '@/shared/lib/agents'
+import { AGENT_TYPES } from '@/shared/lib/constants'
 import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/types/common'
 import type { DailyStats, OverviewStats } from '@/shared/lib/queries'
 import type { DailyCostPoint, AgentCostPoint, ProjectCostPoint } from '@/features/usage/types/usage'
-
-const AGENT_TYPES: AgentType[] = ['claude', 'codex', 'gemini']
 
 type UseCostDataParams = {
   agentType: AgentType

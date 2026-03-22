@@ -18,14 +18,9 @@ export const useAgentConnections = () => {
   }
 
   useEffect(() => {
-    settingsService.getSetupStatus()
-      .then((data) => {
-        setAgents(data.agents)
-        const connected = data.agents.find((a) => a.configured && a.endpoint)
-        if (connected?.endpoint) setEndpoint(connected.endpoint)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    refreshStatus()
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const handleConnect = async (agentTypes: string[]) => {

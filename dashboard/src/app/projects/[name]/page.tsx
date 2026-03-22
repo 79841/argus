@@ -10,11 +10,8 @@ import { DataTable } from '@/shared/components/ui/data-table'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { useLocale } from '@/shared/lib/i18n'
 import type { AgentType } from '@/shared/lib/agents'
-import { formatCost, formatCostDetail } from '@/shared/lib/format'
+import { formatCost, formatCostDetail, formatTokens } from '@/shared/lib/format'
 import { useProjectDetail, AgentDistChart, DailyCostChart } from '@/features/projects'
-
-const formatTokens = (v: number) =>
-  v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v)
 const formatPct = (v: number) => `${(v * 100).toFixed(1)}%`
 const formatDate = (iso: string) => {
   if (!iso) return '—'

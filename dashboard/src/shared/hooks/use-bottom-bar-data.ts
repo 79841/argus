@@ -30,23 +30,22 @@ export const useBottomBarData = (): UseBottomBarDataReturn => {
   const [dailyCosts, setDailyCosts] = useState<AgentDailyCost[]>([])
 
   useEffect(() => {
-    overviewService.getIngestStatus()
-      .then((data) => setAgents((data.agents ?? []) as AgentStatus[]))
-      .catch(() => {})
-    overviewService.getOverview({ agent_type: 'all' })
-      .then((data) => {
+    Promise.allSettled([
+      overviewService.getIngestStatus(),
+      overviewService.getOverview({ agent_type: 'all' }),
+      settingsService.getLimits(),
+      overviewService.getDailyCosts(),
+    ]).then(([ingestRes, overviewRes, limitsRes, costsRes]) => {
+      if (ingestRes.status === 'fulfilled') setAgents((ingestRes.value.agents ?? []) as AgentStatus[])
+      if (overviewRes.status === 'fulfilled') {
         setTotals({
-          total_cost: data.all_time_cost ?? 0,
-          total_tokens: data.all_time_tokens ?? 0,
+          total_cost: overviewRes.value.all_time_cost ?? 0,
+          total_tokens: overviewRes.value.all_time_tokens ?? 0,
         })
-      })
-      .catch(() => {})
-    settingsService.getLimits()
-      .then((data) => setLimits((data.limits ?? []) as AgentLimit[]))
-      .catch(() => {})
-    overviewService.getDailyCosts()
-      .then((data) => setDailyCosts((data.costs ?? []) as AgentDailyCost[]))
-      .catch(() => {})
+      }
+      if (limitsRes.status === 'fulfilled') setLimits((limitsRes.value.limits ?? []) as AgentLimit[])
+      if (costsRes.status === 'fulfilled') setDailyCosts((costsRes.value.costs ?? []) as AgentDailyCost[])
+    })
   }, [])
 
   useEffect(() => {

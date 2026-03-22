@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { efficiencyService } from '@/shared/services'
 import { calculateEfficiency } from '@/features/usage/lib/efficiency'
+import { computeCacheRate } from '@/shared/lib/format'
 import type { DateRange } from '@/shared/types/common'
 import type { EfficiencyRow, EfficiencyComparisonRow } from '@/shared/lib/queries'
 import type { EfficiencyAgentRow, EfficiencyTrendPoint } from '@/features/usage/types/usage'
@@ -55,9 +56,7 @@ export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParam
             costUsd: cur.cost,
             totalDurationMs: cur.total_duration_ms,
           })
-          const cacheRate = cur.total_cache_read + cur.total_input > 0
-            ? (cur.total_cache_read / (cur.total_cache_read + cur.total_input)) * 100
-            : 0
+          const cacheRate = computeCacheRate(cur.total_input, cur.total_cache_read)
           return {
             agent_type: cur.agent_type,
             cache_rate: cacheRate,
@@ -84,7 +83,7 @@ export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParam
           totalDurationMs: totalDuration,
         })
         setOverall({
-          cacheRate: (totalCacheRead + totalInput) > 0 ? (totalCacheRead / (totalCacheRead + totalInput)) * 100 : 0,
+          cacheRate: computeCacheRate(totalInput, totalCacheRead),
           avgDuration: effAll.avgDurationMs / 1000,
           score: effAll.score,
         })

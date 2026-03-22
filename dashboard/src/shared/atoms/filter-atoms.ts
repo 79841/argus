@@ -1,16 +1,9 @@
 import { atom } from 'jotai'
 import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/types/common'
+import { todayISO, daysAgoISO } from '@/shared/lib/format'
 
 export type { DateRange }
-
-const todayISO = () => new Date().toISOString().slice(0, 10)
-
-const daysAgoISO = (days: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (days - 1))
-  return d.toISOString().slice(0, 10)
-}
 
 const defaultDateRange: DateRange = {
   from: daysAgoISO(7),

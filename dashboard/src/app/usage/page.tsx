@@ -6,16 +6,10 @@ import { AgentFilter } from '@/shared/components/agent-filter'
 import { ProjectFilter } from '@/shared/components/project-filter'
 import { DateRangePicker } from '@/shared/components/date-range-picker'
 import { FilterBar } from '@/shared/components/filter-bar'
+import { todayISO, daysAgoISO } from '@/shared/lib/format'
 import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/components/top-bar-context'
 import { CostTab, TokensTab, ModelsTab, EfficiencyTab, ImpactTab } from '@/features/usage'
-
-const todayISO = () => new Date().toISOString().slice(0, 10)
-const daysAgoISO = (days: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (days - 1))
-  return d.toISOString().slice(0, 10)
-}
 
 export default function UsagePage() {
   const [agentType, setAgentType] = useState<AgentType>('all')

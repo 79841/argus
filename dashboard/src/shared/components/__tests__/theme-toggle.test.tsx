@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/shared/components/theme-toggle'
 const mockSetTheme = vi.fn()
 let mockTheme = 'system'
 
-vi.mock('@/components/theme-provider', () => ({
+vi.mock('@/shared/components/theme-provider', () => ({
   useTheme: () => ({
     theme: mockTheme,
     setTheme: mockSetTheme,

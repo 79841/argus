@@ -101,8 +101,10 @@ export const getOverviewDelta = (agentType: string, project: string = 'all'): Ov
   `
 
   type DayRow = { total_sessions: number; total_requests: number; total_cost: number; cache_hit_rate: number }
-  const today = db.prepare(query).get('0 days', ...agentParams(agentType), ...projectParams(project)) as DayRow | undefined
-  const yesterday = db.prepare(query).get('-1 day', ...agentParams(agentType), ...projectParams(project)) as DayRow | undefined
+  const stmt = db.prepare(query)
+  const params = [...agentParams(agentType), ...projectParams(project)]
+  const today = stmt.get('0 days', ...params) as DayRow | undefined
+  const yesterday = stmt.get('-1 day', ...params) as DayRow | undefined
 
   const calcDelta = (curr: number, prev: number): number | null => {
     if (prev === 0) return null

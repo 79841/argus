@@ -5,15 +5,8 @@ import type { AgentType } from '@/shared/lib/agents'
 import { cn } from '@/shared/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/tooltip'
 import { AgentDot } from '@/shared/components/ui/agent-dot'
-import { formatCost } from '@/shared/lib/format'
-import { formatRelativeTime } from '@/shared/lib/format'
+import { formatCost, formatRelativeTime, formatTokens } from '@/shared/lib/format'
 import { useBottomBarData } from '@/shared/hooks/use-bottom-bar-data'
-
-const formatTokensShort = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return String(value)
-}
 
 const getStatusDot = (iso: string | null): string => {
   if (!iso) return 'bg-gray-300 dark:bg-gray-600'
@@ -121,7 +114,7 @@ export const BottomBar = () => {
       )}
 
       <div className="ml-auto flex items-center gap-3">
-        <span>Total: {formatCost(totals.total_cost)} / {formatTokensShort(totals.total_tokens)} tokens</span>
+        <span>Total: {formatCost(totals.total_cost)} / {formatTokens(totals.total_tokens)} tokens</span>
       </div>
     </footer>
   )

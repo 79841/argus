@@ -9,7 +9,7 @@ import { EmptyState } from '@/shared/components/ui/empty-state'
 import { SessionDetail } from '@/features/sessions/components/session-detail'
 import type { SortOption } from '@/shared/types/common'
 import { useLocale } from '@/shared/lib/i18n'
-import { formatCost } from '@/shared/lib/format'
+import { formatCost, computeCacheRate } from '@/shared/lib/format'
 import { useSessions, SessionListItem } from '@/features/sessions'
 
 export default function SessionsPage() {
@@ -33,7 +33,6 @@ export default function SessionsPage() {
     setSearch,
     setSortBy,
     handleSelect,
-    computeCacheRate,
   } = useSessions()
 
   return (
@@ -90,7 +89,7 @@ export default function SessionsPage() {
                   key={s.session_id}
                   session={s}
                   selected={selectedId === s.session_id}
-                  cacheRate={computeCacheRate(s)}
+                  cacheRate={Math.round(computeCacheRate(s.input_tokens, s.cache_read_tokens))}
                   onSelect={handleSelect}
                 />
               ))

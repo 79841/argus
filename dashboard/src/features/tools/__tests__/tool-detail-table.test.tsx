@@ -3,10 +3,14 @@ import { describe, it, expect, vi } from 'vitest'
 import { ToolDetailTable } from '@/features/tools/components/tool-detail-table'
 import type { ToolDetailRow } from '@/shared/lib/queries'
 
-vi.mock('@/shared/lib/format', () => ({
-  formatTokens: (v: number) => `${v}tok`,
-  formatDuration: (v: number) => `${v}ms`,
-}))
+vi.mock('@/shared/lib/format', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  return {
+    ...actual,
+    formatTokens: (v: number) => `${v}tok`,
+    formatDuration: (v: number) => `${v}ms`,
+  }
+})
 
 const makeRow = (overrides: Partial<ToolDetailRow> = {}): ToolDetailRow => ({
   tool_name: 'test_tool',

@@ -20,7 +20,7 @@ vi.mock('@/shared/lib/i18n', () => ({
   }),
 }))
 
-vi.mock('@/components/ui/agent-badge', () => ({
+vi.mock('@/shared/components/ui/agent-badge', () => ({
   AgentBadge: ({ agent }: { agent: string }) => <span data-testid="agent-badge">{agent}</span>,
 }))
 
@@ -107,9 +107,9 @@ describe('SessionDetail', () => {
       makeEvent({ prompt_id: 'p2', event_name: 'tool_result', tool_name: 'bash', tool_success: 1 }),
     ]
     render(<SessionDetail session={session} events={events} />)
-    // 2개 그룹 → #1, #2
-    expect(screen.getByText('#1')).toBeInTheDocument()
-    expect(screen.getByText('#2')).toBeInTheDocument()
+    // 2개 그룹 → promptNum + 1, promptNum + 2
+    expect(screen.getByText('sessions.detail.promptNum1')).toBeInTheDocument()
+    expect(screen.getByText('sessions.detail.promptNum2')).toBeInTheDocument()
   })
 
   it('user_prompt 이벤트에 body를 표시한다', () => {

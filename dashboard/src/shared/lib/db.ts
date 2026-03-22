@@ -178,10 +178,9 @@ const migrate = (db: Database.Database) => {
 }
 
 export const seedPricing = (db: Database.Database) => {
-  const upsert = db.prepare(
+  const insert = db.prepare(
     'INSERT OR IGNORE INTO pricing_model (model_id, agent_type, effective_date, input_per_mtok, output_per_mtok, cache_read_per_mtok, cache_creation_per_mtok) VALUES (?, ?, ?, ?, ?, ?, ?)'
   )
-  const insert = upsert
 
   const pricing = [
     ['claude-sonnet-4-20250514', 'claude', '2025-05-14', 3.0, 15.0, 0.3, 3.75],
