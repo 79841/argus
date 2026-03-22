@@ -6,6 +6,7 @@ import type { ConfigChange } from '@/shared/lib/config-tracker'
 import type { ImpactCompareResult, DailyMetricPoint } from '@/shared/lib/queries'
 import type { DateRange } from '@/shared/types/common'
 import type { CategoryType } from '@/features/usage/types/usage'
+import type { AgentType } from '@/shared/lib/agents'
 
 const TOOLS_FILES = ['.mcp.json', '.claude/settings.json']
 
@@ -20,6 +21,8 @@ export type EnrichedChange = ConfigChange & {
 }
 
 type UseImpactDataParams = {
+  agentType: AgentType
+  project: string
   dateRange: DateRange
   category: CategoryType
   compareDays: number
@@ -31,7 +34,7 @@ type UseImpactDataResult = {
   loading: boolean
 }
 
-export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDataParams): UseImpactDataResult => {
+export const useImpactData = ({ agentType, project, dateRange, category, compareDays }: UseImpactDataParams): UseImpactDataResult => {
   const [changes, setChanges] = useState<EnrichedChange[]>([])
   const [dailyMetrics, setDailyMetrics] = useState<DailyMetricPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,7 +46,7 @@ export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDat
       try {
         const [configHistory, metrics] = await Promise.all([
           configService.getConfigHistory({ days: 90 }),
-          configService.getDailyMetrics({ from: dateRange.from, to: dateRange.to }),
+          configService.getDailyMetrics({ from: dateRange.from, to: dateRange.to, agent_type: agentType, project }),
         ])
 
         setDailyMetrics(metrics)
@@ -68,7 +71,7 @@ export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDat
         }
 
         const dates = dateFiltered.map(c => c.date)
-        const impacts = await configService.getConfigCompareBatch(dates, compareDays)
+        const impacts = await configService.getConfigCompareBatch(dates, compareDays, agentType, project)
 
         const enriched: EnrichedChange[] = dateFiltered.map((c, i) => ({
           ...c,
@@ -85,7 +88,7 @@ export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDat
     }
 
     fetchAll()
-  }, [dateRange, category, compareDays])
+  }, [agentType, project, dateRange, category, compareDays])
 
   return { changes, dailyMetrics, loading }
 }

@@ -29,8 +29,8 @@ const efficiencyColumns = [
   { key: 'score', label: 'Score', align: 'right' as const, format: (v: unknown) => <span className="font-semibold">{String(v)}</span> },
 ]
 
-export const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
-  const { agentRows, trend, overall } = useEfficiencyData({ project, dateRange })
+export const EfficiencyTab = ({ agentType, project, dateRange }: EfficiencyTabProps) => {
+  const { agentRows, trend, overall } = useEfficiencyData({ agentType, project, dateRange })
 
   return (
     <div className="space-y-4">

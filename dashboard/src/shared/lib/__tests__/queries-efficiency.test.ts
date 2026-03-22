@@ -30,7 +30,7 @@ describe('getEfficiencyStats', () => {
     insertApiRequest(testDb, { timestamp: '2026-03-14T11:00:00Z', agent_type: 'claude', input_tokens: 800, cache_read_tokens: 200, cost_usd: 0.3, duration_ms: 1500 })
     insertApiRequest(testDb, { timestamp: '2026-03-14T10:00:00Z', agent_type: 'codex', input_tokens: 500, cache_read_tokens: 0, cost_usd: 0.1, duration_ms: 1000 })
 
-    const stats = getEfficiencyStats(30)
+    const stats = getEfficiencyStats('all', 30)
     const claudeMar14 = stats.find(s => s.agent_type === 'claude' && s.date === '2026-03-14')
     expect(claudeMar14).toBeDefined()
     expect(claudeMar14!.total_input).toBe(1800)
@@ -42,7 +42,7 @@ describe('getEfficiencyStats', () => {
     // 1000 input + 500 cache_read → hit_rate = 500/1500
     insertApiRequest(testDb, { timestamp: '2026-03-14T10:00:00Z', input_tokens: 1000, cache_read_tokens: 500 })
 
-    const stats = getEfficiencyStats(30)
+    const stats = getEfficiencyStats('all', 30)
     expect(stats).toHaveLength(1)
     expect(stats[0].cache_hit_rate).toBeCloseTo(500 / 1500, 5)
   })
@@ -52,7 +52,7 @@ describe('getEfficiencyStats', () => {
     insertApiRequest(testDb, { timestamp: '2026-03-15T10:00:00Z' })
     insertApiRequest(testDb, { timestamp: '2026-03-20T10:00:00Z' })
 
-    const stats = getEfficiencyStats(30, 'all', '2026-03-13', '2026-03-17')
+    const stats = getEfficiencyStats('all', 30, 'all', '2026-03-13', '2026-03-17')
     expect(stats).toHaveLength(1)
     expect(stats[0].date).toBe('2026-03-15')
   })
@@ -61,7 +61,7 @@ describe('getEfficiencyStats', () => {
     insertApiRequest(testDb, { timestamp: '2026-03-16T10:00:00Z' })
     insertApiRequest(testDb, { timestamp: '2026-03-14T10:00:00Z' })
 
-    const stats = getEfficiencyStats(30)
+    const stats = getEfficiencyStats('all', 30)
     expect(stats[0].date <= stats[stats.length - 1].date).toBe(true)
   })
 })
@@ -71,7 +71,7 @@ describe('getEfficiencyComparison', () => {
     insertApiRequest(testDb, { timestamp: '2026-03-07T10:00:00Z', agent_type: 'claude', cost_usd: 2.0 })
     insertApiRequest(testDb, { timestamp: '2026-03-14T10:00:00Z', agent_type: 'claude', cost_usd: 1.0 })
 
-    const result = getEfficiencyComparison(7)
+    const result = getEfficiencyComparison('all', 7)
     expect(result).toHaveProperty('current')
     expect(result).toHaveProperty('previous')
     expect(Array.isArray(result.current)).toBe(true)
@@ -82,13 +82,13 @@ describe('getEfficiencyComparison', () => {
     insertApiRequest(testDb, { timestamp: '2026-03-01T10:00:00Z', cost_usd: 3.0 })
     insertApiRequest(testDb, { timestamp: '2026-03-10T10:00:00Z', cost_usd: 1.0 })
 
-    const result = getEfficiencyComparison(7, 'all', '2026-03-08', '2026-03-14')
+    const result = getEfficiencyComparison('all', 7, 'all', '2026-03-08', '2026-03-14')
     expect(result.current).toBeDefined()
     expect(result.previous).toBeDefined()
   })
 
   it('빈 DB에서 빈 배열을 반환한다', () => {
-    const result = getEfficiencyComparison(7)
+    const result = getEfficiencyComparison('all', 7)
     expect(result.current).toHaveLength(0)
     expect(result.previous).toHaveLength(0)
   })

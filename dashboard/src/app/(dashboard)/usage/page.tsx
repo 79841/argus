@@ -46,10 +46,10 @@ export default function UsagePage() {
             <ModelsTab agentType={agentType} project={project} dateRange={dateRange} />
           </TabsContent>
           <TabsContent value="efficiency">
-            <EfficiencyTab project={project} dateRange={dateRange} />
+            <EfficiencyTab agentType={agentType} project={project} dateRange={dateRange} />
           </TabsContent>
           <TabsContent value="impact">
-            <ImpactTab dateRange={dateRange} />
+            <ImpactTab agentType={agentType} project={project} dateRange={dateRange} />
           </TabsContent>
         </Tabs>
       </div>
