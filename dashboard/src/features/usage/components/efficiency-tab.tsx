@@ -15,6 +15,8 @@ import { useEfficiencyData } from '../hooks/use-efficiency-data'
 import type { AgentType } from '@/shared/lib/agents'
 import type { EfficiencyTabProps } from '@/features/usage/types/usage'
 
+const DOT_CONFIG = { r: 3 } as const
+
 const efficiencyColumns = [
   {
     key: 'agent_type',
@@ -47,7 +49,7 @@ export const EfficiencyTab = ({ project, dateRange }: EfficiencyTabProps) => {
             <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} />
             <Legend {...CHART_THEME.legend} />
             {AGENT_TYPES.map(id => (
-              <Line key={id} type="monotone" dataKey={id} stroke={AGENT_CHART_COLORS[id]} dot={false} name={AGENTS[id].name} />
+              <Line key={id} type="monotone" dataKey={id} stroke={AGENT_CHART_COLORS[id]} dot={DOT_CONFIG} connectNulls name={AGENTS[id].name} strokeWidth={2} />
             ))}
           </LineChart>
         </ResponsiveContainer>

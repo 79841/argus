@@ -46,15 +46,22 @@ export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParam
           trendMap[row.date][row.agent_type] = eff.score
         }
 
-        const filled: EfficiencyTrendPoint[] = []
-        const cur = new Date(dateRange.from)
-        const end = new Date(dateRange.to)
-        while (cur <= end) {
-          const key = cur.toISOString().slice(0, 10)
-          filled.push(trendMap[key] ?? { date: key })
-          cur.setDate(cur.getDate() + 1)
+        const dates = Object.keys(trendMap)
+        if (dates.length === 0) {
+          setTrend([])
+        } else {
+          const minDate = dates.reduce((a, b) => a < b ? a : b)
+          const maxDate = dates.reduce((a, b) => a > b ? a : b)
+          const filled: EfficiencyTrendPoint[] = []
+          const cur = new Date(minDate)
+          const end = new Date(maxDate)
+          while (cur <= end) {
+            const key = cur.toISOString().slice(0, 10)
+            filled.push(trendMap[key] ?? { date: key })
+            cur.setDate(cur.getDate() + 1)
+          }
+          setTrend(filled)
         }
-        setTrend(filled)
 
         const rows = comparison.current.map(cur => {
           const eff = calculateEfficiency({
