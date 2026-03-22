@@ -33,7 +33,7 @@ const AGENT_CONFIGS: Record<string, AgentConfig> = {
   },
   codex: {
     command: 'codex',
-    args: (baseUrl) => ['exec', '--config', 'otel.exporter=otlp-http', '--config', `otel.endpoint="${baseUrl}"`, 'say "e2e test ping" and nothing else'],
+    args: (baseUrl) => ['exec', '--config', `otel.exporter.otlp-http.endpoint="${baseUrl}/v1/logs"`, '--config', 'otel.exporter.otlp-http.protocol="json"', 'say "e2e test ping" and nothing else'],
     env: (baseUrl) => ({
       OTEL_EXPORTER_OTLP_PROTOCOL: 'http/json',
       OTEL_EXPORTER_OTLP_ENDPOINT: baseUrl,
