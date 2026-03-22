@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { sessionsService } from '@/shared/services'
 import { computeCacheRate } from '@/shared/lib/format'
 import type { SessionDetailEvent, SessionSummary } from '@/shared/lib/queries'
@@ -75,13 +75,13 @@ export const useSessionDetail = (sessionId: string): UseSessionDetailReturn => {
       })
   }, [sessionId])
 
-  const promptGroups = groupByPrompt(events)
+  const promptGroups = useMemo(() => groupByPrompt(events), [events])
 
-  const costChartData = promptGroups.map((g, i) => ({
+  const costChartData = useMemo(() => promptGroups.map((g, i) => ({
     label: `#${i + 1}`,
     cost: g.cost,
     toolCount: g.toolCount,
-  }))
+  })), [promptGroups])
 
   const cacheRate = summary
     ? Math.round(computeCacheRate(summary.input_tokens, summary.cache_read_tokens))

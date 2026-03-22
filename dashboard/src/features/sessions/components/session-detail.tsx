@@ -58,7 +58,7 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
   const [activeTab, setActiveTab] = useState('list')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const summary = computeSummary(events, session)
-  const rawGroups = groupByPrompt(events)
+  const rawGroups = useMemo(() => groupByPrompt(events), [events])
   const promptGroups = useMemo(
     () => sortOrder === 'asc' ? rawGroups : [...rawGroups].reverse(),
     [rawGroups, sortOrder],
