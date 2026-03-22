@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { scanRegisteredTools } from '@/shared/lib/registered-tools'
+import { serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +9,6 @@ export async function GET() {
     const tools = scanRegisteredTools()
     return NextResponse.json({ tools })
   } catch (error) {
-    console.error('[/api/tools/registered] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/tools/registered', error)
   }
 }

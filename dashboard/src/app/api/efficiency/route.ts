@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEfficiencyStats, getEfficiencyComparison } from '@/shared/lib/queries'
-import { parseDays, parseAgentType } from '@/shared/lib/api-utils'
+import { parseDays, parseAgentType, serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     const comparison = await getEfficiencyComparison(agentType, days, project, from, to)
     return NextResponse.json({ data, comparison })
   } catch (error) {
-    console.error('[/api/efficiency] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/efficiency', error)
   }
 }

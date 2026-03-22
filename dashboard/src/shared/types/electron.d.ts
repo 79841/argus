@@ -9,6 +9,7 @@ type WindowControl = {
 type ElectronAPI = {
   query: (name: string, params?: QueryParams) => Promise<unknown>
   mutate: (name: string, body?: unknown) => Promise<unknown>
+  delete?: (name: string, params?: QueryParams) => Promise<unknown>
   selectFolder?: (title?: string) => Promise<string | null>
   windowControl?: WindowControl
   platform?: string

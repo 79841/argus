@@ -3,6 +3,7 @@ import { execFileSync } from 'child_process'
 import os from 'os'
 import path from 'path'
 import fs from 'fs'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 const ALLOWED_PATHS = new Set(['/', '/sessions', '/usage', '/tools', '/insights', '/settings', '/rules', '/projects'])
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     const height = sp.get('height') || '800'
 
     if (!ALLOWED_PATHS.has(pagePath)) {
-      return NextResponse.json({ error: 'Invalid path' }, { status: 400 })
+      return errorResponse('Invalid path')
     }
 
     const parsedWidth = parseInt(width, 10)
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       isNaN(parsedWidth) || parsedWidth < 320 || parsedWidth > 3840 ||
       isNaN(parsedHeight) || parsedHeight < 320 || parsedHeight > 3840
     ) {
-      return NextResponse.json({ error: 'Invalid dimensions' }, { status: 400 })
+      return errorResponse('Invalid dimensions')
     }
 
     const chromePath = findChrome()
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Screenshot failed' }, { status: 500 })
     }
 
+
     const buffer = fs.readFileSync(screenshotPath)
     fs.unlinkSync(screenshotPath)
 
@@ -82,8 +84,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[/api/screenshot] error:', error)
-    return NextResponse.json({ error: 'Screenshot capture failed' }, { status: 500 })
+    return serverError('/api/screenshot', error)
   }
 }
 

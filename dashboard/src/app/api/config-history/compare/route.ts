@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getImpactCompare, getImpactCompareBatch } from '@/shared/lib/queries'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,14 +19,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!date) {
-      return NextResponse.json({ error: 'date or dates parameter is required' }, { status: 400 })
+      return errorResponse('date or dates parameter is required')
     }
 
     const data = getImpactCompare(date, days, agentType, project)
     return NextResponse.json(data)
   } catch (error) {
-    console.error('[/api/config-history/compare] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/config-history/compare', error)
   }
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries, getAgentDistribution } from '@/shared/lib/queries'
-import { parseAgentType } from '@/shared/lib/api-utils'
+import { parseAgentType, serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
       agent_distribution: agentDistribution,
     })
   } catch (error) {
-    console.error('[/api/overview] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/overview', error)
   }
 }

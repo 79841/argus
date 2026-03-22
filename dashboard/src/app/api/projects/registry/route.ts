@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDb } from '@/shared/lib/db'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 type RegistryRow = {
   project_name: string
@@ -15,8 +16,7 @@ export async function GET() {
     const rows = db.prepare('SELECT * FROM project_registry ORDER BY project_name').all() as RegistryRow[]
     return NextResponse.json({ projects: rows })
   } catch (error) {
-    console.error('[/api/projects/registry GET] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/projects/registry GET', error)
   }
 }
 
@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
     const { name, path: projectPath } = body as { name: string; path: string }
 
     if (!name || !projectPath) {
-      return NextResponse.json({ error: 'name and path are required' }, { status: 400 })
+      return errorResponse('name and path are required')
     }
 
     const resolved = path.resolve(projectPath)
     if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
-      return NextResponse.json({ error: 'Directory not found' }, { status: 400 })
+      return errorResponse('Directory not found')
     }
 
     const db = getDb()
@@ -41,8 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, name, path: resolved })
   } catch (error) {
-    console.error('[/api/projects/registry POST] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/projects/registry POST', error)
   }
 }
 
@@ -50,15 +49,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const name = request.nextUrl.searchParams.get('name')
     if (!name) {
-      return NextResponse.json({ error: 'name is required' }, { status: 400 })
+      return errorResponse('name is required')
     }
 
     const db = getDb()
     db.prepare('DELETE FROM project_registry WHERE project_name = ?').run(name)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[/api/projects/registry DELETE] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/projects/registry DELETE', error)
   }
 }
 

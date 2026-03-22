@@ -29,6 +29,20 @@ const mutateHttp = async (name: string, body?: unknown): Promise<unknown> => {
   return res.json()
 }
 
+const deleteHttp = async (name: string, params?: QueryParams): Promise<unknown> => {
+  const qs = params
+    ? new URLSearchParams(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]) as [string, string][]
+      ).toString()
+    : ''
+  const url = `/api/${name}${qs ? `?${qs}` : ''}`
+  const res = await fetch(url, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
 export const dataClient = {
   async query(name: string, params?: QueryParams): Promise<unknown> {
     if (isElectron() && !ipcDisabled) {
@@ -50,5 +64,16 @@ export const dataClient = {
       }
     }
     return mutateHttp(name, body)
+  },
+
+  async delete(name: string, params?: QueryParams): Promise<unknown> {
+    if (isElectron() && !ipcDisabled && window.electronAPI!.delete) {
+      try {
+        return await window.electronAPI!.delete(name, params)
+      } catch {
+        ipcDisabled = true
+      }
+    }
+    return deleteHttp(name, params)
   },
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
+import { errorResponse } from '@/shared/lib/api-utils'
 
 type ToolDetailPayload = {
   session_id?: string
@@ -38,6 +39,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ accepted: 1 })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 400 })
+    return errorResponse(message)
   }
 }

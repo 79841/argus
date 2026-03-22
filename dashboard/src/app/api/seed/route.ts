@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 const MODELS = [
   'claude-sonnet-4-20250514',
@@ -64,7 +65,7 @@ const AGENT_CONFIGS: AgentSeedConfig[] = [
 
 export async function POST() {
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
+    return errorResponse('Not available in production', 403)
   }
 
   try {
@@ -222,7 +223,6 @@ export async function POST() {
 
   return NextResponse.json({ seeded: count })
   } catch (error) {
-    console.error('[/api/seed] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/seed', error)
   }
 }
