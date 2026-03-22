@@ -55,6 +55,7 @@ type SessionDetailProps = {
 
 export const SessionDetail = ({ session, events }: SessionDetailProps) => {
   const { t } = useLocale()
+  const [activeTab, setActiveTab] = useState('list')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const summary = computeSummary(events, session)
   const rawGroups = groupByPrompt(events)
@@ -116,19 +117,21 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
 
       {/* Event Timeline */}
       <div>
-        <Tabs defaultValue="list">
+        <Tabs defaultValue="list" onValueChange={setActiveTab}>
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 px-2 text-xs text-muted-foreground"
-                onClick={() => setSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
-              >
-                <ArrowUpDown className="h-3.5 w-3.5" />
-                {sortOrder === 'asc' ? t('sessions.detail.sortAsc') : t('sessions.detail.sortDesc')}
-              </Button>
+              {activeTab === 'list' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+                  onClick={() => setSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
+                >
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                  {sortOrder === 'asc' ? t('sessions.detail.sortAsc') : t('sessions.detail.sortDesc')}
+                </Button>
+              )}
             </div>
             <TabsList>
               <TabsTrigger value="list">List</TabsTrigger>
