@@ -119,7 +119,7 @@ describe('getIndividualToolStats', () => {
     insertToolDetail(testDb, { tool_name: 'mcp:github', detail_name: 'create_issue', detail_type: 'mcp', agent_type: 'claude', success: 1 })
     insertToolDetail(testDb, { tool_name: 'mcp:github', detail_name: 'create_issue', detail_type: 'mcp', agent_type: 'claude', success: 0 })
 
-    const stats = getIndividualToolStats(30)
+    const stats = getIndividualToolStats('all', 30)
     expect(stats.length).toBeGreaterThan(0)
     const github = stats.find(s => s.tool_name === 'mcp:github')
     expect(github).toBeDefined()
@@ -129,7 +129,7 @@ describe('getIndividualToolStats', () => {
   })
 
   it('빈 DB에서 빈 배열을 반환한다', () => {
-    expect(getIndividualToolStats(30)).toHaveLength(0)
+    expect(getIndividualToolStats('all', 30)).toHaveLength(0)
   })
 
   it('invocation_count 내림차순으로 정렬된다', () => {
@@ -137,7 +137,7 @@ describe('getIndividualToolStats', () => {
     insertToolDetail(testDb, { tool_name: 'mcp:github', detail_name: 'create_issue', detail_type: 'mcp' })
     insertToolDetail(testDb, { tool_name: 'mcp:github', detail_name: 'create_issue', detail_type: 'mcp' })
 
-    const stats = getIndividualToolStats(30)
+    const stats = getIndividualToolStats('all', 30)
     expect(stats[0].tool_name).toBe('mcp:github')
   })
 })

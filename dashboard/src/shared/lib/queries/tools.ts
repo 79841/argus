@@ -146,7 +146,7 @@ export const getToolDetailStats = (agentType: string, days: number = 7, project:
   ) as ToolDetailRow[]
 }
 
-export const getIndividualToolStats = (days: number = 30, project: string = 'all', from?: string, to?: string): IndividualToolRow[] => {
+export const getIndividualToolStats = (agentType: string, days: number = 30, project: string = 'all', from?: string, to?: string): IndividualToolRow[] => {
   const db = getDb()
   const useDate = from && to
   const dateClause = useDate
@@ -171,8 +171,9 @@ export const getIndividualToolStats = (days: number = 30, project: string = 'all
     FROM tool_details
     WHERE detail_name != ''
       ${dateClause}
+      ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY tool_name, CASE WHEN detail_type = 'mcp' THEN replace(tool_name, 'mcp:', '') ELSE detail_name END, agent_type
     ORDER BY invocation_count DESC
-  `).all(...dateParams, ...projectParams(project)) as IndividualToolRow[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as IndividualToolRow[]
 }

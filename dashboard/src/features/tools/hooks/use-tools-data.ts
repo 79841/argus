@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } from '@/shared/lib/queries'
 import { toolsService } from '@/shared/services'
 import type { AgentType } from '@/shared/lib/agents'
+import type { RegisteredTool } from '../lib/merge-tools'
 
 type ToolsKpi = {
   total_calls: number
@@ -17,6 +18,7 @@ type UseToolsDataReturn = {
   topTools: ToolUsageRow[]
   daily: DailyToolRow[]
   individual: IndividualToolRow[]
+  registered: RegisteredTool[]
   kpi: ToolsKpi | null
   loading: boolean
 }
@@ -26,6 +28,7 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
   const [topTools, setTopTools] = useState<ToolUsageRow[]>([])
   const [daily, setDaily] = useState<DailyToolRow[]>([])
   const [individual, setIndividual] = useState<IndividualToolRow[]>([])
+  const [registered, setRegistered] = useState<RegisteredTool[]>([])
   const [kpi, setKpi] = useState<ToolsKpi | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -35,19 +38,22 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
     Promise.all([
       toolsService.getTools({ agent_type: agentType, days: Number(days), detail: true }),
       toolsService.getTools({ agent_type: agentType, days: Number(days) }),
+      toolsService.getRegisteredTools(),
     ])
-      .then(([detail, simple]) => {
+      .then(([detail, simple, reg]) => {
         const d = detail as Record<string, unknown[]>
         const s = simple as Record<string, unknown[]>
         const detailTools: ToolDetailRow[] = (d.tools ?? []) as ToolDetailRow[]
         const dailyData: DailyToolRow[] = (d.daily ?? []) as DailyToolRow[]
         const individualData: IndividualToolRow[] = (d.individual ?? []) as IndividualToolRow[]
         const simpleTools: ToolUsageRow[] = (s.tools ?? []) as ToolUsageRow[]
+        const registeredTools: RegisteredTool[] = ((reg as Record<string, unknown[]>).tools ?? []) as RegisteredTool[]
 
         setTools(detailTools)
         setDaily(dailyData)
         setIndividual(individualData)
         setTopTools(simpleTools)
+        setRegistered(registeredTools)
 
         const totalCalls = simpleTools.reduce((sum, r) => sum + r.invocation_count, 0)
         const totalSuccess = simpleTools.reduce((sum, r) => sum + r.success_count, 0)
@@ -70,6 +76,7 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
         setDaily([])
         setIndividual([])
         setTopTools([])
+        setRegistered([])
         setKpi(null)
         setLoading(false)
       })
@@ -79,5 +86,5 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
     fetchData()
   }, [fetchData])
 
-  return { tools, topTools, daily, individual, kpi, loading }
+  return { tools, topTools, daily, individual, registered, kpi, loading }
 }

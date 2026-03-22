@@ -8,9 +8,7 @@ import {
   CategoryTreemap,
   DailyTrendChart,
   FailRateTrendChart,
-  ToolDetailTable,
-  IndividualToolTable,
-  RegisteredToolsCard,
+  DetailsSection,
 } from '@/features/tools'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { FilterBar } from '@/shared/components/filter-bar'
@@ -36,7 +34,7 @@ export default function ToolsPage() {
   const [agentType, setAgentType] = useState<AgentType>('all')
   const [days, setDays] = useState('7')
 
-  const { tools, topTools, daily, individual, kpi, loading } = useToolsData(agentType, days)
+  const { tools, topTools, daily, individual, registered, kpi, loading } = useToolsData(agentType, days)
 
   return (
     <div className="flex h-full flex-col">
@@ -104,19 +102,15 @@ export default function ToolsPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="details" className="mt-4 space-y-4">
+            <TabsContent value="details" className="mt-4">
               {loading ? (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                   Loading...
                 </div>
-              ) : tools.length === 0 ? (
+              ) : individual.length === 0 && registered.length === 0 ? (
                 <EmptyState title={t('tools.empty') ?? 'No tool data'} />
               ) : (
-                <>
-                  <ToolDetailTable data={tools} />
-                  <IndividualToolTable data={individual} />
-                  <RegisteredToolsCard />
-                </>
+                <DetailsSection individual={individual} registered={registered} />
               )}
             </TabsContent>
 
