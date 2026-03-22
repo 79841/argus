@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { insightsService } from '@/shared/services'
-import type { HighCostSession, ModelCostEfficiency, BudgetStatus } from '@/shared/lib/queries'
+import type { HighCostSession, ModelCostEfficiency } from '@/shared/lib/queries'
 import type { Suggestion } from '@/shared/lib/suggestions'
 
 type InsightsData = {
   highCostSessions: HighCostSession[]
   modelEfficiency: ModelCostEfficiency[]
-  budgetStatus: BudgetStatus[]
 }
 
 type UseInsightsDataReturn = {

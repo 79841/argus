@@ -6,7 +6,7 @@ import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { FilterBar } from '@/shared/components/filter-bar'
 import { cn } from '@/shared/lib/utils'
 import { formatCost } from '@/shared/lib/format'
-import { useInsightsData, SuggestionsSection, BudgetGauges, HighCostTable, ModelEfficiencyTable } from '@/features/insights'
+import { useInsightsData, SuggestionsSection, HighCostTable, ModelEfficiencyTable } from '@/features/insights'
 
 const DATE_OPTIONS = [
   { value: '7', labelKey: 'insights.date.7' },
@@ -87,10 +87,6 @@ export default function InsightsPage() {
               loading={loading}
             />
           </div>
-
-          {data?.budgetStatus && (
-            <BudgetGauges budgetStatus={data.budgetStatus} />
-          )}
 
           <HighCostTable data={data?.highCostSessions ?? []} loading={loading} />
 

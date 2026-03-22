@@ -32,11 +32,6 @@ const seedTestData = () => {
       insert.run(`2026-03-16T10:00:${String(i).padStart(2, '0')}Z`, 'claude', 'tool_result', 'session-expensive', '', 0, 0, 0, 0, 100, 'project-a')
     }
 
-    // Budget limits
-    db.prepare(`INSERT OR REPLACE INTO agent_limits (agent_type, daily_cost_limit, monthly_cost_limit) VALUES (?, ?, ?)`)
-      .run('claude', 10.0, 200.0)
-    db.prepare(`INSERT OR REPLACE INTO agent_limits (agent_type, daily_cost_limit, monthly_cost_limit) VALUES (?, ?, ?)`)
-      .run('codex', 5.0, 100.0)
   })
   tx()
 }
@@ -138,36 +133,3 @@ describe('getModelCostEfficiency', () => {
   })
 })
 
-describe('getBudgetStatus', () => {
-  it('에이전트별 예산 상태를 반환한다', async () => {
-    const { getBudgetStatus } = await import('@/shared/lib/queries')
-    const status = await getBudgetStatus(db)
-
-    expect(status.length).toBeGreaterThan(0)
-    expect(status[0]).toHaveProperty('agent_type')
-    expect(status[0]).toHaveProperty('daily_cost_limit')
-    expect(status[0]).toHaveProperty('daily_spent')
-    expect(status[0]).toHaveProperty('daily_usage_pct')
-  })
-
-  it('사용률이 올바르게 계산된다', async () => {
-    const { getBudgetStatus } = await import('@/shared/lib/queries')
-    const status = await getBudgetStatus(db)
-
-    for (const s of status) {
-      if (s.daily_cost_limit > 0) {
-        const expected = (s.daily_spent / s.daily_cost_limit) * 100
-        expect(s.daily_usage_pct).toBeCloseTo(expected, 1)
-      }
-    }
-  })
-
-  it('예산 미설정 에이전트도 포함한다 (limit=0)', async () => {
-    const { getBudgetStatus } = await import('@/shared/lib/queries')
-    const status = await getBudgetStatus(db)
-
-    const gemini = status.find(s => s.agent_type === 'gemini')
-    expect(gemini).toBeDefined()
-    expect(gemini!.daily_cost_limit).toBe(0)
-  })
-})

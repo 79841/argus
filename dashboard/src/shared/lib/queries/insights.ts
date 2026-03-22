@@ -33,14 +33,6 @@ export type ModelCostEfficiency = {
   cost_per_1k_tokens: number
 }
 
-export type BudgetStatus = {
-  agent_type: string
-  daily_cost_limit: number
-  monthly_cost_limit: number
-  daily_spent: number
-  daily_usage_pct: number
-}
-
 const EXPENSIVE_MODELS = ['claude-opus-4-6', 'claude-opus-4-20250514', 'o3', 'gpt-5.4']
 
 const tagCauses = (row: RawHighCostRow): string[] => {
@@ -108,33 +100,6 @@ export const getModelCostEfficiency = (days: number = 7, dbOverride?: Database.D
     GROUP BY model, agent_type
     ORDER BY total_cost DESC
   `).all(days) as ModelCostEfficiency[]
-}
-
-export const getBudgetStatus = (dbOverride?: Database.Database): BudgetStatus[] => {
-  const db = dbOverride ?? getDb()
-
-  const agents = ['claude', 'codex', 'gemini']
-  const limits = db.prepare('SELECT agent_type, daily_cost_limit, monthly_cost_limit FROM agent_limits').all() as Array<{ agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }>
-  const dailyCosts = db.prepare(`
-    SELECT agent_type, COALESCE(sum(cost_usd), 0) as daily_spent
-    FROM agent_logs
-    WHERE ${API_REQUEST_FILTER} AND date(timestamp) = date('now')
-    GROUP BY agent_type
-  `).all() as Array<{ agent_type: string; daily_spent: number }>
-
-  return agents.map(agent => {
-    const limit = limits.find(l => l.agent_type === agent)
-    const cost = dailyCosts.find(c => c.agent_type === agent)
-    const dailyLimit = limit?.daily_cost_limit ?? 0
-    const dailySpent = cost?.daily_spent ?? 0
-    return {
-      agent_type: agent,
-      daily_cost_limit: dailyLimit,
-      monthly_cost_limit: limit?.monthly_cost_limit ?? 0,
-      daily_spent: dailySpent,
-      daily_usage_pct: dailyLimit > 0 ? (dailySpent / dailyLimit) * 100 : 0,
-    }
-  })
 }
 
 const EXPENSIVE_MODEL_PATTERNS = ['opus', 'o3', 'gpt-5']

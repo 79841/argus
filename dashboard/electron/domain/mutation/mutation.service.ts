@@ -14,25 +14,6 @@ export const handleMutate = async (name: string, body?: unknown): Promise<unknow
       return { synced: count }
     }
 
-    case 'settings/limits': {
-      const payload = body as { limits: Array<{ agent_type: string; daily_cost_limit: number; monthly_cost_limit: number }> }
-      const db = getDb()
-      const upsert = db.prepare(`
-        INSERT INTO agent_limits (agent_type, daily_cost_limit, monthly_cost_limit)
-        VALUES (?, ?, ?)
-        ON CONFLICT(agent_type) DO UPDATE SET
-          daily_cost_limit = excluded.daily_cost_limit,
-          monthly_cost_limit = excluded.monthly_cost_limit
-      `)
-      const tx = db.transaction(() => {
-        for (const limit of payload.limits) {
-          upsert.run(limit.agent_type, limit.daily_cost_limit, limit.monthly_cost_limit)
-        }
-      })
-      tx()
-      return { ok: true }
-    }
-
     case 'config': {
       const { path: filePath, content } = body as { path: string; content: string }
       if (!filePath || typeof content !== 'string') {

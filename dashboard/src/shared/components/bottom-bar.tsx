@@ -2,8 +2,6 @@
 
 import { AGENTS } from '@/shared/lib/agents'
 import type { AgentType } from '@/shared/lib/agents'
-import { cn } from '@/shared/lib/utils'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/tooltip'
 import { AgentDot } from '@/shared/components/ui/agent-dot'
 import { formatCost, formatRelativeTime, formatTokens } from '@/shared/lib/format'
 import { useBottomBarData } from '@/shared/hooks/use-bottom-bar-data'
@@ -25,7 +23,7 @@ const formatModel = (model: string): string => {
 }
 
 export const BottomBar = () => {
-  const { agents, totals, activeSessions, limitBars, agentTypes } = useBottomBarData()
+  const { agents, totals, activeSessions, agentTypes } = useBottomBarData()
 
   return (
     <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground">
@@ -70,46 +68,6 @@ export const BottomBar = () => {
           {activeSessions.length > 3 && (
             <span className="text-muted-foreground">+{activeSessions.length - 3}</span>
           )}
-        </div>
-      )}
-
-      {limitBars.length > 0 && (
-        <div className="ml-4 flex items-center gap-3">
-          <div className="h-3 w-px bg-border" />
-          {limitBars.map((bar) => {
-            const config = AGENTS[bar.type]
-            return (
-              <Tooltip key={bar.type}>
-                <TooltipTrigger className="flex items-center gap-1.5">
-                  <span style={{ color: `var(--agent-${bar.type})` }} className="text-[10px] font-medium">
-                    {config.name}
-                  </span>
-                  <div className="relative h-2 w-16 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={cn(
-                        'absolute inset-y-0 left-0 rounded-full transition-all',
-                        bar.exceeded ? 'bg-red-500' : 'bg-current'
-                      )}
-                      style={{
-                        width: `${bar.pct}%`,
-                        ...(!bar.exceeded ? { backgroundColor: `var(--agent-${bar.type})` } : {}),
-                      }}
-                    />
-                  </div>
-                  <span className={cn(
-                    'text-[10px] tabular-nums',
-                    bar.exceeded && 'text-red-500 font-medium'
-                  )}>
-                    {Math.round(bar.pct)}%
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {config.name}: {formatCost(bar.cost)} / {formatCost(bar.limit)} daily
-                  {bar.exceeded && ' (exceeded)'}
-                </TooltipContent>
-              </Tooltip>
-            )
-          })}
         </div>
       )}
 

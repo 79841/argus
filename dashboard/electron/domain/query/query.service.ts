@@ -24,7 +24,6 @@ import {
   getConfigCompareStats,
   getHighCostSessions,
   getModelCostEfficiency,
-  getBudgetStatus,
   getSuggestionMetrics,
 } from '../../../src/shared/lib/queries'
 import { generateSuggestions } from '../../../src/shared/lib/suggestions'
@@ -160,12 +159,11 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     case 'insights': {
       const days = num(params?.days, 7)
       const limit = num(params?.limit, 10)
-      const [highCostSessions, modelEfficiency, budgetStatus] = await Promise.all([
+      const [highCostSessions, modelEfficiency] = await Promise.all([
         getHighCostSessions(days, limit),
         getModelCostEfficiency(days),
-        getBudgetStatus(),
       ])
-      return { highCostSessions, modelEfficiency, budgetStatus }
+      return { highCostSessions, modelEfficiency }
     }
 
     case 'suggestions': {
@@ -191,12 +189,6 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
       const days = num(params?.days, 7)
       if (!date) throw new Error('date parameter is required')
       return getConfigCompareStats(date, days)
-    }
-
-    case 'settings/limits': {
-      const db = getDb()
-      const rows = db.prepare('SELECT agent_type, daily_cost_limit, monthly_cost_limit FROM agent_limits').all()
-      return { limits: rows }
     }
 
     case 'projects/registry': {

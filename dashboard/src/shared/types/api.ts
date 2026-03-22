@@ -10,12 +10,6 @@ export type AllTimeTotals = {
   total_tokens: number
 }
 
-export type AgentLimit = {
-  agent_type: string
-  daily_cost_limit: number
-  monthly_cost_limit: number
-}
-
 export type AgentDailyCost = {
   agent_type: string
   daily_cost: number

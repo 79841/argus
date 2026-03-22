@@ -16,8 +16,8 @@ export { getProjects, getProjectCosts, getProjectDetailStats, getProjectDailyCos
 export type { EfficiencyRow, EfficiencyComparisonRow } from './efficiency'
 export { getEfficiencyStats, getEfficiencyComparison } from './efficiency'
 
-export type { HighCostSession, ModelCostEfficiency, BudgetStatus } from './insights'
-export { getHighCostSessions, getModelCostEfficiency, getBudgetStatus, getSuggestionMetrics } from './insights'
+export type { HighCostSession, ModelCostEfficiency } from './insights'
+export { getHighCostSessions, getModelCostEfficiency, getSuggestionMetrics } from './insights'
 
 export type { ConfigComparePeriod, ConfigCompareResult } from './config-history'
 export { getConfigCompareStats } from './config-history'

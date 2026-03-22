@@ -20,7 +20,6 @@ describe('initSchema', () => {
     expect(tables).toContain('pricing_model')
     expect(tables).toContain('config_snapshots')
     expect(tables).toContain('tool_details')
-    expect(tables).toContain('agent_limits')
     expect(tables).toContain('project_registry')
   })
 
@@ -80,17 +79,6 @@ describe('initSchema', () => {
       initSchema(db)
       initSchema(db)
     }).not.toThrow()
-  })
-
-  it('agent_limits 테이블에 데이터를 삽입할 수 있다', () => {
-    const db = createDb()
-    initSchema(db)
-
-    db.prepare("INSERT INTO agent_limits (agent_type, daily_cost_limit, monthly_cost_limit) VALUES (?, ?, ?)").run('claude', 10.0, 200.0)
-
-    const row = db.prepare("SELECT * FROM agent_limits WHERE agent_type = 'claude'").get() as { daily_cost_limit: number } | undefined
-    expect(row).toBeDefined()
-    expect(row!.daily_cost_limit).toBe(10.0)
   })
 
   it('인덱스가 생성된다', () => {

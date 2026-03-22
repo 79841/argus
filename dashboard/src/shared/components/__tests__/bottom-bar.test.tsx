@@ -17,16 +17,6 @@ vi.mock('@/shared/lib/format', async (importOriginal) => {
   }
 })
 
-vi.mock('@/shared/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={className}>{children}</div>
-  ),
-  TooltipContent: ({ children, side }: { children: React.ReactNode; side?: string }) => (
-    <div role="tooltip">{children}</div>
-  ),
-}))
-
 vi.mock('@/shared/components/ui/agent-dot', () => ({
   AgentDot: ({ agent, size, pulse }: { agent: string; size?: string; pulse?: boolean }) => (
     <span data-testid="agent-dot" data-agent={agent} />
@@ -42,8 +32,6 @@ describe('BottomBar', () => {
     mockQuery.mockImplementation((name: string) => {
       if (name === 'ingest-status') return Promise.resolve({ agents: [] })
       if (name === 'overview') return Promise.resolve({ all_time_cost: 0, all_time_tokens: 0 })
-      if (name === 'settings/limits') return Promise.resolve({ limits: [] })
-      if (name === 'daily-costs') return Promise.resolve({ costs: [] })
       if (name === 'sessions/active') return Promise.resolve({ sessions: [] })
       return Promise.resolve({})
     })
@@ -70,8 +58,6 @@ describe('BottomBar', () => {
     mockQuery.mockImplementation((name: string) => {
       if (name === 'overview') return Promise.resolve({ all_time_cost: 1.5, all_time_tokens: 10000 })
       if (name === 'ingest-status') return Promise.resolve({ agents: [] })
-      if (name === 'settings/limits') return Promise.resolve({ limits: [] })
-      if (name === 'daily-costs') return Promise.resolve({ costs: [] })
       if (name === 'sessions/active') return Promise.resolve({ sessions: [] })
       return Promise.resolve({})
     })
@@ -96,34 +82,12 @@ describe('BottomBar', () => {
       })
       if (name === 'ingest-status') return Promise.resolve({ agents: [] })
       if (name === 'overview') return Promise.resolve({ all_time_cost: 0, all_time_tokens: 0 })
-      if (name === 'settings/limits') return Promise.resolve({ limits: [] })
-      if (name === 'daily-costs') return Promise.resolve({ costs: [] })
       return Promise.resolve({})
     })
 
     render(<BottomBar />)
     await waitFor(() => {
       expect(screen.getByTestId('agent-dot')).toBeInTheDocument()
-    })
-  })
-
-  it('일일 한도 설정이 있으면 진행률 바를 표시한다', async () => {
-    mockQuery.mockImplementation((name: string) => {
-      if (name === 'settings/limits') return Promise.resolve({
-        limits: [{ agent_type: 'claude', daily_cost_limit: 1.0, monthly_cost_limit: 30 }],
-      })
-      if (name === 'daily-costs') return Promise.resolve({
-        costs: [{ agent_type: 'claude', daily_cost: 0.5 }],
-      })
-      if (name === 'ingest-status') return Promise.resolve({ agents: [] })
-      if (name === 'overview') return Promise.resolve({ all_time_cost: 0, all_time_tokens: 0 })
-      if (name === 'sessions/active') return Promise.resolve({ sessions: [] })
-      return Promise.resolve({})
-    })
-
-    render(<BottomBar />)
-    await waitFor(() => {
-      expect(screen.getByText('50%')).toBeInTheDocument()
     })
   })
 
@@ -143,8 +107,6 @@ describe('BottomBar', () => {
         }],
       })
       if (name === 'overview') return Promise.resolve({ all_time_cost: 0, all_time_tokens: 0 })
-      if (name === 'settings/limits') return Promise.resolve({ limits: [] })
-      if (name === 'daily-costs') return Promise.resolve({ costs: [] })
       if (name === 'sessions/active') return Promise.resolve({ sessions: [] })
       return Promise.resolve({})
     })
