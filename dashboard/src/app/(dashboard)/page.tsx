@@ -6,14 +6,14 @@ import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { UsageHeatmap } from '@/features/dashboard/components/usage-heatmap'
 import { FilterBar } from '@/shared/components/filter-bar'
 import { formatCost } from '@/shared/lib/format'
-import { useDashboardData, AgentSummaryCard, RecentSessionsCard } from '@/features/dashboard'
+import { useDashboardData, AgentSummaryCard, AgentDonutChart, RecentSessionsCard } from '@/features/dashboard'
 import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [onboardingChecked, setOnboardingChecked] = useState(false)
   const { data, loading } = useDashboardData()
-  const { stats, delta, agentSummaries, daily, sessions } = data
+  const { stats, delta, agentSummaries, agentDistribution, daily, sessions } = data
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
@@ -53,7 +53,8 @@ export default function DashboardPage() {
               ))}
             </div>
             <div className="h-48 animate-pulse rounded-xl bg-muted" />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="h-48 animate-pulse rounded-xl bg-muted" />
               <div className="h-48 animate-pulse rounded-xl bg-muted" />
               <div className="h-48 animate-pulse rounded-xl bg-muted" />
             </div>
@@ -96,8 +97,9 @@ export default function DashboardPage() {
           {/* 히트맵 */}
           <UsageHeatmap data={daily} agentType="all" />
 
-          {/* 에이전트 요약 + 최근 세션 */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* 에이전트 분포 + 에이전트 요약 + 최근 세션 */}
+          <div className="grid grid-cols-3 gap-4">
+            <AgentDonutChart data={agentDistribution} />
             <AgentSummaryCard agentSummaries={agentSummaries} />
             <RecentSessionsCard
               sessions={sessions}

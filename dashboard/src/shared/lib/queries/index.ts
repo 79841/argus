@@ -1,5 +1,5 @@
-export type { OverviewStats, OverviewDelta, AgentTodaySummary, AllTimeStats, ActiveSession, AgentDailyCost, IngestStatusRow } from './overview'
-export { getOverviewStats, getOverviewDelta, getAgentTodaySummaries, getAllTimeStats, getActiveSessions, getAgentDailyCosts, getIngestStatus } from './overview'
+export type { OverviewStats, OverviewDelta, AgentTodaySummary, AllTimeStats, ActiveSession, AgentDailyCost, IngestStatusRow, AgentDistribution } from './overview'
+export { getOverviewStats, getOverviewDelta, getAgentTodaySummaries, getAllTimeStats, getActiveSessions, getAgentDailyCosts, getIngestStatus, getAgentDistribution } from './overview'
 
 export type { DailyStats } from './daily'
 export { getDailyStats } from './daily'
