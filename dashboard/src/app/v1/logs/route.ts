@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
         body: text,
       })
       return ingestPOST(jsonRequest)
-    } catch {
-      // fall through to protobuf
+    } catch (_jsonErr) {
+      // intentional: fall through to protobuf decode
     }
   }
 
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
         body: text,
       })
       return ingestPOST(jsonRequest)
-    } catch (jsonErr) {
-      console.error('[/v1/logs] error:', jsonErr)
+    } catch (jsonFallbackErr) {
+      console.error('[/v1/logs] Failed to parse request (protobuf and JSON both failed):', protoErr, jsonFallbackErr)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   }

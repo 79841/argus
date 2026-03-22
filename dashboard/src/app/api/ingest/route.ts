@@ -129,7 +129,11 @@ export async function POST(request: NextRequest) {
               const toolParams = getAttr(attrs, 'tool_parameters')
               let params: Record<string, string> = {}
               if (toolParams) {
-                try { params = JSON.parse(toolParams) } catch {}
+                try {
+                  params = JSON.parse(toolParams)
+                } catch (_error) {
+                  console.warn('[ingest] Failed to parse tool_parameters:', toolParams?.slice(0, 200))
+                }
               }
 
               if (toolName.startsWith('mcp__') || (toolName === 'mcp_tool' && params.mcp_server_name)) {

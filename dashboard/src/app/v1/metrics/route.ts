@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
     try {
       const text = new TextDecoder().decode(buf)
       data = JSON.parse(text) as OtlpMetricsRequest
-    } catch {
+    } catch (_jsonErr) {
+      // intentional: fall through to protobuf decode
       try {
         const decoded = ExportMetricsServiceRequest.decode(new Uint8Array(buf))
         data = ExportMetricsServiceRequest.toObject(decoded, {
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
           defaults: true,
         }) as OtlpMetricsRequest
       } catch (protoErr) {
-        console.error('[/v1/metrics] protobuf decode error:', protoErr)
+        console.error('[/v1/metrics] Failed to parse request (JSON and protobuf both failed):', protoErr)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
       }
     }
