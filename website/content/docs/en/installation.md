@@ -61,4 +61,4 @@ pnpm electron:dist:win   # Windows NSIS (x64)
 
 ## Next Steps
 
-After installation, [configure your AI agents](/docs/setup-guide) to send telemetry to Argus.
+After installation, [configure your AI agents](/docs/en/setup-guide) to send telemetry to Argus.

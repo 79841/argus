@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import path from 'path'
 import fs from 'fs'
 
-const DB_PATH = process.env.ARGUS_DB_PATH || process.env.PILOT_DB_PATH || path.join(process.cwd(), '..', 'argus.db')
+const DB_PATH = process.env.ARGUS_DB_PATH || path.join(process.cwd(), '..', 'argus.db')
 
 let _db: Database.Database | null = null
 

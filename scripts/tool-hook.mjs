@@ -9,7 +9,7 @@
 import http from 'node:http'
 import https from 'node:https'
 
-const ARGUS_ENDPOINT = process.env.ARGUS_ENDPOINT || 'http://localhost:3000'
+const ARGUS_ENDPOINT = process.env.ARGUS_ENDPOINT || 'http://localhost:9845'
 
 function readStdin() {
   return new Promise((resolve) => {

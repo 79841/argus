@@ -5,7 +5,7 @@ services:
   #     context: ./dashboard
   #     dockerfile: Dockerfile
   #   ports:
-  #     - "3000:3000"
+  #     - "9845:9845"
   #   volumes:
   #     - ./argus.db:/app/argus.db
   #   environment:
