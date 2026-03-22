@@ -10,6 +10,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "electron:build": "tsc -p electron/tsconfig.json",
     "electron:dev": "npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
     "electron:pack": "pnpm build && pnpm electron:build && electron-builder --dir",
@@ -42,6 +44,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

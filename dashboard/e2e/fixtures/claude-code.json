@@ -1,0 +1,48 @@
+{
+  "resourceLogs": [{
+    "resource": {
+      "attributes": [
+        { "key": "service.name", "value": { "stringValue": "claude-code" } }
+      ]
+    },
+    "scopeLogs": [{
+      "logRecords": [
+        {
+          "timeUnixNano": "1710000000000000000",
+          "severityText": "INFO",
+          "attributes": [
+            { "key": "event.name", "value": { "stringValue": "claude_code.api_request" } },
+            { "key": "session.id", "value": { "stringValue": "e2e-claude-session-1" } },
+            { "key": "prompt.id", "value": { "stringValue": "e2e-prompt-1" } },
+            { "key": "model", "value": { "stringValue": "claude-sonnet-4-6" } },
+            { "key": "cost_usd", "value": { "doubleValue": 0.0234 } },
+            { "key": "input_tokens", "value": { "intValue": 1500 } },
+            { "key": "output_tokens", "value": { "intValue": 350 } },
+            { "key": "cache_read_tokens", "value": { "intValue": 800 } },
+            { "key": "duration_ms", "value": { "intValue": 1523 } }
+          ]
+        },
+        {
+          "timeUnixNano": "1710000001000000000",
+          "severityText": "INFO",
+          "attributes": [
+            { "key": "event.name", "value": { "stringValue": "claude_code.tool_result" } },
+            { "key": "session.id", "value": { "stringValue": "e2e-claude-session-1" } },
+            { "key": "tool_name", "value": { "stringValue": "Read" } },
+            { "key": "success", "value": { "stringValue": "true" } },
+            { "key": "duration_ms", "value": { "intValue": 45 } }
+          ]
+        },
+        {
+          "timeUnixNano": "1710000002000000000",
+          "severityText": "INFO",
+          "attributes": [
+            { "key": "event.name", "value": { "stringValue": "claude_code.user_prompt" } },
+            { "key": "session.id", "value": { "stringValue": "e2e-claude-session-1" } },
+            { "key": "prompt_length", "value": { "intValue": 150 } }
+          ]
+        }
+      ]
+    }]
+  }]
+}
