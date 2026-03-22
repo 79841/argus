@@ -1,4 +1,5 @@
 import { getDb } from '../db'
+import { agentFilter, agentParams, projectFilter, projectParams } from './helpers'
 
 export type ImpactMetrics = {
   avg_cost: number
@@ -42,7 +43,7 @@ type RawMetricsRow = {
   reqs_per_session: number
 }
 
-const getMetricsForPeriod = (from: string, to: string): ImpactMetrics => {
+const getMetricsForPeriod = (from: string, to: string, agentType: string, project: string): ImpactMetrics => {
   const db = getDb()
 
   const row = db.prepare(`
@@ -64,6 +65,8 @@ const getMetricsForPeriod = (from: string, to: string): ImpactMetrics => {
       FROM agent_logs
       WHERE event_name = 'api_request'
         AND date(timestamp) >= date(?) AND date(timestamp) < date(?)
+        ${agentFilter(agentType)}
+        ${projectFilter(project)}
     ),
     tools AS (
       SELECT
@@ -74,10 +77,15 @@ const getMetricsForPeriod = (from: string, to: string): ImpactMetrics => {
       FROM agent_logs
       WHERE event_name = 'tool_result'
         AND date(timestamp) >= date(?) AND date(timestamp) < date(?)
+        ${agentFilter(agentType)}
+        ${projectFilter(project)}
     )
     SELECT api.*, tools.tool_success_rate
     FROM api, tools
-  `).get(from, to, from, to) as RawMetricsRow | undefined
+  `).get(
+    from, to, ...agentParams(agentType), ...projectParams(project),
+    from, to, ...agentParams(agentType), ...projectParams(project),
+  ) as RawMetricsRow | undefined
 
   if (!row || row.request_count === 0) return emptyMetrics
 
@@ -92,7 +100,7 @@ const getMetricsForPeriod = (from: string, to: string): ImpactMetrics => {
   }
 }
 
-export const getImpactCompare = (date: string, days: number = 7): ImpactCompareResult => {
+export const getImpactCompare = (date: string, days: number = 7, agentType: string = 'all', project: string = 'all'): ImpactCompareResult => {
   const changeDate = new Date(date)
   const beforeStart = new Date(changeDate)
   beforeStart.setDate(beforeStart.getDate() - days)
@@ -104,19 +112,21 @@ export const getImpactCompare = (date: string, days: number = 7): ImpactCompareR
   const afterEndStr = afterEnd.toISOString().slice(0, 10)
 
   return {
-    before: getMetricsForPeriod(beforeStartStr, changeDateStr),
-    after: getMetricsForPeriod(changeDateStr, afterEndStr),
+    before: getMetricsForPeriod(beforeStartStr, changeDateStr, agentType, project),
+    after: getMetricsForPeriod(changeDateStr, afterEndStr, agentType, project),
   }
 }
 
 export const getImpactCompareBatch = (
   dates: string[],
-  days: number = 7
+  days: number = 7,
+  agentType: string = 'all',
+  project: string = 'all',
 ): ImpactCompareResult[] => {
-  return dates.map(date => getImpactCompare(date, days))
+  return dates.map(date => getImpactCompare(date, days, agentType, project))
 }
 
-export const getDailyMetrics = (from: string, to: string): DailyMetricPoint[] => {
+export const getDailyMetrics = (from: string, to: string, agentType: string = 'all', project: string = 'all'): DailyMetricPoint[] => {
   const db = getDb()
 
   const rows = db.prepare(`
@@ -132,9 +142,11 @@ export const getDailyMetrics = (from: string, to: string): DailyMetricPoint[] =>
     FROM agent_logs
     WHERE event_name = 'api_request'
       AND date(timestamp) >= date(?) AND date(timestamp) <= date(?)
+      ${agentFilter(agentType)}
+      ${projectFilter(project)}
     GROUP BY date(timestamp)
     ORDER BY date
-  `).all(from, to) as DailyMetricPoint[]
+  `).all(from, to, ...agentParams(agentType), ...projectParams(project)) as DailyMetricPoint[]
 
   return rows
 }

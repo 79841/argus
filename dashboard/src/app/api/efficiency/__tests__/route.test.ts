@@ -9,6 +9,7 @@ vi.mock('@/shared/lib/queries', () => ({
 
 vi.mock('@/shared/lib/api-utils', () => ({
   parseDays: vi.fn((v: string | null, def: number) => (v ? parseInt(v) : def)),
+  parseAgentType: vi.fn((v: string | null) => v ?? 'all'),
 }))
 
 import * as queries from '@/shared/lib/queries'
@@ -74,7 +75,7 @@ describe('GET /api/efficiency', () => {
 
     expect(queries.getEfficiencyStats).toHaveBeenCalledOnce()
     const callArgs = vi.mocked(queries.getEfficiencyStats).mock.calls[0]
-    expect(callArgs[0]).toBe(7)
+    expect(callArgs[1]).toBe(7)
   })
 
   it('?days=30 → days=30이 쿼리 함수에 전달됨', async () => {
@@ -85,7 +86,7 @@ describe('GET /api/efficiency', () => {
 
     expect(queries.getEfficiencyStats).toHaveBeenCalledOnce()
     const callArgs = vi.mocked(queries.getEfficiencyStats).mock.calls[0]
-    expect(callArgs[0]).toBe(30)
+    expect(callArgs[1]).toBe(30)
   })
 
   it('days 파라미터 없으면 기본값 7 사용', async () => {
@@ -96,7 +97,7 @@ describe('GET /api/efficiency', () => {
 
     expect(queries.getEfficiencyStats).toHaveBeenCalledOnce()
     const callArgs = vi.mocked(queries.getEfficiencyStats).mock.calls[0]
-    expect(callArgs[0]).toBe(7)
+    expect(callArgs[1]).toBe(7)
   })
 
   it('getEfficiencyStats, getEfficiencyComparison 모두 호출됨', async () => {

@@ -9,6 +9,7 @@ import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { AGENTS } from '@/shared/lib/agents'
+import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import type { MergedMcpServer, MergedToolItem } from '@/features/tools/lib/merge-tools'
 import { TOP_COLORS, STATUS_BADGE, SCOPE_BADGE, formatToolDate } from './constants'
@@ -23,12 +24,12 @@ const AGENT_DOT: Record<string, string> = {
   gemini: 'bg-blue-500',
 }
 
-const ToolRows = ({ tools }: { tools: MergedToolItem[] }) => {
+const ToolRows = ({ tools, noUsageLabel }: { tools: MergedToolItem[]; noUsageLabel: string }) => {
   if (tools.length === 0) {
     return (
       <TableRow>
         <TableCell colSpan={6} className="py-3 text-center text-xs text-muted-foreground">
-          사용 기록이 없습니다
+          {noUsageLabel}
         </TableCell>
       </TableRow>
     )
@@ -76,6 +77,7 @@ const ToolRows = ({ tools }: { tools: MergedToolItem[] }) => {
 }
 
 export const McpTab = ({ data }: McpTabProps) => {
+  const { t } = useLocale()
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set())
 
   const registeredCount = data.filter((s) => s.status !== 'unregistered').length
@@ -106,21 +108,21 @@ export const McpTab = ({ data }: McpTabProps) => {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <KpiCard
-          label="활용률"
+          label={t('tools.detail.utilization')}
           value={`${utilizationPct}%`}
-          sub={registeredCount > 0 ? `등록 ${registeredCount}개 중 ${activeCount}개 활용` : '등록된 서버 없음'}
+          sub={registeredCount > 0 ? t('tools.detail.registered', { '0': String(registeredCount), '1': String(activeCount) }) : t('tools.detail.noRegisteredServers')}
         />
         <KpiCard
-          label="성공률"
+          label={t('tools.detail.successRate')}
           value={totalCalls > 0 ? `${successRate.toFixed(1)}%` : '—'}
-          sub={totalCalls > 0 ? `전체 ${totalCalls.toLocaleString()}회 호출` : '호출 데이터 없음'}
+          sub={totalCalls > 0 ? t('tools.detail.totalCalls', { '0': totalCalls.toLocaleString() }) : t('tools.detail.noCallData')}
         />
       </div>
 
       {donutData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">서버별 호출 비율</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('tools.detail.mcpRatio')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative h-[260px]">
@@ -148,7 +150,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                         <div style={CHART_THEME.tooltip.containerStyle}>
                           <p className="font-medium text-sm">{d.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {d.value.toLocaleString()}회 ({pct}%)
+                            {d.value.toLocaleString()}{t('tools.detail.callsSuffix')} ({pct}%)
                           </p>
                         </div>
                       )
@@ -176,13 +178,13 @@ export const McpTab = ({ data }: McpTabProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">MCP 서버 목록</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.detail.mcpServers')}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.length === 0 ? (
             <EmptyState
-              title="MCP 서버 없음"
-              description="등록된 MCP 서버가 없거나 아직 호출 기록이 없습니다."
+              title={t('tools.detail.emptyMcp')}
+              description={t('tools.detail.emptyMcpDesc')}
             />
           ) : (
             <Table className="table-fixed">
@@ -237,7 +239,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                         <TableCell className="space-y-1">
                           <div>
                             <Badge className={cn('text-[10px] px-1.5 py-0', statusCfg.className)}>
-                              {statusCfg.label}
+                              {t(statusCfg.i18nKey)}
                             </Badge>
                           </div>
                           {server.scope && (
@@ -265,7 +267,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                       </TableRow>
 
                       {isExpanded && (
-                        <ToolRows tools={server.tools} />
+                        <ToolRows tools={server.tools} noUsageLabel={t('tools.detail.noUsage')} />
                       )}
                     </React.Fragment>
                   )

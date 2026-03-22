@@ -106,13 +106,14 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     }
 
     case 'efficiency': {
+      const agentType = str(params?.agent_type, 'all')
       const days = num(params?.days, 7)
       const project = str(params?.project, 'all')
       const from = params?.from ? str(params.from) : undefined
       const to = params?.to ? str(params.to) : undefined
       const [data, comparison] = await Promise.all([
-        getEfficiencyStats(days, project, from, to),
-        getEfficiencyComparison(days, project, from, to),
+        getEfficiencyStats(agentType, days, project, from, to),
+        getEfficiencyComparison(agentType, days, project, from, to),
       ])
       return { data, comparison }
     }
@@ -189,20 +190,24 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     case 'config-history/compare': {
       const dates = str(params?.dates)
       const days = num(params?.days, 7)
+      const agentType = str(params?.agent_type, 'all')
+      const project = str(params?.project, 'all')
       if (dates) {
         const dateList = dates.split(',').filter(Boolean)
-        return getImpactCompareBatch(dateList, days)
+        return getImpactCompareBatch(dateList, days, agentType, project)
       }
       const date = str(params?.date)
       if (!date) throw new Error('date or dates parameter is required')
-      return getImpactCompare(date, days)
+      return getImpactCompare(date, days, agentType, project)
     }
 
     case 'config-history/daily-metrics': {
       const from = str(params?.from)
       const to = str(params?.to)
       if (!from || !to) throw new Error('from and to parameters are required')
-      return getDailyMetrics(from, to)
+      const agentType = str(params?.agent_type, 'all')
+      const project = str(params?.project, 'all')
+      return getDailyMetrics(from, to, agentType, project)
     }
 
     case 'projects/registry': {

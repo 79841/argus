@@ -61,6 +61,7 @@ export type EfficiencyTrendPoint = {
 }
 
 export type EfficiencyTabProps = {
+  agentType: AgentType
   project: string
   dateRange: DateRange
 }
@@ -68,5 +69,7 @@ export type EfficiencyTabProps = {
 export type CategoryType = 'all' | 'rules' | 'tools'
 
 export type ImpactTabProps = {
+  agentType: AgentType
+  project: string
   dateRange: DateRange
 }

@@ -145,11 +145,13 @@ const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDa
   )
 }
 
-export const ImpactTab = ({ dateRange }: ImpactTabProps) => {
+export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => {
   const [category, setCategory] = useState<CategoryType>('all')
   const [compareDays, setCompareDays] = useState<number>(7)
 
   const { changes, dailyMetrics, loading } = useImpactData({
+    agentType,
+    project,
     dateRange,
     category,
     compareDays,

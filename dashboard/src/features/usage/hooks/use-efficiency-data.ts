@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { efficiencyService } from '@/shared/services'
 import { calculateEfficiency } from '@/features/usage/lib/efficiency'
 import { computeCacheRate } from '@/shared/lib/format'
+import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/types/common'
 import type { EfficiencyRow, EfficiencyComparisonRow } from '@/shared/lib/queries'
 import type { EfficiencyAgentRow, EfficiencyTrendPoint } from '@/features/usage/types/usage'
 
 type UseEfficiencyDataParams = {
+  agentType: AgentType
   project: string
   dateRange: DateRange
 }
@@ -19,13 +21,13 @@ type UseEfficiencyDataResult = {
   overall: { cacheRate: number; avgDuration: number; score: number } | null
 }
 
-export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParams): UseEfficiencyDataResult => {
+export const useEfficiencyData = ({ agentType, project, dateRange }: UseEfficiencyDataParams): UseEfficiencyDataResult => {
   const [agentRows, setAgentRows] = useState<EfficiencyAgentRow[]>([])
   const [trend, setTrend] = useState<EfficiencyTrendPoint[]>([])
   const [overall, setOverall] = useState<{ cacheRate: number; avgDuration: number; score: number } | null>(null)
 
   useEffect(() => {
-    efficiencyService.getEfficiency({ project, from: dateRange.from, to: dateRange.to })
+    efficiencyService.getEfficiency({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
       .then((res) => {
         const { data, comparison } = res as {
           data: EfficiencyRow[]
@@ -105,7 +107,7 @@ export const useEfficiencyData = ({ project, dateRange }: UseEfficiencyDataParam
         })
       })
       .catch(() => {})
-  }, [project, dateRange])
+  }, [agentType, project, dateRange])
 
   return { agentRows, trend, overall }
 }

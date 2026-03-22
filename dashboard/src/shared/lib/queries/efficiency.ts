@@ -1,5 +1,5 @@
 import { getDb } from '../db'
-import { API_REQUEST_FILTER, projectFilter, projectParams, dateRangeFilter } from './helpers'
+import { API_REQUEST_FILTER, agentFilter, agentParams, projectFilter, projectParams, dateRangeFilter } from './helpers'
 
 export type EfficiencyRow = {
   agent_type: string
@@ -23,7 +23,7 @@ export type EfficiencyComparisonRow = {
   total_duration_ms: number
 }
 
-export const getEfficiencyStats = (days: number = 7, project: string = 'all', from?: string, to?: string): EfficiencyRow[] => {
+export const getEfficiencyStats = (agentType: string = 'all', days: number = 7, project: string = 'all', from?: string, to?: string): EfficiencyRow[] => {
   const db = getDb()
   const useDate = from && to
   const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) >= date('now', '-' || ? || ' days')"
@@ -47,13 +47,14 @@ export const getEfficiencyStats = (days: number = 7, project: string = 'all', fr
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
       ${dateClause}
+      ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY agent_type, date
     ORDER BY date ASC
-  `).all(...dateParams, ...projectParams(project)) as EfficiencyRow[]
+  `).all(...dateParams, ...agentParams(agentType), ...projectParams(project)) as EfficiencyRow[]
 }
 
-export const getEfficiencyComparison = (days: number = 7, project: string = 'all', from?: string, to?: string): {
+export const getEfficiencyComparison = (agentType: string = 'all', days: number = 7, project: string = 'all', from?: string, to?: string): {
   current: EfficiencyComparisonRow[]
   previous: EfficiencyComparisonRow[]
 } => {
@@ -82,11 +83,12 @@ export const getEfficiencyComparison = (days: number = 7, project: string = 'all
       FROM agent_logs
       WHERE ${API_REQUEST_FILTER}
         ${dateRangeFilter()}
+        ${agentFilter(agentType)}
         ${projectFilter(project)}
       GROUP BY agent_type
     `
-    const current = db.prepare(query).all(from, to, ...projectParams(project)) as EfficiencyComparisonRow[]
-    const previous = db.prepare(query).all(prevFromISO, prevToISO, ...projectParams(project)) as EfficiencyComparisonRow[]
+    const current = db.prepare(query).all(from, to, ...agentParams(agentType), ...projectParams(project)) as EfficiencyComparisonRow[]
+    const previous = db.prepare(query).all(prevFromISO, prevToISO, ...agentParams(agentType), ...projectParams(project)) as EfficiencyComparisonRow[]
     return { current, previous }
   }
 
@@ -103,10 +105,11 @@ export const getEfficiencyComparison = (days: number = 7, project: string = 'all
     WHERE ${API_REQUEST_FILTER}
       AND date(timestamp) >= date('now', '-' || ? || ' days')
       AND date(timestamp) < date('now', '-' || ? || ' days')
+      ${agentFilter(agentType)}
       ${projectFilter(project)}
     GROUP BY agent_type
   `
-  const current = db.prepare(query).all(days, 0, ...projectParams(project)) as EfficiencyComparisonRow[]
-  const previous = db.prepare(query).all(days * 2, days, ...projectParams(project)) as EfficiencyComparisonRow[]
+  const current = db.prepare(query).all(days, 0, ...agentParams(agentType), ...projectParams(project)) as EfficiencyComparisonRow[]
+  const previous = db.prepare(query).all(days * 2, days, ...agentParams(agentType), ...projectParams(project)) as EfficiencyComparisonRow[]
   return { current, previous }
 }
