@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     const chromePath = findChrome()
     if (!chromePath) {
-      return NextResponse.json({ error: 'Chrome not found' }, { status: 500 })
+      return errorResponse('Chrome not found', 500)
     }
 
     const timestamp = Date.now()
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     )
 
     if (!fs.existsSync(screenshotPath)) {
-      return NextResponse.json({ error: 'Screenshot failed' }, { status: 500 })
+      return errorResponse('Screenshot capture failed', 500)
     }
 
 

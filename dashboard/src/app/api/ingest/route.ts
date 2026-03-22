@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
+import { serverError } from '@/shared/lib/api-utils'
 import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
@@ -246,7 +247,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ accepted: count })
   } catch (error) {
-    console.error('[/api/ingest] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/ingest', error)
   }
 }

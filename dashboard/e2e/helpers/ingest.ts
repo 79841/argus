@@ -39,9 +39,11 @@ export const sendOtlpPayload = async (request: APIRequestContext, payload: objec
 }
 
 export const seedAgentData = async (request: APIRequestContext) => {
-  await sendOtlpPayload(request, withDynamicTimestamps(claudeFixture as OtlpFixture))
-  await sendOtlpPayload(request, withDynamicTimestamps(codexFixture as OtlpFixture))
-  await sendOtlpPayload(request, withDynamicTimestamps(geminiFixture as OtlpFixture))
+  await Promise.all([
+    sendOtlpPayload(request, withDynamicTimestamps(claudeFixture as OtlpFixture)),
+    sendOtlpPayload(request, withDynamicTimestamps(codexFixture as OtlpFixture)),
+    sendOtlpPayload(request, withDynamicTimestamps(geminiFixture as OtlpFixture)),
+  ])
 }
 
 export const getSessions = (json: Record<string, unknown>): Array<Record<string, unknown>> => {

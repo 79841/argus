@@ -725,7 +725,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.datePicker.thisMonth': 'This month',
     'shared.datePicker.customRange': 'Custom Range',
     'shared.datePicker.apply': 'Apply',
-    'shared.bottomBar.noData': 'no data',
+    'shared.bottomBar.noData': 'No data',
     'shared.projectFilter.allProjects': 'All Projects',
     'shared.navLayout.toggleSidebar': 'Toggle sidebar',
     'shared.dataTable.noData': 'No data',

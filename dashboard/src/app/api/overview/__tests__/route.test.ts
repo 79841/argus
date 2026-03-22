@@ -6,10 +6,11 @@ vi.mock('@/shared/lib/queries', () => ({
   getAllTimeStats: vi.fn(),
   getOverviewDelta: vi.fn(),
   getAgentTodaySummaries: vi.fn(),
+  getAgentDistribution: vi.fn(),
 }))
 
 const { GET } = await import('../route')
-import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries } from '@/shared/lib/queries'
+import { getOverviewStats, getAllTimeStats, getOverviewDelta, getAgentTodaySummaries, getAgentDistribution } from '@/shared/lib/queries'
 
 const mkRequest = (params: Record<string, string> = {}): NextRequest => {
   const url = new URL('http://localhost:9845/api/overview')
@@ -51,6 +52,7 @@ beforeEach(() => {
   vi.mocked(getAllTimeStats).mockResolvedValue(mockAllTimeStats)
   vi.mocked(getOverviewDelta).mockResolvedValue(mockDelta)
   vi.mocked(getAgentTodaySummaries).mockResolvedValue(mockAgentSummaries)
+  vi.mocked(getAgentDistribution).mockResolvedValue([])
 })
 
 describe('GET /api/overview', () => {
@@ -73,9 +75,9 @@ describe('GET /api/overview', () => {
   it('overview stats가 응답에 병합된다', async () => {
     const res = await GET(mkRequest())
     const json = await res.json()
-    expect(json.today_cost).toBe(1.23)
-    expect(json.today_sessions).toBe(5)
-    expect(json.today_tokens).toBe(10000)
+    expect(json.total_cost).toBe(1.23)
+    expect(json.total_sessions).toBe(5)
+    expect(json.total_input_tokens).toBe(10000)
   })
 
   it('?agent_type=claude → getOverviewStats에 "claude" 전달', async () => {

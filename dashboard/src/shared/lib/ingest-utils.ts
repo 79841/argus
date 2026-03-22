@@ -180,13 +180,14 @@ export const getStatusCode = (attrs: KeyValue[] | undefined): string => {
   return getAttr(attrs, 'status_code') || getAttr(attrs, 'http.response.status_code') || ''
 }
 
-export const getToolCategory = (toolName: string): string => {
-  for (const [category, tools] of Object.entries(AGENT_TOOL_CATEGORIES)) {
-    if (tools.includes(toolName)) return category
-  }
-  if (toolName.startsWith('mcp')) return 'MCP'
-  return 'Other'
-}
+const TOOL_CATEGORY_MAP = new Map(
+  Object.entries(AGENT_TOOL_CATEGORIES).flatMap(([cat, tools]) =>
+    tools.map((t): [string, string] => [t, cat])
+  )
+)
+
+export const getToolCategory = (toolName: string): string =>
+  TOOL_CATEGORY_MAP.get(toolName) ?? (toolName.startsWith('mcp') ? 'MCP' : 'Other')
 
 export const extractProjectFromArgs = (attrs: KeyValue[] | undefined): string => {
   const args = getAttr(attrs, 'arguments')

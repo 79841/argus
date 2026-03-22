@@ -7,10 +7,14 @@ vi.mock('@/shared/lib/queries', () => ({
   getEfficiencyComparison: vi.fn(),
 }))
 
-vi.mock('@/shared/lib/api-utils', () => ({
-  parseDays: vi.fn((v: string | null, def: number) => (v ? parseInt(v) : def)),
-  parseAgentType: vi.fn((v: string | null) => v ?? 'all'),
-}))
+vi.mock('@/shared/lib/api-utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/lib/api-utils')>()
+  return {
+    ...actual,
+    parseDays: vi.fn((v: string | null, def: number) => (v ? parseInt(v) : def)),
+    parseAgentType: vi.fn((v: string | null) => v ?? 'all'),
+  }
+})
 
 import * as queries from '@/shared/lib/queries'
 
