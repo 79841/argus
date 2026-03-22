@@ -171,7 +171,7 @@ export default function Home() {
               <span className="h-3 w-3 rounded-full bg-yellow-400" />
               <span className="h-3 w-3 rounded-full bg-green-400" />
               <div className="ml-2 flex-1 rounded-md border border-surface-200 bg-white px-3 py-1 text-xs text-surface-500 dark:border-surface-600 dark:bg-surface-900 dark:text-surface-400">
-                localhost:3000
+                localhost:9845
               </div>
             </div>
             <div className="relative">
@@ -242,7 +242,7 @@ export default function Home() {
                 <span className="text-white">=http/json{"\n"}</span>
                 <span className="text-green-400">export </span>
                 <span className="text-blue-300">OTEL_EXPORTER_OTLP_ENDPOINT</span>
-                <span className="text-white">=http://localhost:3000</span>
+                <span className="text-white">=http://localhost:9845</span>
               </code>
             </pre>
           </div>

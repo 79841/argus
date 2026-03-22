@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getProjects, getProjectCosts, getProjectComparison } from '@/lib/queries'
-import { parseAgentType } from '@/lib/api-utils'
+import { getProjects, getProjectCosts, getProjectComparison } from '@/shared/lib/queries'
+import { parseAgentType } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
 
     const data = await getProjects()
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

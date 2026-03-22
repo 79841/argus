@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSuggestionMetrics } from '@/lib/queries'
-import { generateSuggestions } from '@/lib/suggestions'
-import { parseDays } from '@/lib/api-utils'
+import { getSuggestionMetrics } from '@/shared/lib/queries'
+import { generateSuggestions } from '@/shared/lib/suggestions'
+import { parseDays } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const suggestions = generateSuggestions(metrics)
 
     return NextResponse.json({ suggestions, metrics })
-  } catch {
+  } catch (error) {
+    console.error('[/api/suggestions] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -5,7 +5,7 @@
 # Hook JSON on stdin:
 #   { "session_id": "...", "tool_name": "...", "tool_input": {...}, ... }
 
-ARGUS_ENDPOINT="${ARGUS_ENDPOINT:-http://localhost:3000}"
+ARGUS_ENDPOINT="${ARGUS_ENDPOINT:-http://localhost:9845}"
 
 HOOK_JSON=$(cat)
 

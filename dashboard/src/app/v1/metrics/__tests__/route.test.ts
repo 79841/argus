@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Database from 'better-sqlite3'
-import { initSchema } from '@/lib/db'
+import { initSchema } from '@/shared/lib/db'
 
 let testDb: Database.Database
 
-vi.mock('@/lib/db', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@/lib/db')>()
+vi.mock('@/shared/lib/db', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/shared/lib/db')>()
   return {
     ...original,
     getDb: () => testDb,

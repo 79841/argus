@@ -1,16 +1,22 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
   extractProjectFromArgs,
-} from '@/lib/ingest-utils'
-import type { OtlpLogsRequest } from '@/lib/ingest-utils'
+} from '@/shared/lib/ingest-utils'
+import type { OtlpLogsRequest } from '@/shared/lib/ingest-utils'
 
 export async function POST(request: NextRequest) {
+  let data: OtlpLogsRequest
   try {
-    const data = (await request.json()) as OtlpLogsRequest
+    data = (await request.json()) as OtlpLogsRequest
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  try {
     if (!data.resourceLogs || !Array.isArray(data.resourceLogs)) {
       return NextResponse.json({ accepted: 0 })
     }
@@ -34,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     let count = 0
     const sessionProjects = new Map<string, string>()
+    const codexSessions = new Set<string>()
 
     const tx = db.transaction(() => {
       for (const resourceLog of data.resourceLogs ?? []) {
@@ -78,12 +85,17 @@ export async function POST(request: NextRequest) {
             const toolName = getAttr(attrs, 'tool_name') || getAttr(attrs, 'function_name')
             const durationMs = getNumAttr(attrs, 'duration_ms')
 
-            let body = logRecord.body ? getVal(logRecord.body) : ''
+            const rawBody = logRecord.body ? getVal(logRecord.body) : ''
+            let body = rawBody
             if (eventName === 'api_error') {
               body = getErrorMessage(attrs) || body
             } else if (eventName === 'user_prompt') {
               const promptText = getAttr(attrs, 'prompt')
-              if (promptText) body = promptText
+              if (promptText && !['<REDACTED>', '[REDACTED]'].includes(promptText)) {
+                body = promptText
+              } else if (!body || body.endsWith(`.${eventName}`) || ['<REDACTED>', '[REDACTED]'].includes(body)) {
+                body = ''
+              }
             }
 
             insert.run(
@@ -117,7 +129,11 @@ export async function POST(request: NextRequest) {
               const toolParams = getAttr(attrs, 'tool_parameters')
               let params: Record<string, string> = {}
               if (toolParams) {
-                try { params = JSON.parse(toolParams) } catch {}
+                try {
+                  params = JSON.parse(toolParams)
+                } catch (error) {
+                  console.warn('[ingest] Failed to parse tool_parameters:', toolParams?.slice(0, 200), error)
+                }
               }
 
               if (toolName.startsWith('mcp__') || (toolName === 'mcp_tool' && params.mcp_server_name)) {
@@ -179,7 +195,39 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            if (agentType === 'codex' && sessionId) {
+              codexSessions.add(sessionId)
+            }
+
             count++
+          }
+        }
+      }
+
+      // Backfill synthetic prompt_id for Codex sessions (Codex has no native prompt_id)
+      if (codexSessions.size > 0) {
+        const selectEvents = db.prepare(
+          "SELECT id, event_name, prompt_id FROM agent_logs WHERE session_id = ? AND agent_type = 'codex' ORDER BY timestamp, id"
+        )
+        const updatePromptId = db.prepare(
+          'UPDATE agent_logs SET prompt_id = ? WHERE id = ?'
+        )
+        for (const sid of codexSessions) {
+          const rows = selectEvents.all(sid) as { id: number; event_name: string; prompt_id: string }[]
+          let currentPromptId = ''
+          for (const row of rows) {
+            if (row.prompt_id) {
+              currentPromptId = row.prompt_id
+              continue
+            }
+            if (row.event_name === 'user_prompt') {
+              currentPromptId = randomUUID()
+            } else if (!currentPromptId && row.event_name !== 'session_start') {
+              currentPromptId = randomUUID()
+            }
+            if (currentPromptId) {
+              updatePromptId.run(currentPromptId, row.id)
+            }
           }
         }
       }
@@ -197,7 +245,8 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ accepted: count })
-  } catch {
+  } catch (error) {
+    console.error('[/api/ingest] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

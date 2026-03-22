@@ -1,0 +1,26 @@
+{
+  "resourceLogs": [{
+    "resource": {
+      "attributes": [
+        { "key": "service.name", "value": { "stringValue": "gemini-cli" } }
+      ]
+    },
+    "scopeLogs": [{
+      "logRecords": [{
+        "timeUnixNano": "1710000000000000000",
+        "severityText": "INFO",
+        "attributes": [
+          { "key": "event.name", "value": { "stringValue": "gemini_cli.api_response" } },
+          { "key": "session.id", "value": { "stringValue": "e2e-gemini-session-1" } },
+          { "key": "prompt_id", "value": { "stringValue": "e2e-gemini-prompt-1" } },
+          { "key": "model", "value": { "stringValue": "models/gemini-2.5-pro" } },
+          { "key": "input_token_count", "value": { "intValue": 1000 } },
+          { "key": "output_token_count", "value": { "intValue": 300 } },
+          { "key": "cached_content_token_count", "value": { "intValue": 500 } },
+          { "key": "thoughts_token_count", "value": { "intValue": 50 } },
+          { "key": "duration_ms", "value": { "intValue": 1800 } }
+        ]
+      }]
+    }]
+  }]
+}

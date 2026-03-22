@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionDetail, getSessionSummary } from '@/lib/queries'
+import { getSessionDetail, getSessionSummary } from '@/shared/lib/queries'
 
 export async function GET(
   request: NextRequest,
@@ -23,7 +23,8 @@ export async function GET(
 
     const events = await getSessionDetail(id)
     return NextResponse.json(events)
-  } catch {
+  } catch (error) {
+    console.error('[/api/sessions/[id]] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { disconnectAgents } from '@/lib/setup'
-import type { AgentSetupType } from '@/lib/setup'
+import { disconnectAgents } from '@/shared/lib/setup'
+import type { AgentSetupType } from '@/shared/lib/setup'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { agents: string[] }

@@ -1,0 +1,26 @@
+{
+  "resourceLogs": [{
+    "resource": {
+      "attributes": [
+        { "key": "service.name", "value": { "stringValue": "codex-cli" } }
+      ]
+    },
+    "scopeLogs": [{
+      "logRecords": [{
+        "timeUnixNano": "1710000000000000000",
+        "severityText": "INFO",
+        "attributes": [
+          { "key": "event.name", "value": { "stringValue": "codex.sse_event" } },
+          { "key": "event.kind", "value": { "stringValue": "response.completed" } },
+          { "key": "conversation.id", "value": { "stringValue": "e2e-codex-session-1" } },
+          { "key": "model", "value": { "stringValue": "gpt-4.1" } },
+          { "key": "input_token_count", "value": { "intValue": 1200 } },
+          { "key": "output_token_count", "value": { "intValue": 450 } },
+          { "key": "cached_token_count", "value": { "intValue": 600 } },
+          { "key": "reasoning_token_count", "value": { "intValue": 100 } },
+          { "key": "duration_ms", "value": { "intValue": 2340 } }
+        ]
+      }]
+    }]
+  }]
+}

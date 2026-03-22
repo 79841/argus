@@ -21,19 +21,29 @@ Next.js App Router 기반으로 페이지, API 라우트, 컴포넌트를 구현
 
 ```
 dashboard/src/
-├── app/
-│   ├── layout.tsx           # Nav 포함 루트 레이아웃
-│   ├── page.tsx             # Overview
-│   ├── {name}/page.tsx      # 각 페이지
-│   └── api/{name}/route.ts  # API 라우트
-├── lib/
-│   ├── queries.ts           # SQLite 쿼리 함수
-│   ├── agents.ts            # 에이전트 정의
-│   ├── efficiency.ts        # 효율성 점수
-│   └── config-tracker.ts    # 설정 추적
-└── components/
-    ├── ui/                  # shadcn/ui
-    └── *.tsx                # 커스텀 컴포넌트
+├── app/                             # App Router — 라우팅만 담당
+│   ├── layout.tsx                   # Nav 포함 루트 레이아웃
+│   ├── page.tsx                     # Overview
+│   ├── {name}/page.tsx              # 각 페이지 → features/{name} import
+│   └── api/{name}/route.ts          # API 라우트
+├── features/                        # Feature 모듈 (도메인별 컴포넌트·로직·테스트)
+│   └── {feature-name}/
+│       ├── components/              # 도메인 전용 컴포넌트
+│       ├── lib/                     # 도메인 전용 로직
+│       ├── hooks/                   # 도메인 전용 훅
+│       ├── __tests__/               # 도메인 테스트
+│       └── index.ts                 # 공개 API
+├── shared/                          # 공유 모듈 (2개+ feature에서 사용)
+│   ├── components/                  # 공유 컴포넌트 (ui/, 필터, 네비게이션)
+│   │   └── ui/                      # shadcn/ui 컴포넌트
+│   ├── hooks/                       # 공유 훅
+│   └── lib/                         # 유틸 (db, queries, format, agents)
+│       ├── db.ts                    # SQLite 클라이언트 + 스키마
+│       ├── queries/                 # SQLite 쿼리 함수 (모듈별 분리)
+│       ├── agents.ts                # 에이전트 정의
+│       ├── format.ts                # 포맷 유틸
+│       └── ingest-utils.ts          # OTLP 파싱 유틸
+└── infra/                           # 외부 시스템 연동 (git, fetch)
 ```
 
 ## 실행 절차
@@ -51,27 +61,30 @@ dashboard/src/
 # 기존 API 라우트 패턴 확인
 ls dashboard/src/app/api/
 
-# 기존 컴포넌트 확인
-ls dashboard/src/components/
+# 기존 feature 컴포넌트 확인
+ls dashboard/src/features/
+
+# 공유 컴포넌트 확인
+ls dashboard/src/shared/components/
 
 # 쿼리 패턴 확인
-cat dashboard/src/lib/queries.ts
+ls dashboard/src/shared/lib/queries/
 ```
 
 ### 3. 구현 순서
 
 **Bottom-up으로 구현한다:**
 
-1. **lib 함수**: SQLite 쿼리 함수
-2. **API 라우트**: NextRequest → 쿼리 함수 호출 → NextResponse.json()
-3. **컴포넌트**: 차트, 카드 등 UI 컴포넌트
-4. **페이지**: 컴포넌트 조합 + 데이터 페칭
+1. **쿼리 함수**: `shared/lib/queries/` 에 모듈별 쿼리 추가
+2. **API 라우트**: `app/api/{name}/route.ts`
+3. **Feature 컴포넌트**: `features/{name}/components/`
+4. **페이지**: `app/{name}/page.tsx` → feature 컴포넌트 import
 
 ### 4. 검증
 
 ```bash
 cd dashboard
-npm run dev
+pnpm dev
 # 브라우저에서 페이지 확인
 # API 직접 호출 테스트
 curl -s http://localhost:9845/api/{name}
@@ -81,14 +94,14 @@ curl -s http://localhost:9845/api/{name}
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
-import { getXxxData } from '@/lib/queries'
+import { getXxxData } from '@/shared/lib/queries/xxx'
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const agentType = searchParams.get('agent_type') || 'all'
 
-    const data = await getXxxData(agentType)
+    const data = getXxxData(agentType)
     return NextResponse.json(data)
   } catch (error) {
     console.error('API error:', error)
@@ -103,15 +116,10 @@ export async function GET(request: NextRequest) {
 ## SQLite 쿼리 패턴
 
 ```typescript
-import { getDb } from './db'
+import { getDb } from '@/shared/lib/db'
+import { agentFilter, agentParams } from './helpers'
 
-const agentFilter = (agentType: string) =>
-  agentType !== 'all' ? `AND agent_type = ?` : ''
-
-const agentParams = (agentType: string) =>
-  agentType !== 'all' ? [agentType] : []
-
-export const getData = async (agentType: string) => {
+export const getData = (agentType: string) => {
   const db = getDb()
   return db.prepare(`
     SELECT ...
@@ -129,7 +137,7 @@ export const getData = async (agentType: string) => {
 ```typescript
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 
 type StatsCardProps = {
   title: string
@@ -165,6 +173,7 @@ export const StatsCard = ({ title, value, description }: StatsCardProps) => {
 
 - Server Component 기본, `'use client'`는 인터랙션 필요 시에만 추가한다
 - `export default` 금지 (Next.js 페이지/레이아웃 예외)
+- import 경로는 `@/shared/`, `@/features/` 접두사를 사용한다
 - 에이전트 필터는 모든 데이터 페이지에 필수로 포함한다
 - API 라우트에서 에러 발생 시 적절한 HTTP 상태 코드를 반환한다
 - SQLite 쿼리는 `?` 파라미터를 사용한다 (SQL 인젝션 방지)

@@ -44,6 +44,7 @@ CONTEXT.md
 PRD.md
 
 # Claude Code
+.claude/docs/
 .claude/worktrees/
 
 # Misc

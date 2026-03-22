@@ -81,7 +81,8 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `inline; filename="argus-${pagePath.replace(/\//g, '-')}.png"`,
       },
     })
-  } catch {
+  } catch (error) {
+    console.error('[/api/screenshot] error:', error)
     return NextResponse.json({ error: 'Screenshot capture failed' }, { status: 500 })
   }
 }

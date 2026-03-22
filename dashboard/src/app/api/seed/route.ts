@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 const MODELS = [
   'claude-sonnet-4-20250514',
@@ -221,7 +221,8 @@ export async function POST() {
   tx()
 
   return NextResponse.json({ seeded: count })
-  } catch {
+  } catch (error) {
+    console.error('[/api/seed] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

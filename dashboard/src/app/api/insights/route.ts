@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/lib/queries'
-import { parseDays, parseLimit } from '@/lib/api-utils'
+import { getHighCostSessions, getModelCostEfficiency, getBudgetStatus } from '@/shared/lib/queries'
+import { parseDays, parseLimit } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({ highCostSessions, modelEfficiency, budgetStatus })
-  } catch {
+  } catch (error) {
+    console.error('[/api/insights] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

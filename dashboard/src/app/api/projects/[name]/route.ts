@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getProjectDetailStats, getProjectDailyCosts } from '@/lib/queries'
+import { getProjectDetailStats, getProjectDailyCosts } from '@/shared/lib/queries'
 
 export async function GET(
   _request: NextRequest,
@@ -17,7 +17,8 @@ export async function GET(
     const projectDaily = daily.filter((d) => d.project_name === projectName)
 
     return NextResponse.json({ stats, daily: projectDaily })
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects/[name]] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

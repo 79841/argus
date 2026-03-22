@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessions } from '@/lib/queries'
-import { parseAgentType, parseLimit } from '@/lib/api-utils'
+import { getSessions } from '@/shared/lib/queries'
+import { parseAgentType, parseLimit } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const limit = parseLimit(sp.get('limit'), 100)
     const data = await getSessions(agentType, project, from, to, limit)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/sessions] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

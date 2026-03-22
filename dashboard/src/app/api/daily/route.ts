@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDailyStats } from '@/lib/queries'
-import { parseAgentType, parseDays } from '@/lib/api-utils'
+import { getDailyStats } from '@/shared/lib/queries'
+import { parseAgentType, parseDays } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const to = sp.get('to') || undefined
     const data = await getDailyStats(agentType, days, project, from, to)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/daily] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

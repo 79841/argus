@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
-import { VALID_AGENT_TYPES } from '@/lib/api-utils'
+import { getDb } from '@/shared/lib/db'
+import { VALID_AGENT_TYPES } from '@/shared/lib/api-utils'
 
 export type AgentLimit = {
   agent_type: string
@@ -13,7 +13,8 @@ export async function GET() {
     const db = getDb()
     const rows = db.prepare('SELECT agent_type, daily_cost_limit, monthly_cost_limit FROM agent_limits').all() as AgentLimit[]
     return NextResponse.json({ limits: rows })
-  } catch {
+  } catch (error) {
+    console.error('[/api/settings/limits GET] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest) {
     tx()
 
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (error) {
+    console.error('[/api/settings/limits POST] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

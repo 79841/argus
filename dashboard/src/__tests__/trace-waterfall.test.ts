@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import type { SessionDetailEvent } from '@/lib/queries'
+import type { SessionDetailEvent } from '@/shared/lib/queries'
 import {
   groupEventsForWaterfall,
   calculateTimeScale,
   calculateBarPosition,
-} from '@/lib/trace-waterfall'
+} from '@/features/sessions/lib/trace-waterfall'
 
 const makeEvent = (overrides: Partial<SessionDetailEvent> = {}): SessionDetailEvent => ({
   timestamp: '2026-03-16T10:00:00.000Z',

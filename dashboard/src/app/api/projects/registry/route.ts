@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { getDb } from '@/lib/db'
+import { getDb } from '@/shared/lib/db'
 
 type RegistryRow = {
   project_name: string
@@ -14,7 +14,8 @@ export async function GET() {
     const db = getDb()
     const rows = db.prepare('SELECT * FROM project_registry ORDER BY project_name').all() as RegistryRow[]
     return NextResponse.json({ projects: rows })
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects/registry GET] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -39,7 +40,8 @@ export async function POST(request: NextRequest) {
     ).run(name, resolved)
 
     return NextResponse.json({ success: true, name, path: resolved })
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects/registry POST] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -54,7 +56,8 @@ export async function DELETE(request: NextRequest) {
     const db = getDb()
     db.prepare('DELETE FROM project_registry WHERE project_name = ?').run(name)
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (error) {
+    console.error('[/api/projects/registry DELETE] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

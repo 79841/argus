@@ -1,0 +1,8 @@
+export { StepIndicator } from './components/step-indicator'
+export { WelcomeStep } from './components/welcome-step'
+export { AgentConnectionStep } from './components/agent-connection-step'
+export { ProjectConnectionStep } from './components/project-connection-step'
+export { VerificationStep } from './components/verification-step'
+export { CompleteStep } from './components/complete-step'
+export { useOnboarding } from './hooks/use-onboarding'
+export type { OnboardingStep } from './hooks/use-onboarding'

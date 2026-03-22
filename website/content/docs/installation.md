@@ -13,7 +13,7 @@ Download the latest installer from [GitHub Releases](https://github.com/79841/ar
 | **Windows** | `Argus Setup x.x.x.exe` | Run the NSIS installer → launch from Start Menu |
 
 After launching, Argus runs as a **tray-resident app** and automatically:
-- Starts a Next.js server on `http://localhost:3000`
+- Starts a Next.js server on `http://localhost:9845`
 - Opens the dashboard in an Electron window
 - Creates a SQLite database for storing telemetry
 
@@ -34,7 +34,7 @@ cd argus/dashboard
 pnpm install
 ```
 
-**Web mode** (browser at http://localhost:3000):
+**Web mode** (browser at http://localhost:9845):
 
 ```bash
 pnpm dev

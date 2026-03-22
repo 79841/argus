@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getModelUsage } from '@/lib/queries'
-import { parseAgentType } from '@/lib/api-utils'
+import { getModelUsage } from '@/shared/lib/queries'
+import { parseAgentType } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     const to = sp.get('to') || undefined
     const data = await getModelUsage(agentType, project, from, to)
     return NextResponse.json(data)
-  } catch {
+  } catch (error) {
+    console.error('[/api/models] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
