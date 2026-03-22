@@ -3,7 +3,7 @@ import path from 'path'
 import { spawn, exec, type ChildProcess } from 'child_process'
 import net from 'net'
 
-export const PORT = 9845
+export const PORT = Number(process.env.ARGUS_PORT) || 9845
 export const DEV_URL = `http://localhost:${PORT}`
 export const isDev = !app.isPackaged
 

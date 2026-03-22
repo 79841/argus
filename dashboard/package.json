@@ -19,6 +19,8 @@
     "electron:dist": "pnpm build && pnpm electron:build && electron-builder",
     "electron:dist:mac": "pnpm build && pnpm electron:build && electron-builder --mac",
     "electron:dist:win": "pnpm build && pnpm electron:build && electron-builder --win",
+    "dev:onboarding": "npm rebuild better-sqlite3 > /dev/null 2>&1 && npm run electron:build && npx concurrently -n next,electron \"ARGUS_DB_PATH=../argus-onboarding-test.db next dev --port 9847\" \"npx wait-on http://localhost:9847/api/health && ARGUS_PORT=9847 npx electron .\"",
+    "dev:onboarding:clean": "rm -f ../argus-onboarding-test.db ../argus-onboarding-test.db-wal ../argus-onboarding-test.db-shm && rm -rf \"$HOME/Library/Application Support/argus/Local Storage\" \"$HOME/Library/Application Support/argus/Session Storage\"",
     "electron:rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3"
   },
