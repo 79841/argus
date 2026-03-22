@@ -3,7 +3,5 @@ export { AgentsSection } from './components/agents-section'
 export { PricingSection } from './components/pricing-section'
 export { SetupSection } from './components/setup-section'
 export { ProjectConnectionSection } from './components/project-connection-section'
-export { DataSection } from './components/data-section'
-
 export { useAgentConnections } from './hooks/use-agent-connections'
 export { useProjectRegistry } from './hooks/use-project-registry'

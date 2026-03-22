@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useLocale } from '@/shared/lib/i18n'
 import { FilterBar } from '@/shared/components/filter-bar'
+import { AgentFilter } from '@/shared/components/agent-filter'
+import type { AgentType } from '@/shared/lib/agents'
 import type { Heading } from '@/features/rules/components/markdown-viewer'
 import { useConfigFiles, FileTree, FileViewer } from '@/features/rules'
 
 export default function RulesPage() {
   const { t } = useLocale()
+  const [agentType, setAgentType] = useState<AgentType>('all')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
@@ -27,7 +30,7 @@ export default function RulesPage() {
     setViewMode,
     loadFile,
     handleSave,
-  } = useConfigFiles()
+  } = useConfigFiles({ agentType })
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups((prev) => {
@@ -56,6 +59,7 @@ export default function RulesPage() {
       <FilterBar>
         <span className="text-sm font-semibold">Rules</span>
         <span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span>
+        <AgentFilter value={agentType} onChange={setAgentType} />
       </FilterBar>
       <div className="flex flex-1 min-h-0">
         <div className="w-[35%] border-r border-[var(--border-subtle)] flex flex-col overflow-auto">
