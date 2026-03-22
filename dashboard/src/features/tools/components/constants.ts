@@ -30,3 +30,24 @@ export const TOOL_COLORS: Record<string, string> = {
 }
 
 export const DEFAULT_COLORS = ['#64748b', '#94a3b8', '#78716c', '#a8a29e', '#71717a']
+
+export const STATUS_BADGE = {
+  active: { label: '활성', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  unused: { label: '미사용', className: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' },
+  unregistered: { label: '미등록', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+} as const
+
+export const SCOPE_BADGE = {
+  project: { label: 'project', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  global: { label: 'global', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+} as const
+
+export const formatToolDate = (iso: string): string => {
+  const d = new Date(iso)
+  return d.toLocaleDateString('ko-KR', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

@@ -155,16 +155,27 @@ export const mergeMcpTools = (
 }
 
 const aggregateRows = (rows: IndividualToolRow[]) => {
-  const invocation_count = rows.reduce((s, r) => s + r.invocation_count, 0)
-  const success_count = rows.reduce((s, r) => s + r.success_count, 0)
-  const fail_count = rows.reduce((s, r) => s + r.fail_count, 0)
-  const avg_duration_ms =
-    invocation_count > 0
-      ? rows.reduce((s, r) => s + r.avg_duration_ms * r.invocation_count, 0) / invocation_count
-      : 0
-  const last_used = rows.reduce((latest, r) => (r.last_used > latest ? r.last_used : latest), '')
+  let invocation_count = 0
+  let success_count = 0
+  let fail_count = 0
+  let totalDuration = 0
+  let latest = ''
 
-  return { invocation_count, success_count, fail_count, avg_duration_ms, last_used: last_used || undefined }
+  for (const r of rows) {
+    invocation_count += r.invocation_count
+    success_count += r.success_count
+    fail_count += r.fail_count
+    totalDuration += r.avg_duration_ms * r.invocation_count
+    if (r.last_used > latest) latest = r.last_used
+  }
+
+  return {
+    invocation_count,
+    success_count,
+    fail_count,
+    avg_duration_ms: invocation_count > 0 ? totalDuration / invocation_count : 0,
+    last_used: latest || undefined,
+  }
 }
 
 const buildMcpToolItems = (rows: IndividualToolRow[]): MergedToolItem[] => {

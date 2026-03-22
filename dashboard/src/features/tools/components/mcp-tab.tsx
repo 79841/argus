@@ -8,46 +8,22 @@ import { Badge } from '@/shared/components/ui/badge'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
+import { AGENTS } from '@/shared/lib/agents'
 import { cn } from '@/shared/lib/utils'
 import type { MergedMcpServer, MergedToolItem } from '@/features/tools/lib/merge-tools'
-import { TOP_COLORS } from './constants'
+import { TOP_COLORS, STATUS_BADGE, SCOPE_BADGE, formatToolDate } from './constants'
 
 type McpTabProps = {
   data: MergedMcpServer[]
 }
 
-const AGENT_STYLE: Record<string, { label: string; dotColor: string }> = {
-  claude: { label: 'Claude', dotColor: 'bg-orange-500' },
-  codex: { label: 'Codex', dotColor: 'bg-emerald-500' },
-  gemini: { label: 'Gemini', dotColor: 'bg-blue-500' },
+const AGENT_DOT: Record<string, string> = {
+  claude: 'bg-orange-500',
+  codex: 'bg-emerald-500',
+  gemini: 'bg-blue-500',
 }
 
-const STATUS_CONFIG = {
-  active: { label: '활성', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-  unused: { label: '미사용', className: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' },
-  unregistered: { label: '미등록', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-}
-
-const SCOPE_CONFIG = {
-  project: { label: 'project', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-  global: { label: 'global', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-}
-
-const formatDate = (iso: string): string => {
-  const d = new Date(iso)
-  return d.toLocaleDateString('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-type ToolRowsProps = {
-  tools: MergedToolItem[]
-}
-
-const ToolRows = ({ tools }: ToolRowsProps) => {
+const ToolRows = ({ tools }: { tools: MergedToolItem[] }) => {
   if (tools.length === 0) {
     return (
       <TableRow>
@@ -61,7 +37,8 @@ const ToolRows = ({ tools }: ToolRowsProps) => {
   return (
     <>
       {tools.map((tool, idx) => {
-        const agentStyle = tool.agent_type ? (AGENT_STYLE[tool.agent_type] ?? { label: tool.agent_type, dotColor: 'bg-gray-500' }) : null
+        const agent = tool.agent_type ? AGENTS[tool.agent_type as keyof typeof AGENTS] : null
+        const dot = tool.agent_type ? AGENT_DOT[tool.agent_type] ?? 'bg-gray-500' : null
         return (
           <TableRow key={`${tool.name}-${tool.agent_type ?? idx}`} className="bg-muted/30">
             <TableCell className="pl-8 max-w-0">
@@ -70,10 +47,10 @@ const ToolRows = ({ tools }: ToolRowsProps) => {
               </span>
             </TableCell>
             <TableCell>
-              {agentStyle ? (
+              {agent && dot ? (
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className={cn('h-2 w-2 shrink-0 rounded-full', agentStyle.dotColor)} />
-                  {agentStyle.label}
+                  <span className={cn('h-2 w-2 shrink-0 rounded-full', dot)} />
+                  {agent.name}
                 </span>
               ) : (
                 <span className="text-xs text-muted-foreground">—</span>
@@ -89,7 +66,7 @@ const ToolRows = ({ tools }: ToolRowsProps) => {
               )}
             </TableCell>
             <TableCell className="text-right text-xs text-muted-foreground">
-              {tool.last_used ? formatDate(tool.last_used) : '—'}
+              {tool.last_used ? formatToolDate(tool.last_used) : '—'}
             </TableCell>
           </TableRow>
         )
@@ -109,21 +86,18 @@ export const McpTab = ({ data }: McpTabProps) => {
   const totalSuccess = data.reduce((s, d) => s + d.successCount, 0)
   const successRate = totalCalls > 0 ? (totalSuccess / totalCalls) * 100 : 0
 
-  const activeServers = data.filter((s) => s.status === 'active' && s.totalCalls > 0)
-  const donutData = activeServers.map((s, i) => ({
-    name: s.serverName,
-    value: s.totalCalls,
-    fill: TOP_COLORS[i % TOP_COLORS.length],
-  }))
+  const donutData = data
+    .filter((s) => s.status === 'active' && s.totalCalls > 0)
+    .map((s, i) => ({
+      name: s.serverName,
+      value: s.totalCalls,
+      fill: TOP_COLORS[i % TOP_COLORS.length],
+    }))
 
   const toggleServer = (serverName: string) => {
-    setExpandedServers((prev: Set<string>) => {
+    setExpandedServers((prev) => {
       const next = new Set(prev)
-      if (next.has(serverName)) {
-        next.delete(serverName)
-      } else {
-        next.add(serverName)
-      }
+      next.has(serverName) ? next.delete(serverName) : next.add(serverName)
       return next
     })
   }
@@ -134,11 +108,7 @@ export const McpTab = ({ data }: McpTabProps) => {
         <KpiCard
           label="활용률"
           value={`${utilizationPct}%`}
-          sub={
-            registeredCount > 0
-              ? `등록 ${registeredCount}개 중 ${activeCount}개 활용`
-              : '등록된 서버 없음'
-          }
+          sub={registeredCount > 0 ? `등록 ${registeredCount}개 중 ${activeCount}개 활용` : '등록된 서버 없음'}
         />
         <KpiCard
           label="성공률"
@@ -172,7 +142,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null
-                      const d = payload[0].payload as typeof donutData[number]
+                      const d = payload[0].payload as (typeof donutData)[number]
                       const pct = totalCalls > 0 ? ((d.value / totalCalls) * 100).toFixed(1) : '0'
                       return (
                         <div style={CHART_THEME.tooltip.containerStyle}>
@@ -193,7 +163,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center" style={{ paddingBottom: 40 }}>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-10">
                 <span className="text-xl font-bold tabular-nums leading-none">
                   {totalCalls.toLocaleString()}
                 </span>
@@ -239,7 +209,7 @@ export const McpTab = ({ data }: McpTabProps) => {
               <TableBody>
                 {data.map((server) => {
                   const isExpanded = expandedServers.has(server.serverName)
-                  const statusCfg = STATUS_CONFIG[server.status]
+                  const statusCfg = STATUS_BADGE[server.status]
                   const isUnused = server.status === 'unused'
 
                   return (
@@ -272,8 +242,8 @@ export const McpTab = ({ data }: McpTabProps) => {
                           </div>
                           {server.scope && (
                             <div>
-                              <Badge className={cn('text-[10px] px-1.5 py-0', SCOPE_CONFIG[server.scope].className)}>
-                                {SCOPE_CONFIG[server.scope].label}
+                              <Badge className={cn('text-[10px] px-1.5 py-0', SCOPE_BADGE[server.scope].className)}>
+                                {SCOPE_BADGE[server.scope].label}
                               </Badge>
                             </div>
                           )}
