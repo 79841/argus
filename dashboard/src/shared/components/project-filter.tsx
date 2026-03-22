@@ -10,6 +10,7 @@ import {
 } from '@/shared/components/ui/select'
 import type { ProjectRow } from '@/shared/lib/queries'
 import { projectsService } from '@/shared/services'
+import { useLocale } from '@/shared/lib/i18n'
 
 type ProjectFilterProps = {
   value: string
@@ -18,6 +19,7 @@ type ProjectFilterProps = {
 
 export const ProjectFilter = ({ value, onChange }: ProjectFilterProps) => {
   const [projects, setProjects] = useState<ProjectRow[]>([])
+  const { t } = useLocale()
 
   useEffect(() => {
     projectsService.getProjects()
@@ -28,10 +30,10 @@ export const ProjectFilter = ({ value, onChange }: ProjectFilterProps) => {
   return (
     <Select value={value} onValueChange={(v) => onChange(v ?? 'all')}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="All Projects" />
+        <SelectValue placeholder={t('shared.projectFilter.allProjects')} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All Projects</SelectItem>
+        <SelectItem value="all">{t('shared.projectFilter.allProjects')}</SelectItem>
         {projects.map((p) => (
           <SelectItem key={p.project_name} value={p.project_name}>
             {p.project_name}

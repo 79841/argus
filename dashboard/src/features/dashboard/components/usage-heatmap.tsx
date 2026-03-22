@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Tabs, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import type { DailyStats } from '@/shared/lib/queries'
 import { getAgentColor, AGENTS } from '@/shared/lib/agents'
+import { useLocale } from '@/shared/lib/i18n'
 
 type HeatmapMode = 'agents' | 'sessions' | 'cost' | 'efficiency'
 
@@ -97,6 +98,7 @@ const formatCostShort = (v: number): string => {
 
 export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
   const [mode, setMode] = useState<HeatmapMode>('agents')
+  const { t } = useLocale()
 
   const { grid, months, maxSessions, maxCost } = useMemo(() => {
     const today = new Date()
@@ -224,16 +226,16 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">Usage Heatmap</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.heatmap.title')}</CardTitle>
           <Tabs
             value={mode}
             onValueChange={(v) => setMode(v as HeatmapMode)}
           >
             <TabsList className="h-7">
-              <TabsTrigger value="agents" className="text-xs px-2 py-0.5">Agents</TabsTrigger>
-              <TabsTrigger value="sessions" className="text-xs px-2 py-0.5">Sessions</TabsTrigger>
-              <TabsTrigger value="cost" className="text-xs px-2 py-0.5">Cost</TabsTrigger>
-              <TabsTrigger value="efficiency" className="text-xs px-2 py-0.5">Cache</TabsTrigger>
+              <TabsTrigger value="agents" className="text-xs px-2 py-0.5">{t('dashboard.heatmap.agents')}</TabsTrigger>
+              <TabsTrigger value="sessions" className="text-xs px-2 py-0.5">{t('dashboard.heatmap.sessions')}</TabsTrigger>
+              <TabsTrigger value="cost" className="text-xs px-2 py-0.5">{t('dashboard.heatmap.cost')}</TabsTrigger>
+              <TabsTrigger value="efficiency" className="text-xs px-2 py-0.5">{t('dashboard.heatmap.cache')}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

@@ -1,3 +1,5 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import {
@@ -9,6 +11,7 @@ import {
   TableCell,
 } from '@/shared/components/ui/table'
 import { cn } from '@/shared/lib/utils'
+import { useLocale } from '@/shared/lib/i18n'
 
 type Column = {
   key: string
@@ -41,8 +44,9 @@ export const DataTable = ({
   stickyHeader = false,
   onRowClick,
 }: DataTableProps) => {
+  const { t } = useLocale()
   if (data.length === 0) {
-    return <EmptyState title={emptyMessage ?? 'No data'} />
+    return <EmptyState title={emptyMessage ?? t('shared.dataTable.noData')} />
   }
 
   return (

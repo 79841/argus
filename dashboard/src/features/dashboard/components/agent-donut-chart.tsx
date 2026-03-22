@@ -14,18 +14,13 @@ import { AGENTS } from '@/shared/lib/agents'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { formatCostDetail, formatTokens } from '@/shared/lib/format'
 import type { AgentDistribution } from '@/shared/lib/queries'
+import { useLocale } from '@/shared/lib/i18n'
 
 type AgentDonutChartProps = {
   data: AgentDistribution[]
 }
 
 type Metric = 'sessions' | 'tokens' | 'cost'
-
-const METRIC_TABS: { key: Metric; label: string }[] = [
-  { key: 'sessions', label: 'Sessions' },
-  { key: 'tokens', label: 'Tokens' },
-  { key: 'cost', label: 'Cost' },
-]
 
 const formatValue = (metric: Metric, value: number): string => {
   if (metric === 'cost') return formatCostDetail(value)
@@ -111,6 +106,13 @@ const renderCustomLabel = ({
 
 export const AgentDonutChart = ({ data }: AgentDonutChartProps) => {
   const [metric, setMetric] = useState<Metric>('sessions')
+  const { t } = useLocale()
+
+  const METRIC_TABS: { key: Metric; label: string }[] = [
+    { key: 'sessions', label: t('dashboard.agentDonut.sessions') },
+    { key: 'tokens', label: t('dashboard.agentDonut.tokens') },
+    { key: 'cost', label: t('dashboard.agentDonut.cost') },
+  ]
 
   const { chartData, isEmpty } = useMemo(() => {
     const filtered = data.filter((d) => d[metric] > 0)
@@ -144,10 +146,10 @@ export const AgentDonutChart = ({ data }: AgentDonutChartProps) => {
 
   return (
     <ChartCard
-      title="Agent Distribution"
+      title={t('dashboard.agentDonut.title')}
       height={260}
       empty={isEmpty}
-      emptyMessage="No agent data"
+      emptyMessage={t('dashboard.agentDonut.noData')}
       actions={actions}
     >
       <ResponsiveContainer width="100%" height={260}>

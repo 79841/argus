@@ -15,7 +15,7 @@ import { useProjectDetail, AgentDistChart, DailyCostChart } from '@/features/pro
 const formatPct = (v: number) => `${(v * 100).toFixed(1)}%`
 const formatDate = (iso: string) => {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('ko-KR', {
+  return new Date(iso).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -23,7 +23,7 @@ const formatDate = (iso: string) => {
 }
 const shortenDate = (iso: string) => {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 export default function ProjectDetailPage() {

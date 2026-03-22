@@ -11,7 +11,7 @@ import { useProjectsData, CostComparisonChart } from '@/features/projects'
 
 const formatDate = (iso: string) => {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('ko-KR', {
+  return new Date(iso).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   })
