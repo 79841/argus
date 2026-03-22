@@ -110,12 +110,12 @@ export const McpTab = ({ data }: McpTabProps) => {
         <KpiCard
           label={t('tools.detail.utilization')}
           value={`${utilizationPct}%`}
-          sub={registeredCount > 0 ? t('tools.detail.registered').replace('{0}', String(registeredCount)).replace('{1}', String(activeCount)) : t('tools.detail.noRegisteredServers')}
+          sub={registeredCount > 0 ? t('tools.detail.registered', { '0': String(registeredCount), '1': String(activeCount) }) : t('tools.detail.noRegisteredServers')}
         />
         <KpiCard
           label={t('tools.detail.successRate')}
           value={totalCalls > 0 ? `${successRate.toFixed(1)}%` : '—'}
-          sub={totalCalls > 0 ? t('tools.detail.totalCalls').replace('{0}', totalCalls.toLocaleString()) : t('tools.detail.noCallData')}
+          sub={totalCalls > 0 ? t('tools.detail.totalCalls', { '0': totalCalls.toLocaleString() }) : t('tools.detail.noCallData')}
         />
       </div>
 

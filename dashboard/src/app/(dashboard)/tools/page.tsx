@@ -108,7 +108,7 @@ export default function ToolsPage() {
                   Loading...
                 </div>
               ) : individual.length === 0 && registered.length === 0 ? (
-                <EmptyState title={t('tools.empty') ?? 'No tool data'} />
+                <EmptyState title={t('tools.empty')} />
               ) : (
                 <DetailsSection individual={individual} registered={registered} />
               )}
