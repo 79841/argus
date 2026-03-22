@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sun, Moon, Monitor, Globe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Sun, Moon, Monitor, Globe, RotateCcw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Button } from '@/shared/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/components/ui/select'
 import { useTheme } from '@/shared/components/theme-provider'
 import { useLocale } from '@/shared/lib/i18n'
@@ -23,6 +25,7 @@ const REFRESH_OPTIONS = POLLING.REFRESH_OPTIONS.map((opt) => ({
 }))
 
 export const GeneralSection = () => {
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { locale, setLocale, t } = useLocale()
   const [refreshInterval, setRefreshInterval] = useState('0')
@@ -176,6 +179,25 @@ export const GeneralSection = () => {
               ))}
             </SelectContent>
           </Select>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.onboarding.restart')}</CardTitle>
+          <CardDescription>{t('settings.onboarding.restart.desc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
+              router.push('/onboarding')
+            }}
+          >
+            <RotateCcw className="mr-2 size-4" />
+            {t('settings.onboarding.restart')}
+          </Button>
         </CardContent>
       </Card>
     </div>

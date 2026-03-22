@@ -6,11 +6,13 @@ export const STORAGE_KEYS = {
   AGENT_THEME: 'argus-agent-theme',
   REFRESH_INTERVAL: 'argus-refresh-interval',
   THEME: 'argus-theme',
+  ONBOARDING_COMPLETED: 'argus-onboarding-completed',
 } as const
 
 // Polling intervals (ms)
 export const POLLING = {
   ACTIVE_SESSION_MS: 30_000,
+  VERIFICATION_MS: 3_000,
   REFRESH_OPTIONS: [
     { label: '30s', value: 30_000 },
     { label: '1m', value: 60_000 },
