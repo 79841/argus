@@ -1,7 +1,10 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { ArrowUpDown } from 'lucide-react'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
+import { Button } from '@/shared/components/ui/button'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { useLocale } from '@/shared/lib/i18n'
 import { FilterBar } from '@/shared/components/filter-bar'
@@ -15,7 +18,12 @@ export default function SessionDetailPage() {
 
   const sessionId = typeof params.id === 'string' ? decodeURIComponent(params.id) : ''
 
-  const { loading, summary, promptGroups, cacheRate, costChartData } = useSessionDetail(sessionId)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const { loading, summary, promptGroups: rawGroups, cacheRate, costChartData } = useSessionDetail(sessionId)
+  const promptGroups = useMemo(
+    () => sortOrder === 'asc' ? rawGroups : [...rawGroups].reverse(),
+    [rawGroups, sortOrder],
+  )
 
   if (loading) {
     return (
@@ -94,16 +102,30 @@ export default function SessionDetailPage() {
           )}
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
+            <div className="mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+                onClick={() => setSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {sortOrder === 'asc' ? t('sessions.detail.sortAsc') : t('sessions.detail.sortDesc')}
+              </Button>
+            </div>
             {promptGroups.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
                 {t('sessions.detail.noEvents')}
               </div>
             ) : (
               <div className="space-y-2">
-                {promptGroups.map((group, idx) => (
-                  <PromptGroupCard key={group.promptId} group={group} index={idx} />
-                ))}
+                {promptGroups.map((group, idx) => {
+                  const originalIndex = sortOrder === 'asc' ? idx : promptGroups.length - 1 - idx
+                  return (
+                    <PromptGroupCard key={group.promptId} group={group} index={originalIndex} />
+                  )
+                })}
               </div>
             )}
           </div>

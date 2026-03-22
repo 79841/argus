@@ -1,6 +1,9 @@
 'use client'
 
+import { useState, useMemo } from 'react'
+import { ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { SessionModelCostChart } from '@/features/sessions/components/session-model-cost-chart'
@@ -52,8 +55,13 @@ type SessionDetailProps = {
 
 export const SessionDetail = ({ session, events }: SessionDetailProps) => {
   const { t } = useLocale()
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const summary = computeSummary(events, session)
-  const promptGroups = groupByPrompt(events)
+  const rawGroups = groupByPrompt(events)
+  const promptGroups = useMemo(
+    () => sortOrder === 'asc' ? rawGroups : [...rawGroups].reverse(),
+    [rawGroups, sortOrder],
+  )
 
   return (
     <div className="space-y-5 p-6">
@@ -110,7 +118,18 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
       <div>
         <Tabs defaultValue="list">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">{t('sessions.detail.timeline')}</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+                onClick={() => setSortOrder((prev) => prev === 'asc' ? 'desc' : 'asc')}
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {sortOrder === 'asc' ? t('sessions.detail.sortAsc') : t('sessions.detail.sortDesc')}
+              </Button>
+            </div>
             <TabsList>
               <TabsTrigger value="list">List</TabsTrigger>
               <TabsTrigger value="waterfall">Waterfall</TabsTrigger>
@@ -122,9 +141,12 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
               <div className="py-8 text-center text-sm text-muted-foreground">{t('sessions.detail.noEvents')}</div>
             ) : (
               <div className="space-y-2">
-                {promptGroups.map((group, idx) => (
-                  <PromptGroupCard key={group.promptId} group={group} index={idx} agentType={session.agent_type} />
-                ))}
+                {promptGroups.map((group, idx) => {
+                  const originalIndex = sortOrder === 'asc' ? idx : promptGroups.length - 1 - idx
+                  return (
+                    <PromptGroupCard key={group.promptId} group={group} index={originalIndex} agentType={session.agent_type} />
+                  )
+                })}
               </div>
             )}
           </TabsContent>
