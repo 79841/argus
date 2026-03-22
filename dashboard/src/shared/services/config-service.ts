@@ -28,6 +28,9 @@ export const configService = {
   getConfigCompare: (params: QueryParams): Promise<ImpactCompareResult> =>
     dataClient.query('config-history/compare', params) as Promise<ImpactCompareResult>,
 
+  getConfigCompareBatch: (dates: string[], days: number): Promise<ImpactCompareResult[]> =>
+    dataClient.query('config-history/compare', { dates: dates.join(','), days }) as Promise<ImpactCompareResult[]>,
+
   getDailyMetrics: (params: QueryParams): Promise<DailyMetricPoint[]> =>
     dataClient.query('config-history/daily-metrics', params) as Promise<DailyMetricPoint[]>,
 }

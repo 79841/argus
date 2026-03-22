@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -10,8 +10,9 @@ import { ChartCard } from '@/shared/components/ui/chart-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Card, CardContent } from '@/shared/components/ui/card'
+import { DiffLine } from '@/shared/components/ui/diff-line'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
-import { formatCostChart } from '@/shared/lib/format'
+import { formatCostChart, formatTokens, formatDuration } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
 import { useImpactData } from '../hooks/use-impact-data'
 import type { EnrichedChange } from '../hooks/use-impact-data'
@@ -40,26 +41,13 @@ type MetricDef = {
 }
 
 const METRICS: MetricDef[] = [
-  { key: 'avg_cost', label: 'Avg Cost', format: (v) => formatCostChart(v), inverted: true },
-  { key: 'avg_tokens', label: 'Avg Tokens', format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : Math.round(v).toString(), inverted: true },
+  { key: 'avg_cost', label: 'Avg Cost', format: formatCostChart, inverted: true },
+  { key: 'avg_tokens', label: 'Avg Tokens', format: formatTokens, inverted: true },
   { key: 'cache_rate', label: 'Cache Rate', format: (v) => `${v.toFixed(1)}%`, inverted: false },
   { key: 'tool_success_rate', label: 'Tool Success', format: (v) => `${v.toFixed(1)}%`, inverted: false },
-  { key: 'avg_duration_ms', label: 'Avg Duration', format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}s` : `${Math.round(v)}ms`, inverted: true },
+  { key: 'avg_duration_ms', label: 'Avg Duration', format: formatDuration, inverted: true },
   { key: 'reqs_per_session', label: 'Reqs/Session', format: (v) => v.toFixed(1), inverted: true },
 ]
-
-const DiffLine = ({ line }: { line: string }) => {
-  if (line.startsWith('+') && !line.startsWith('+++')) {
-    return <div className="bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300">{line}</div>
-  }
-  if (line.startsWith('-') && !line.startsWith('---')) {
-    return <div className="bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300">{line}</div>
-  }
-  if (line.startsWith('@@')) {
-    return <div className="text-blue-600 dark:text-blue-400">{line}</div>
-  }
-  return <div>{line}</div>
-}
 
 const MetricCell = ({ before, after, metric }: { before: number; after: number; metric: MetricDef }) => {
   const diff = before === 0 ? (after === 0 ? 0 : 100) : ((after - before) / before) * 100
@@ -167,11 +155,14 @@ export const ImpactTab = ({ dateRange }: ImpactTabProps) => {
     compareDays,
   })
 
-  const changeMarkers = changes.map(c => ({
-    date: c.date.slice(0, 10),
-    label: c.category === 'rules' ? 'R' : 'T',
-    category: c.category,
-  }))
+  const changeMarkers = useMemo(() =>
+    changes.map(c => ({
+      date: c.date.slice(0, 10),
+      label: c.category === 'rules' ? 'R' : 'T',
+      category: c.category,
+    })),
+    [changes]
+  )
 
   return (
     <div className="space-y-4">

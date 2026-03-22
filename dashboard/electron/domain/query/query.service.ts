@@ -22,6 +22,7 @@ import {
   getIngestStatus,
   getAgentDailyCosts,
   getImpactCompare,
+  getImpactCompareBatch,
   getDailyMetrics,
   getHighCostSessions,
   getModelCostEfficiency,
@@ -186,9 +187,14 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     }
 
     case 'config-history/compare': {
-      const date = str(params?.date)
+      const dates = str(params?.dates)
       const days = num(params?.days, 7)
-      if (!date) throw new Error('date parameter is required')
+      if (dates) {
+        const dateList = dates.split(',').filter(Boolean)
+        return getImpactCompareBatch(dateList, days)
+      }
+      const date = str(params?.date)
+      if (!date) throw new Error('date or dates parameter is required')
       return getImpactCompare(date, days)
     }
 

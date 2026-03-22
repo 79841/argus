@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getImpactCompare } from '@/shared/lib/queries'
+import { getImpactCompare, getImpactCompareBatch } from '@/shared/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams
     const date = params.get('date')
+    const dates = params.get('dates')
     const days = parseInt(params.get('days') || '7', 10)
 
+    if (dates) {
+      const dateList = dates.split(',').filter(Boolean)
+      const data = getImpactCompareBatch(dateList, days)
+      return NextResponse.json(data)
+    }
+
     if (!date) {
-      return NextResponse.json({ error: 'date parameter is required' }, { status: 400 })
+      return NextResponse.json({ error: 'date or dates parameter is required' }, { status: 400 })
     }
 
     const data = getImpactCompare(date, days)

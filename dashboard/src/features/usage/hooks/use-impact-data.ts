@@ -7,11 +7,6 @@ import type { ImpactCompareResult, DailyMetricPoint } from '@/shared/lib/queries
 import type { DateRange } from '@/shared/types/common'
 import type { CategoryType } from '@/features/usage/types/usage'
 
-const RULES_FILES = [
-  'CLAUDE.md', 'codex.md', 'GEMINI.md', 'AGENTS.md',
-  '.claude/agents/', '.claude/skills/',
-]
-
 const TOOLS_FILES = ['.mcp.json', '.claude/settings.json']
 
 const classifyChange = (filePath: string): 'rules' | 'tools' => {
@@ -53,8 +48,7 @@ export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDat
 
         setDailyMetrics(metrics)
 
-        const typed = configHistory as ConfigChange[]
-        const categorized = typed.map(c => ({
+        const categorized = configHistory.map(c => ({
           ...c,
           category: classifyChange(c.file_path),
         }))
@@ -68,19 +62,18 @@ export const useImpactData = ({ dateRange, category, compareDays }: UseImpactDat
           return d >= dateRange.from && d <= dateRange.to
         })
 
-        const enriched: EnrichedChange[] = await Promise.all(
-          dateFiltered.map(async (c) => {
-            try {
-              const impact = await configService.getConfigCompare({
-                date: c.date,
-                days: compareDays,
-              })
-              return { ...c, impact }
-            } catch {
-              return { ...c, impact: null }
-            }
-          })
-        )
+        if (dateFiltered.length === 0) {
+          setChanges([])
+          return
+        }
+
+        const dates = dateFiltered.map(c => c.date)
+        const impacts = await configService.getConfigCompareBatch(dates, compareDays)
+
+        const enriched: EnrichedChange[] = dateFiltered.map((c, i) => ({
+          ...c,
+          impact: impacts[i] ?? null,
+        }))
 
         setChanges(enriched)
       } catch {
