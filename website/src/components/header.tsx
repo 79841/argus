@@ -5,8 +5,8 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const nav = [
-  { label: "Docs", href: "/docs/getting-started" },
-  { label: "API Reference", href: "/docs/api-reference" },
+  { label: "Docs", href: "/docs/en/getting-started" },
+  { label: "API Reference", href: "/docs/en/api-reference" },
   { label: "GitHub", href: "https://github.com/79841/argus", external: true },
 ];
 
@@ -35,7 +35,7 @@ export function Header() {
             </Link>
           ))}
           <Link
-            href="/docs/installation"
+            href="/docs/en/installation"
             className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
           >
             Download
@@ -70,7 +70,7 @@ export function Header() {
             </Link>
           ))}
           <Link
-            href="/docs/installation"
+            href="/docs/en/installation"
             className="mt-2 block rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-medium text-white"
             onClick={() => setOpen(false)}
           >

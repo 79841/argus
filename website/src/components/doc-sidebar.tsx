@@ -13,9 +13,18 @@ type SidebarItem = {
 
 type DocSidebarProps = {
   sidebar: SidebarItem[]
+  locale: string
 }
 
-function SidebarContent({ sidebar, onItemClick }: { sidebar: SidebarItem[]; onItemClick?: () => void }) {
+function SidebarContent({
+  sidebar,
+  locale,
+  onItemClick,
+}: {
+  sidebar: SidebarItem[]
+  locale: string
+  onItemClick?: () => void
+}) {
   const pathname = usePathname()
 
   return (
@@ -27,7 +36,7 @@ function SidebarContent({ sidebar, onItemClick }: { sidebar: SidebarItem[]; onIt
           </p>
           <ul className="space-y-0.5">
             {group.items.map((item) => {
-              const href = `/docs/${item.slug}`
+              const href = `/docs/${locale}/${item.slug}`
               const isActive = pathname === href
               return (
                 <li key={item.slug}>
@@ -53,7 +62,7 @@ function SidebarContent({ sidebar, onItemClick }: { sidebar: SidebarItem[]; onIt
   )
 }
 
-export function DocSidebar({ sidebar }: DocSidebarProps) {
+export function DocSidebar({ sidebar, locale }: DocSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
@@ -98,14 +107,14 @@ export function DocSidebar({ sidebar }: DocSidebarProps) {
               <X size={20} className="text-surface-600 dark:text-surface-400" />
             </button>
           </div>
-          <SidebarContent sidebar={sidebar} onItemClick={() => setMobileOpen(false)} />
+          <SidebarContent sidebar={sidebar} locale={locale} onItemClick={() => setMobileOpen(false)} />
         </div>
       )}
 
       {/* Desktop sidebar */}
       <aside className="hidden w-56 shrink-0 lg:block">
         <div className="sticky top-24">
-          <SidebarContent sidebar={sidebar} />
+          <SidebarContent sidebar={sidebar} locale={locale} />
         </div>
       </aside>
     </>

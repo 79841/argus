@@ -9,17 +9,17 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-semibold">Getting Started</h3>
             <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
               <li>
-                <Link href="/docs/installation" className="hover:text-primary-600">
+                <Link href="/docs/en/installation" className="hover:text-primary-600">
                   Installation
                 </Link>
               </li>
               <li>
-                <Link href="/docs/setup-guide" className="hover:text-primary-600">
+                <Link href="/docs/en/setup-guide" className="hover:text-primary-600">
                   Agent Setup
                 </Link>
               </li>
               <li>
-                <Link href="/docs/user-guide" className="hover:text-primary-600">
+                <Link href="/docs/en/user-guide" className="hover:text-primary-600">
                   User Guide
                 </Link>
               </li>
@@ -29,12 +29,12 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-semibold">Reference</h3>
             <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
               <li>
-                <Link href="/docs/api-reference" className="hover:text-primary-600">
+                <Link href="/docs/en/api-reference" className="hover:text-primary-600">
                   API Reference
                 </Link>
               </li>
               <li>
-                <Link href="/docs/architecture" className="hover:text-primary-600">
+                <Link href="/docs/en/architecture" className="hover:text-primary-600">
                   Architecture
                 </Link>
               </li>

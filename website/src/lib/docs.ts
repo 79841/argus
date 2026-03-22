@@ -4,6 +4,10 @@ import matter from "gray-matter";
 
 const DOCS_DIR = path.join(process.cwd(), "content/docs");
 
+export const SUPPORTED_LOCALES = ["en", "ko"] as const;
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
+export const DEFAULT_LOCALE: Locale = "en";
+
 export type DocMeta = {
   slug: string;
   title: string;
@@ -33,15 +37,24 @@ const DOC_CONFIG: Record<string, { group: string; order: number }> = {
 
 const GROUP_ORDER = ["Getting Started", "Dashboard", "Reference"];
 
-export function getAllDocs(): DocMeta[] {
-  if (!fs.existsSync(DOCS_DIR)) return [];
+function getDocsDir(locale: Locale): string {
+  return path.join(DOCS_DIR, locale);
+}
 
-  const files = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith(".md"));
+export function isValidLocale(locale: string): locale is Locale {
+  return SUPPORTED_LOCALES.includes(locale as Locale);
+}
+
+export function getAllDocs(locale: Locale = DEFAULT_LOCALE): DocMeta[] {
+  const dir = getDocsDir(locale);
+  if (!fs.existsSync(dir)) return [];
+
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
 
   return files
     .map((file) => {
       const slug = file.replace(/\.md$/, "");
-      const raw = fs.readFileSync(path.join(DOCS_DIR, file), "utf-8");
+      const raw = fs.readFileSync(path.join(dir, file), "utf-8");
       const { data } = matter(raw);
       const config = DOC_CONFIG[slug] ?? { group: "Other", order: 99 };
 
@@ -56,8 +69,11 @@ export function getAllDocs(): DocMeta[] {
     .sort((a, b) => a.order - b.order);
 }
 
-export function getDoc(slug: string): Doc | null {
-  const filePath = path.join(DOCS_DIR, `${slug}.md`);
+export function getDoc(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Doc | null {
+  const filePath = path.join(getDocsDir(locale), `${slug}.md`);
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf-8");
@@ -74,8 +90,8 @@ export function getDoc(slug: string): Doc | null {
   };
 }
 
-export function getSidebar(): SidebarItem[] {
-  const docs = getAllDocs();
+export function getSidebar(locale: Locale = DEFAULT_LOCALE): SidebarItem[] {
+  const docs = getAllDocs(locale);
   const groups = new Map<string, DocMeta[]>();
 
   for (const doc of docs) {
@@ -90,11 +106,14 @@ export function getSidebar(): SidebarItem[] {
   }));
 }
 
-export function getAdjacentDocs(slug: string): {
+export function getAdjacentDocs(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): {
   prev: DocMeta | null;
   next: DocMeta | null;
 } {
-  const docs = getAllDocs();
+  const docs = getAllDocs(locale);
   const idx = docs.findIndex((d) => d.slug === slug);
 
   return {
