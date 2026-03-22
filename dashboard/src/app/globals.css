@@ -325,3 +325,12 @@
     @apply font-sans;
   }
 }
+
+/* ─── Utility: Hide Scrollbar ────────────────────────────────────────────── */
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -76,7 +76,7 @@ export default function SessionsPage() {
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
             {loading ? (
               <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">
                 {t('sessions.loading')}
@@ -98,7 +98,7 @@ export default function SessionsPage() {
         </div>
 
         {/* Right Panel: Session Detail (65%) */}
-        <div className="flex flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide">
           {!selectedId ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
               <svg
