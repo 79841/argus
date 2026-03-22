@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       const [tools, daily, individual] = await Promise.all([
         getToolDetailStats(agentType, days, project, from, to),
         getDailyToolStats(agentType, days, project, from, to),
-        getIndividualToolStats(days, project, from, to),
+        getIndividualToolStats(agentType, days, project, from, to),
       ])
       return NextResponse.json({ tools, daily, individual })
     }

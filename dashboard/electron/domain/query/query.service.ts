@@ -128,7 +128,7 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
         const [tools, daily, individual] = await Promise.all([
           getToolDetailStats(agentType, days, project, from, to),
           getDailyToolStats(agentType, days, project, from, to),
-          getIndividualToolStats(days, project, from, to),
+          getIndividualToolStats(agentType, days, project, from, to),
         ])
         return { tools, daily, individual }
       }
