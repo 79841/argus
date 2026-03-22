@@ -56,9 +56,23 @@ const eventBorderColor = (ev: SessionDetailEvent): string => {
 export type PromptGroupCardProps = {
   group: PromptGroup
   index: number
+  agentType?: string
 }
 
-export const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
+const promptSettingHint = (agentType?: string): string => {
+  switch (agentType) {
+    case 'claude':
+      return 'OTEL_LOG_USER_PROMPTS=1 환경변수를 설정하세요.'
+    case 'codex':
+      return '~/.codex/config.toml [otel] 섹션에 log_user_prompt = true를 설정하세요.'
+    case 'gemini':
+      return '~/.gemini/settings.json에서 logPrompts: true를 설정하세요.'
+    default:
+      return ''
+  }
+}
+
+export const PromptGroupCard = ({ group, index, agentType }: PromptGroupCardProps) => {
   const { t } = useLocale()
   const [expanded, setExpanded] = useState(index === 0)
 
@@ -105,6 +119,11 @@ export const PromptGroupCard = ({ group, index }: PromptGroupCardProps) => {
                   ) : (
                     <p className="mt-1 rounded bg-muted/50 px-2 py-1.5 text-xs text-muted-foreground italic">
                       {t('sessions.detail.promptRedacted')}
+                      {agentType && (
+                        <span className="ml-1 text-[10px] not-italic opacity-70">
+                          {promptSettingHint(agentType)}
+                        </span>
+                      )}
                     </p>
                   )
                 )}

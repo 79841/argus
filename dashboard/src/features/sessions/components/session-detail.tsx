@@ -123,7 +123,7 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
             ) : (
               <div className="space-y-2">
                 {promptGroups.map((group, idx) => (
-                  <PromptGroupCard key={group.promptId} group={group} index={idx} />
+                  <PromptGroupCard key={group.promptId} group={group} index={idx} agentType={session.agent_type} />
                 ))}
               </div>
             )}
