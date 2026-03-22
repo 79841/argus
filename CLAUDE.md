@@ -140,21 +140,22 @@ feature/*     ← 기능 개발 (develop에서 분기, develop으로 머지)
 - develop에 직접 커밋하는 것은 단일 커밋으로 완결되는 소규모 수정에만 허용한다
 
 ### Worktree 활용
-feature 브랜치 작업 시 git worktree를 사용하여 격리된 작업 환경을 제공한다.
-`/feature-start`가 자동으로 worktree를 생성하고, `/feature-finish`가 정리한다.
+feature 브랜치 작업 시 `.claude/worktrees/`에 worktree를 생성하여 격리된 작업 환경을 제공한다.
+`/feature-start`가 자동으로 worktree를 생성하고, `/feature-finish`가 PR 머지 후 정리한다.
 
 ```bash
 # 자동 생성 (/feature-start 사용)
-/feature-start <이름>  → ../argus-<이름> 디렉토리에 worktree 생성
+/feature-start <이름>  → .claude/worktrees/<이름> 디렉토리에 worktree 생성
 
 # 수동 생성
-git worktree add ../argus-<이름> feature/<이름>
+git worktree add .claude/worktrees/<이름> feature/<이름>
 
-# 정리 (/feature-finish 사용 또는 수동)
-git worktree remove ../argus-<이름>
+# 정리 (/feature-finish 사용 — PR 머지 후 자동 정리)
+# 또는 수동: git worktree remove .claude/worktrees/<이름>
 ```
 
-Agent 도구의 `isolation: "worktree"` 옵션으로 에이전트를 격리 실행할 수도 있다.
+- `.claude/worktrees/`는 `.gitignore`에 포함되어 저장소에 커밋되지 않는다
+- Agent 도구의 `isolation: "worktree"` 옵션으로 에이전트를 격리 실행할 수도 있다
 
 ## 개발 프로세스
 
