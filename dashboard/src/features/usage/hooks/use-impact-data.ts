@@ -8,10 +8,9 @@ import type { DateRange } from '@/shared/types/common'
 import type { CategoryType } from '@/features/usage/types/usage'
 import type { AgentType } from '@/shared/lib/agents'
 
-const TOOLS_FILES = ['.mcp.json', '.claude/settings.json', '.codex/config.toml', '.gemini/settings.json']
-
 const classifyChange = (filePath: string): 'rules' | 'tools' => {
-  if (TOOLS_FILES.some(f => filePath.includes(f))) return 'tools'
+  const p = filePath.replace(/\\/g, '/')
+  if (p === '.mcp.json' || p.startsWith('.claude/') || p.startsWith('.codex/') || p.startsWith('.gemini/')) return 'tools'
   return 'rules'
 }
 
