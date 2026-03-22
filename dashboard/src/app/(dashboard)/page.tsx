@@ -1,16 +1,45 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { UsageHeatmap } from '@/features/dashboard/components/usage-heatmap'
 import { FilterBar } from '@/shared/components/filter-bar'
 import { formatCost } from '@/shared/lib/format'
 import { useDashboardData, AgentSummaryCard, RecentSessionsCard } from '@/features/dashboard'
+import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 export default function DashboardPage() {
   const router = useRouter()
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
   const { data, loading } = useDashboardData()
   const { stats, delta, agentSummaries, daily, sessions } = data
+
+  useEffect(() => {
+    const completed = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
+    if (completed === 'true') {
+      setOnboardingChecked(true)
+      return
+    }
+    fetch('/api/onboarding/status')
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.hasData) {
+          router.replace('/onboarding')
+        } else {
+          setOnboardingChecked(true)
+        }
+      })
+      .catch(() => setOnboardingChecked(true))
+  }, [router])
+
+  if (!onboardingChecked) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      </div>
+    )
+  }
 
   if (loading) {
     return (
