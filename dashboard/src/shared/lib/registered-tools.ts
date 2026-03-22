@@ -64,11 +64,8 @@ const scanSkills = (claudeDir: string, scope: RegisteredToolScope): RegisteredTo
   return tools
 }
 
-const scanMcp = (rootDir: string, scope: RegisteredToolScope): RegisteredTool[] => {
+const scanMcpFile = (mcpFile: string, scope: RegisteredToolScope): RegisteredTool[] => {
   const tools: RegisteredTool[] = []
-  const mcpFile = scope === 'global'
-    ? path.join(rootDir, '.claude', '.mcp.json')
-    : path.join(rootDir, '.mcp.json')
   const mcpData = tryReadJson(mcpFile)
   if (mcpData && typeof mcpData === 'object') {
     const mcpServers = mcpData.mcpServers as Record<string, unknown> | undefined
@@ -84,6 +81,16 @@ const scanMcp = (rootDir: string, scope: RegisteredToolScope): RegisteredTool[] 
     }
   }
   return tools
+}
+
+const scanMcp = (rootDir: string, scope: RegisteredToolScope): RegisteredTool[] => {
+  if (scope === 'global') {
+    const agentDirs = ['.claude', '.codex']
+    return agentDirs.flatMap((dir) =>
+      scanMcpFile(path.join(rootDir, dir, '.mcp.json'), scope)
+    )
+  }
+  return scanMcpFile(path.join(rootDir, '.mcp.json'), scope)
 }
 
 const scanHooks = (claudeDir: string, scope: RegisteredToolScope): RegisteredTool[] => {
