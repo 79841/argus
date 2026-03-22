@@ -1,21 +1,34 @@
 import { test, expect } from '@playwright/test'
-import { runClaudeCode, runCodexCli, runGeminiCli } from '../helpers/agent-runner'
+import { AGENT_RUNNERS } from '../helpers/agent-runner'
+import type { AgentResult } from '../helpers/agent-runner'
 import { getSessions } from '../helpers/ingest'
 
 test.skip(!!process.env.CI, 'Live agent tests are skipped in CI')
 
 const BASE_URL = 'http://localhost:9845'
 
+const skipIfUnavailable = (name: string, result: AgentResult) => {
+  if (result.error?.includes('설치되지 않았습니다')) {
+    test.skip(true, `${name} 미설치`)
+    return true
+  }
+  if (result.isRateLimited) {
+    console.warn(`${name} rate limit 감지:`, result.stderr || result.stdout)
+    test.skip(true, `${name} rate limit 초과`)
+    return true
+  }
+  if (result.isTokenLimitExceeded) {
+    console.warn(`${name} 토큰 한도 초과:`, result.stderr || result.stdout)
+    test.skip(true, `${name} 토큰 한도 초과`)
+    return true
+  }
+  return false
+}
+
 test.describe.serial('실제 에이전트 연결 E2E', () => {
   test('에이전트 연결 상태 보고', async () => {
-    const agents = [
-      { name: 'Claude Code', runner: runClaudeCode },
-      { name: 'Codex CLI', runner: runCodexCli },
-      { name: 'Gemini CLI', runner: runGeminiCli },
-    ] as const
-
     const report: string[] = []
-    for (const { name, runner } of agents) {
+    for (const { name, runner } of AGENT_RUNNERS) {
       const result = await runner(BASE_URL)
       if (result.error?.includes('설치되지 않았습니다')) {
         report.push(`${name}: 미설치`)
@@ -32,98 +45,20 @@ test.describe.serial('실제 에이전트 연결 E2E', () => {
     console.log('\n에이전트 연결 상태 보고:\n' + report.join('\n'))
   })
 
-  test.describe('Claude Code', () => {
-    test('에이전트 실행 및 텔레메트리 수신', async ({ request }) => {
-      const result = await runClaudeCode(BASE_URL)
-
-      if (result.error?.includes('설치되지 않았습니다')) {
-        test.skip(true, 'Claude Code CLI 미설치')
-        return
-      }
-
-      if (result.isRateLimited) {
-        console.warn('Claude Code rate limit 감지:', result.stderr || result.stdout)
-        test.skip(true, 'Claude Code rate limit 초과')
-        return
-      }
-
-      if (result.isTokenLimitExceeded) {
-        console.warn('Claude Code 토큰 한도 초과:', result.stderr || result.stdout)
-        test.skip(true, 'Claude Code 토큰 한도 초과')
-        return
-      }
+  for (const { name, agentType, runner } of AGENT_RUNNERS) {
+    test(`${name} — 실행 및 텔레메트리 수신`, async ({ request }) => {
+      const result = await runner(BASE_URL)
+      if (skipIfUnavailable(name, result)) return
 
       expect(result.success).toBe(true)
 
       await expect(async () => {
-        const res = await request.get('/api/sessions?agent_type=claude')
+        const res = await request.get(`/api/sessions?agent_type=${agentType}`)
         const sessions = getSessions(await res.json())
         expect(sessions.length).toBeGreaterThan(0)
       }).toPass({ timeout: 10_000, intervals: [1000] })
     })
-  })
-
-  test.describe('Codex CLI', () => {
-    test('에이전트 실행 및 텔레메트리 수신', async ({ request }) => {
-      const result = await runCodexCli(BASE_URL)
-
-      if (result.error?.includes('설치되지 않았습니다')) {
-        test.skip(true, 'Codex CLI 미설치')
-        return
-      }
-
-      if (result.isRateLimited) {
-        console.warn('Codex CLI rate limit 감지:', result.stderr || result.stdout)
-        test.skip(true, 'Codex CLI rate limit 초과')
-        return
-      }
-
-      if (result.isTokenLimitExceeded) {
-        console.warn('Codex CLI 토큰 한도 초과:', result.stderr || result.stdout)
-        test.skip(true, 'Codex CLI 토큰 한도 초과')
-        return
-      }
-
-      expect(result.success).toBe(true)
-
-      await expect(async () => {
-        const res = await request.get('/api/sessions?agent_type=codex')
-        const sessions = getSessions(await res.json())
-        expect(sessions.length).toBeGreaterThan(0)
-      }).toPass({ timeout: 10_000, intervals: [1000] })
-    })
-  })
-
-  test.describe('Gemini CLI', () => {
-    test('에이전트 실행 및 텔레메트리 수신', async ({ request }) => {
-      const result = await runGeminiCli(BASE_URL)
-
-      if (result.error?.includes('설치되지 않았습니다')) {
-        test.skip(true, 'Gemini CLI 미설치')
-        return
-      }
-
-      if (result.isRateLimited) {
-        console.warn('Gemini CLI rate limit 감지:', result.stderr || result.stdout)
-        test.skip(true, 'Gemini CLI rate limit 초과')
-        return
-      }
-
-      if (result.isTokenLimitExceeded) {
-        console.warn('Gemini CLI 토큰 한도 초과:', result.stderr || result.stdout)
-        test.skip(true, 'Gemini CLI 토큰 한도 초과')
-        return
-      }
-
-      expect(result.success).toBe(true)
-
-      await expect(async () => {
-        const res = await request.get('/api/sessions?agent_type=gemini')
-        const sessions = getSessions(await res.json())
-        expect(sessions.length).toBeGreaterThan(0)
-      }).toPass({ timeout: 10_000, intervals: [1000] })
-    })
-  })
+  }
 
   test('실행된 에이전트가 Overview에 반영', async ({ request }) => {
     const res = await request.get('/api/overview')
