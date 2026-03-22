@@ -16,18 +16,21 @@ import { Badge } from '@/shared/components/ui/badge'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
+import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import type { MergedToolItem } from '@/features/tools/lib/merge-tools'
 import { TOP_COLORS, STATUS_BADGE, SCOPE_BADGE, formatToolDate } from './constants'
 
 type ToolListTabProps = {
   data: MergedToolItem[]
-  emptyTitle: string
-  emptyDescription: string
-  noRegisteredLabel: string
+  emptyTitleKey: string
+  emptyDescKey: string
+  noRegisteredKey: string
 }
 
-export const ToolListTab = ({ data, emptyTitle, emptyDescription, noRegisteredLabel }: ToolListTabProps) => {
+export const ToolListTab = ({ data, emptyTitleKey, emptyDescKey, noRegisteredKey }: ToolListTabProps) => {
+  const { t } = useLocale()
+
   const registeredCount = data.filter((d) => d.status !== 'unregistered').length
   const activeCount = data.filter((d) => d.status === 'active').length
   const utilizationPct = registeredCount > 0 ? Math.round((activeCount / registeredCount) * 100) : 0
@@ -51,21 +54,21 @@ export const ToolListTab = ({ data, emptyTitle, emptyDescription, noRegisteredLa
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <KpiCard
-          label="활용률"
+          label={t('tools.detail.utilization')}
           value={`${utilizationPct}%`}
-          sub={registeredCount > 0 ? `등록 ${registeredCount}개 중 ${activeCount}개 활용` : noRegisteredLabel}
+          sub={registeredCount > 0 ? t('tools.detail.registered').replace('{0}', String(registeredCount)).replace('{1}', String(activeCount)) : t(noRegisteredKey)}
         />
         <KpiCard
-          label="성공률"
+          label={t('tools.detail.successRate')}
           value={totalCalls > 0 ? `${successRate.toFixed(1)}%` : '—'}
-          sub={totalCalls > 0 ? `전체 ${totalCalls.toLocaleString()}회 호출` : '호출 데이터 없음'}
+          sub={totalCalls > 0 ? t('tools.detail.totalCalls').replace('{0}', totalCalls.toLocaleString()) : t('tools.detail.noCallData')}
         />
       </div>
 
       {chartData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">사용 빈도</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('tools.detail.frequency')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div style={{ height: chartHeight }}>
@@ -94,7 +97,7 @@ export const ToolListTab = ({ data, emptyTitle, emptyDescription, noRegisteredLa
                         <div style={CHART_THEME.tooltip.containerStyle}>
                           <p className="font-medium text-sm">{d.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {d.count.toLocaleString()}회 ({d.success} 성공, {d.fail} 실패)
+                            {d.count.toLocaleString()}{t('tools.detail.callsSuffix')} ({d.success} {t('tools.detail.success')}, {d.fail} {t('tools.detail.fail')})
                           </p>
                         </div>
                       )
@@ -114,11 +117,11 @@ export const ToolListTab = ({ data, emptyTitle, emptyDescription, noRegisteredLa
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">전체 목록</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('tools.detail.fullList')}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.length === 0 ? (
-            <EmptyState title={emptyTitle} description={emptyDescription} />
+            <EmptyState title={t(emptyTitleKey)} description={t(emptyDescKey)} />
           ) : (
             <Table className="table-fixed">
               <colgroup>
@@ -163,7 +166,7 @@ export const ToolListTab = ({ data, emptyTitle, emptyDescription, noRegisteredLa
                       </TableCell>
                       <TableCell>
                         <Badge className={cn('text-[10px] px-1.5 py-0', statusCfg.className)}>
-                          {statusCfg.label}
+                          {t(statusCfg.i18nKey)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">

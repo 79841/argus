@@ -112,6 +112,12 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 - import 경로: `@/shared/`, `@/features/` 접두사 사용
 - Tailwind CSS 클래스 사용, 인라인 스타일 금지
 
+### i18n (다국어)
+- **UI 텍스트에 한글을 직접 하드코딩하지 않는다** — 반드시 `src/shared/lib/i18n.ts`의 번역 키를 사용한다
+- `useLocale()` 훅의 `t('key')` 함수로 번역 문자열을 가져온다
+- 새 텍스트 추가 시 `ko`와 `en` 양쪽 모두에 키를 등록한다
+- 날짜/숫자 포맷에 locale을 하드코딩하지 않는다 (`'ko-KR'` 대신 `undefined` 사용)
+
 ### 데이터
 - SQLite: `better-sqlite3` 동기 API, WAL 모드
 - 스키마: `src/shared/lib/db.ts`에서 자동 초기화
