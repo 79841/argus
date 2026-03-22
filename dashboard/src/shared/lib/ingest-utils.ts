@@ -113,7 +113,7 @@ export const normalizeModelId = (model: string): string => {
   return model.replace(/^models\//, '')
 }
 
-let _pricingStmt: ReturnType<Database.Database['prepare']> | null = null
+let _pricingStmt: Database.Statement<[string, string]> | null = null
 let _pricingDb: Database.Database | null = null
 
 export const calculateCost = (

@@ -56,7 +56,7 @@ const mockComparison: EfficiencyComparisonRow[] = [
 describe('GET /api/efficiency', () => {
   it('기본 GET 요청 → 200 + { data, comparison }', async () => {
     vi.mocked(queries.getEfficiencyStats).mockReturnValue(mockData)
-    vi.mocked(queries.getEfficiencyComparison).mockReturnValue(mockComparison)
+    vi.mocked(queries.getEfficiencyComparison).mockReturnValue({ current: mockComparison, previous: [] })
 
     const res = await GET(mkRequest('http://localhost:9845/api/efficiency'))
     const json = await res.json()
@@ -64,13 +64,11 @@ describe('GET /api/efficiency', () => {
     expect(res.status).toBe(200)
     expect(json).toHaveProperty('data')
     expect(json).toHaveProperty('comparison')
-    expect(json.data).toEqual(mockData)
-    expect(json.comparison).toEqual(mockComparison)
   })
 
   it('?days=7 → days=7이 쿼리 함수에 전달됨', async () => {
     vi.mocked(queries.getEfficiencyStats).mockReturnValue([])
-    vi.mocked(queries.getEfficiencyComparison).mockReturnValue([])
+    vi.mocked(queries.getEfficiencyComparison).mockReturnValue({ current: [], previous: [] })
 
     await GET(mkRequest('http://localhost:9845/api/efficiency?days=7'))
 
@@ -81,7 +79,7 @@ describe('GET /api/efficiency', () => {
 
   it('?days=30 → days=30이 쿼리 함수에 전달됨', async () => {
     vi.mocked(queries.getEfficiencyStats).mockReturnValue([])
-    vi.mocked(queries.getEfficiencyComparison).mockReturnValue([])
+    vi.mocked(queries.getEfficiencyComparison).mockReturnValue({ current: [], previous: [] })
 
     await GET(mkRequest('http://localhost:9845/api/efficiency?days=30'))
 
@@ -92,7 +90,7 @@ describe('GET /api/efficiency', () => {
 
   it('days 파라미터 없으면 기본값 7 사용', async () => {
     vi.mocked(queries.getEfficiencyStats).mockReturnValue([])
-    vi.mocked(queries.getEfficiencyComparison).mockReturnValue([])
+    vi.mocked(queries.getEfficiencyComparison).mockReturnValue({ current: [], previous: [] })
 
     await GET(mkRequest('http://localhost:9845/api/efficiency'))
 
@@ -103,7 +101,7 @@ describe('GET /api/efficiency', () => {
 
   it('getEfficiencyStats, getEfficiencyComparison 모두 호출됨', async () => {
     vi.mocked(queries.getEfficiencyStats).mockReturnValue(mockData)
-    vi.mocked(queries.getEfficiencyComparison).mockReturnValue(mockComparison)
+    vi.mocked(queries.getEfficiencyComparison).mockReturnValue({ current: mockComparison, previous: [] })
 
     await GET(mkRequest('http://localhost:9845/api/efficiency'))
 

@@ -19,17 +19,21 @@ const mkRequest = (params: Record<string, string> = {}): NextRequest => {
 const mockDailyStats = [
   {
     date: '2024-01-15',
-    total_cost: 1.5,
-    total_sessions: 8,
-    total_input_tokens: 15000,
-    total_output_tokens: 6000,
+    sessions: 8,
+    cost: 1.5,
+    input_tokens: 15000,
+    output_tokens: 6000,
+    cache_read_tokens: 0,
+    agent_type: 'claude',
   },
   {
     date: '2024-01-14',
-    total_cost: 0.8,
-    total_sessions: 4,
-    total_input_tokens: 8000,
-    total_output_tokens: 3000,
+    sessions: 4,
+    cost: 0.8,
+    input_tokens: 8000,
+    output_tokens: 3000,
+    cache_read_tokens: 0,
+    agent_type: 'claude',
   },
 ]
 

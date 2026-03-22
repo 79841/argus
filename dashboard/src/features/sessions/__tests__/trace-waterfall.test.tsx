@@ -41,13 +41,12 @@ const makeEvent = (overrides: Partial<SessionDetailEvent> = {}): SessionDetailEv
   input_tokens: 100,
   output_tokens: 50,
   cache_read_tokens: 0,
-  cache_creation_tokens: 0,
   cost_usd: 0.01,
   duration_ms: 1000,
-  tool_name: null,
+  tool_name: '',
   tool_success: null,
   prompt_id: 'p1',
-  body: null,
+  body: '',
   ...overrides,
 })
 

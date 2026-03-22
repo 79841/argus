@@ -14,6 +14,7 @@ const makeEvent = (overrides: Partial<SessionDetailEvent> = {}): SessionDetailEv
   duration_ms: 1000,
   tool_name: '',
   tool_success: null,
+  body: '',
   ...overrides,
 })
 

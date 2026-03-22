@@ -20,7 +20,6 @@ const makeStats = (overrides: Partial<DailyStats> = {}): DailyStats => ({
   input_tokens: 1000,
   output_tokens: 500,
   cache_read_tokens: 200,
-  cache_creation_tokens: 0,
   ...overrides,
 })
 

@@ -1,24 +1,23 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
+import type { ReactElement } from 'react'
 import { JsonHighlight, TomlHighlight, highlightJson, highlightToml } from '@/features/rules/components/syntax-highlight'
+
+const asEl = (t: unknown) => t as ReactElement
+const getClassName = (t: unknown) => (asEl(t).props as Record<string, unknown>).className as string | undefined
+const getChildren = (t: unknown) => (asEl(t).props as Record<string, unknown>).children as unknown[]
+const isEl = (t: unknown): boolean => t !== null && typeof t === 'object' && 'props' in (t as Record<string, unknown>)
 
 describe('highlightJson', () => {
   it('JSON 키를 파란색 클래스로 렌더링한다', () => {
     const tokens = highlightJson('{"key": "value"}')
-    const keyToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.children &&
-      Array.isArray((t as React.ReactElement).props.children)
-    )
-    // key 토큰이 있는지 확인
     expect(tokens.length).toBeGreaterThan(0)
   })
 
   it('문자열 값을 녹색 클래스로 렌더링한다', () => {
     const tokens = highlightJson('"hello"')
     const stringToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.className?.includes('green')
+      (t) => isEl(t) && getClassName(t)?.includes('green')
     )
     expect(stringToken).toBeTruthy()
   })
@@ -26,8 +25,7 @@ describe('highlightJson', () => {
   it('숫자를 주황색 클래스로 렌더링한다', () => {
     const tokens = highlightJson('42')
     const numToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.className?.includes('orange')
+      (t) => isEl(t) && getClassName(t)?.includes('orange')
     )
     expect(numToken).toBeTruthy()
   })
@@ -35,8 +33,7 @@ describe('highlightJson', () => {
   it('true/false/null을 보라색 클래스로 렌더링한다', () => {
     const tokens = highlightJson('true')
     const boolToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.className?.includes('purple')
+      (t) => isEl(t) && getClassName(t)?.includes('purple')
     )
     expect(boolToken).toBeTruthy()
   })
@@ -63,8 +60,7 @@ describe('highlightToml', () => {
   it('섹션 헤더([section])를 파란색 클래스로 렌더링한다', () => {
     const tokens = highlightToml('[database]')
     const sectionToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.className?.includes('blue')
+      (t) => isEl(t) && getClassName(t)?.includes('blue')
     )
     expect(sectionToken).toBeTruthy()
   })
@@ -72,8 +68,7 @@ describe('highlightToml', () => {
   it('주석(#)을 muted 클래스로 렌더링한다', () => {
     const tokens = highlightToml('# this is a comment')
     const commentToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      (t as React.ReactElement).props.className?.includes('muted')
+      (t) => isEl(t) && getClassName(t)?.includes('muted')
     )
     expect(commentToken).toBeTruthy()
   })
@@ -81,10 +76,10 @@ describe('highlightToml', () => {
   it('문자열 값을 녹색 클래스로 렌더링한다', () => {
     const tokens = highlightToml('name = "test"')
     const strValueToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      Array.isArray((t as React.ReactElement).props.children) &&
-      (t as React.ReactElement).props.children.some(
-        (c: React.ReactElement) => c && c.props?.className?.includes('green')
+      (t) => isEl(t) &&
+      Array.isArray(getChildren(t)) &&
+      getChildren(t).some(
+        (c) => c && isEl(c) && getClassName(c)?.includes('green')
       )
     )
     expect(strValueToken).toBeTruthy()
@@ -93,10 +88,10 @@ describe('highlightToml', () => {
   it('불리언 값을 주황색 클래스로 렌더링한다', () => {
     const tokens = highlightToml('enabled = true')
     const boolToken = tokens.find(
-      (t) => t && typeof t === 'object' && 'props' in t &&
-      Array.isArray((t as React.ReactElement).props.children) &&
-      (t as React.ReactElement).props.children.some(
-        (c: React.ReactElement) => c && c.props?.className?.includes('orange')
+      (t) => isEl(t) &&
+      Array.isArray(getChildren(t)) &&
+      getChildren(t).some(
+        (c) => c && isEl(c) && getClassName(c)?.includes('orange')
       )
     )
     expect(boolToken).toBeTruthy()

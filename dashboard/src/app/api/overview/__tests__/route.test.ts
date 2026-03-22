@@ -20,9 +20,13 @@ const mkRequest = (params: Record<string, string> = {}): NextRequest => {
 }
 
 const mockOverviewStats = {
-  today_cost: 1.23,
-  today_sessions: 5,
-  today_tokens: 10000,
+  total_sessions: 5,
+  total_cost: 1.23,
+  total_requests: 10,
+  total_input_tokens: 10000,
+  total_output_tokens: 5000,
+  total_cache_read_tokens: 2000,
+  cache_hit_rate: 0.2,
 }
 
 const mockAllTimeStats = {
@@ -31,12 +35,14 @@ const mockAllTimeStats = {
 }
 
 const mockDelta = {
-  cost_delta: 0.5,
-  session_delta: 2,
+  cost_delta_pct: 0.5,
+  sessions_delta_pct: 0.2,
+  requests_delta_pct: 0.1,
+  cache_rate_delta_pct: 0.05,
 }
 
 const mockAgentSummaries = [
-  { agent_type: 'claude', session_count: 3, cost_usd: 0.9 },
+  { agent_type: 'claude', today_cost: 0.9, today_requests: 3, last_active: '2024-01-15T10:00:00Z' },
 ]
 
 beforeEach(() => {
