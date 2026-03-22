@@ -7,7 +7,10 @@ import {
   getAllDocs,
   getAdjacentDocs,
   getDoc,
+  getDocUrl,
+  getOtherLocale,
   isValidLocale,
+  LOCALE_LABELS,
   SUPPORTED_LOCALES,
   DEFAULT_LOCALE,
 } from '@/lib/docs'
@@ -41,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: doc.description,
     alternates: {
       languages: Object.fromEntries(
-        SUPPORTED_LOCALES.map((l) => [l, `/docs/${l}/${slug}`]),
+        SUPPORTED_LOCALES.map((l) => [l, getDocUrl(slug, l)]),
       ),
     },
   }
@@ -89,7 +92,7 @@ export default async function DocPage({ params }: Props) {
     },
   }
 
-  const otherLocale = locale === 'en' ? 'ko' : 'en'
+  const otherLocale = getOtherLocale(locale)
 
   return (
     <div className="flex gap-8">
@@ -100,10 +103,10 @@ export default async function DocPage({ params }: Props) {
               {doc.group}
             </p>
             <Link
-              href={`/docs/${otherLocale}/${slug}`}
+              href={getDocUrl(slug, otherLocale)}
               className="rounded-md border border-surface-200 px-2 py-1 text-xs font-medium text-surface-600 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
             >
-              {otherLocale === 'en' ? 'English' : '한국어'}
+              {LOCALE_LABELS[otherLocale]}
             </Link>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-surface-900 dark:text-surface-50">
@@ -126,7 +129,7 @@ export default async function DocPage({ params }: Props) {
           <nav className="mt-12 flex items-center justify-between border-t border-surface-200 pt-6 dark:border-surface-700">
             {prev ? (
               <Link
-                href={`/docs/${locale}/${prev.slug}`}
+                href={getDocUrl(prev.slug, locale)}
                 className="group flex items-center gap-2 rounded-lg border border-surface-200 px-4 py-3 text-sm transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-surface-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/10"
               >
                 <ChevronLeft size={16} className="text-surface-400 group-hover:text-primary-600" />
@@ -141,7 +144,7 @@ export default async function DocPage({ params }: Props) {
 
             {next ? (
               <Link
-                href={`/docs/${locale}/${next.slug}`}
+                href={getDocUrl(next.slug, locale)}
                 className="group flex items-center gap-2 rounded-lg border border-surface-200 px-4 py-3 text-sm transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-surface-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/10"
               >
                 <span className="text-right">

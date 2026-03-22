@@ -4,16 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
-import type { DocMeta } from '@/lib/docs'
-
-type SidebarItem = {
-  label: string
-  items: DocMeta[]
-}
+import { getDocUrl } from '@/lib/docs-shared'
+import type { Locale, SidebarItem } from '@/lib/docs-shared'
 
 type DocSidebarProps = {
   sidebar: SidebarItem[]
-  locale: string
+  locale: Locale
 }
 
 function SidebarContent({
@@ -22,7 +18,7 @@ function SidebarContent({
   onItemClick,
 }: {
   sidebar: SidebarItem[]
-  locale: string
+  locale: Locale
   onItemClick?: () => void
 }) {
   const pathname = usePathname()
@@ -36,7 +32,7 @@ function SidebarContent({
           </p>
           <ul className="space-y-0.5">
             {group.items.map((item) => {
-              const href = `/docs/${locale}/${item.slug}`
+              const href = getDocUrl(item.slug, locale)
               const isActive = pathname === href
               return (
                 <li key={item.slug}>

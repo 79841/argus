@@ -2,27 +2,22 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
+export {
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+  LOCALE_LABELS,
+  isValidLocale,
+  getDocUrl,
+  getOtherLocale,
+} from "./docs-shared";
+export type { Locale, DocMeta, SidebarItem } from "./docs-shared";
+import type { Locale, DocMeta, SidebarItem } from "./docs-shared";
+import { DEFAULT_LOCALE } from "./docs-shared";
+
 const DOCS_DIR = path.join(process.cwd(), "content/docs");
-
-export const SUPPORTED_LOCALES = ["en", "ko"] as const;
-export type Locale = (typeof SUPPORTED_LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = "en";
-
-export type DocMeta = {
-  slug: string;
-  title: string;
-  description?: string;
-  order: number;
-  group: string;
-};
 
 export type Doc = DocMeta & {
   content: string;
-};
-
-type SidebarItem = {
-  label: string;
-  items: DocMeta[];
 };
 
 const DOC_CONFIG: Record<string, { group: string; order: number }> = {
@@ -41,20 +36,18 @@ function getDocsDir(locale: Locale): string {
   return path.join(DOCS_DIR, locale);
 }
 
-export function isValidLocale(locale: string): locale is Locale {
-  return SUPPORTED_LOCALES.includes(locale as Locale);
-}
-
 export function getAllDocs(locale: Locale = DEFAULT_LOCALE): DocMeta[] {
-  const dir = getDocsDir(locale);
-  if (!fs.existsSync(dir)) return [];
-
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
+  let files: string[];
+  try {
+    files = fs.readdirSync(getDocsDir(locale)).filter((f) => f.endsWith(".md"));
+  } catch {
+    return [];
+  }
 
   return files
     .map((file) => {
       const slug = file.replace(/\.md$/, "");
-      const raw = fs.readFileSync(path.join(dir, file), "utf-8");
+      const raw = fs.readFileSync(path.join(getDocsDir(locale), file), "utf-8");
       const { data } = matter(raw);
       const config = DOC_CONFIG[slug] ?? { group: "Other", order: 99 };
 
@@ -73,10 +66,16 @@ export function getDoc(
   slug: string,
   locale: Locale = DEFAULT_LOCALE,
 ): Doc | null {
-  const filePath = path.join(getDocsDir(locale), `${slug}.md`);
-  if (!fs.existsSync(filePath)) return null;
+  let raw: string;
+  try {
+    raw = fs.readFileSync(
+      path.join(getDocsDir(locale), `${slug}.md`),
+      "utf-8",
+    );
+  } catch {
+    return null;
+  }
 
-  const raw = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(raw);
   const config = DOC_CONFIG[slug] ?? { group: "Other", order: 99 };
 
