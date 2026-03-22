@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Palette, Bot, Cog, Plug, FolderPlus, Database } from 'lucide-react'
+import { Palette, Bot, Cog, Plug, FolderPlus } from 'lucide-react'
 import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import { FilterBar } from '@/shared/components/filter-bar'
@@ -11,7 +11,6 @@ import {
   PricingSection,
   SetupSection,
   ProjectConnectionSection,
-  DataSection,
 } from '@/features/settings'
 import type { Category } from '@/features/settings/types/settings'
 
@@ -21,7 +20,6 @@ const SECTION_MAP: Record<Category, React.FC> = {
   pricing: PricingSection,
   agentConnection: SetupSection,
   projectConnection: ProjectConnectionSection,
-  data: DataSection,
 }
 
 export default function SettingsPage() {
@@ -35,7 +33,6 @@ export default function SettingsPage() {
     { key: 'pricing', labelKey: 'settings.pricing', icon: Cog },
     { key: 'agentConnection', labelKey: 'settings.agentConnection', icon: Plug },
     { key: 'projectConnection', labelKey: 'settings.projectConnection', icon: FolderPlus },
-    { key: 'data', labelKey: 'settings.data', icon: Database },
   ]
 
   return (
