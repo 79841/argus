@@ -21,3 +21,6 @@ export { getHighCostSessions, getModelCostEfficiency, getSuggestionMetrics } fro
 
 export type { ConfigComparePeriod, ConfigCompareResult } from './config-history'
 export { getConfigCompareStats } from './config-history'
+
+export type { ImpactMetrics, ImpactCompareResult, DailyMetricPoint } from './impact'
+export { getImpactCompare, getDailyMetrics } from './impact'

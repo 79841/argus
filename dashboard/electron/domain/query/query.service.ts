@@ -21,7 +21,8 @@ import {
   getProjectComparison,
   getIngestStatus,
   getAgentDailyCosts,
-  getConfigCompareStats,
+  getImpactCompare,
+  getDailyMetrics,
   getHighCostSessions,
   getModelCostEfficiency,
   getSuggestionMetrics,
@@ -188,7 +189,14 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
       const date = str(params?.date)
       const days = num(params?.days, 7)
       if (!date) throw new Error('date parameter is required')
-      return getConfigCompareStats(date, days)
+      return getImpactCompare(date, days)
+    }
+
+    case 'config-history/daily-metrics': {
+      const from = str(params?.from)
+      const to = str(params?.to)
+      if (!from || !to) throw new Error('from and to parameters are required')
+      return getDailyMetrics(from, to)
     }
 
     case 'projects/registry': {

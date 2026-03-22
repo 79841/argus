@@ -65,7 +65,7 @@ export type EfficiencyTabProps = {
   dateRange: DateRange
 }
 
-export type ScopeType = 'all' | 'project' | 'user'
+export type CategoryType = 'all' | 'rules' | 'tools'
 
 export type ImpactTabProps = {
   dateRange: DateRange

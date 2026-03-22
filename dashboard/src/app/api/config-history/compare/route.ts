@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfigCompareStats } from '@/shared/lib/queries'
+import { getImpactCompare } from '@/shared/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'date parameter is required' }, { status: 400 })
     }
 
-    const data = await getConfigCompareStats(date, days)
+    const data = getImpactCompare(date, days)
     return NextResponse.json(data)
   } catch (error) {
     console.error('[/api/config-history/compare] error:', error)
