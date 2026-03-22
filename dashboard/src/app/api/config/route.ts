@@ -69,6 +69,39 @@ const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> 
   return dynamic
 }
 
+const scanUserDynamicFiles = (): Array<{ agent: string; path: string }> => {
+  const dynamic: Array<{ agent: string; path: string }> = []
+  const home = getUserHome()
+
+  const codexDir = path.join(home, '.codex')
+  if (fs.existsSync(codexDir)) {
+    try {
+      for (const entry of fs.readdirSync(codexDir)) {
+        if (entry.endsWith('.md') || entry.endsWith('.toml')) {
+          dynamic.push({ agent: 'codex', path: `~/.codex/${entry}` })
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const geminiDir = path.join(home, '.gemini')
+  if (fs.existsSync(geminiDir)) {
+    try {
+      for (const entry of fs.readdirSync(geminiDir)) {
+        if (entry.endsWith('.json') || entry.endsWith('.md') || entry.endsWith('.toml')) {
+          dynamic.push({ agent: 'gemini', path: `~/.gemini/${entry}` })
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return dynamic
+}
+
 type RegistryRow = { project_name: string; project_path: string }
 
 const getRegisteredProjects = (): RegistryRow[] => {
@@ -118,7 +151,7 @@ export async function GET(request: NextRequest) {
         getProjectFiles(project_path, project_name)
       )
 
-      const userFiles = USER_STATIC_FILES
+      const staticUserFiles = USER_STATIC_FILES
         .filter((f) => fs.existsSync(resolveUserPath(f.path)))
         .map((f) => ({
           path: f.path,
@@ -128,6 +161,21 @@ export async function GET(request: NextRequest) {
           projectRoot: '',
           projectName: '',
         }))
+
+      const staticUserPaths = new Set(staticUserFiles.map((f) => f.path))
+
+      const dynamicUserFiles = scanUserDynamicFiles()
+        .filter((f) => !staticUserPaths.has(f.path) && fs.existsSync(resolveUserPath(f.path)))
+        .map((f) => ({
+          path: f.path,
+          agent: f.agent,
+          scope: 'user' as const,
+          exists: true,
+          projectRoot: '',
+          projectName: '',
+        }))
+
+      const userFiles = [...staticUserFiles, ...dynamicUserFiles]
 
       return NextResponse.json({ files: [...allProjectFiles, ...userFiles] })
     }

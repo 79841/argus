@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { projectsService, configService } from '@/shared/services'
+import type { AgentType } from '@/shared/lib/agents'
 import type { FileEntry, DbProject, ProjectGroup, Agent } from '@/features/rules/types/rules'
 
 const groupByAgent = (list: FileEntry[]) => {
@@ -11,6 +12,10 @@ const groupByAgent = (list: FileEntry[]) => {
     map.get(f.agent)!.push(f)
   }
   return Array.from(map.entries()).map(([agent, files]) => ({ agent, files }))
+}
+
+type UseConfigFilesOptions = {
+  agentType?: AgentType
 }
 
 type UseConfigFilesReturn = {
@@ -33,7 +38,7 @@ type UseConfigFilesReturn = {
   handleSave: () => Promise<void>
 }
 
-export const useConfigFiles = (): UseConfigFilesReturn => {
+export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}): UseConfigFilesReturn => {
   const [dbProjects, setDbProjects] = useState<DbProject[]>([])
   const [files, setFiles] = useState<FileEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,6 +76,14 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
   useEffect(() => {
     loadAll()
   }, [loadAll])
+
+  useEffect(() => {
+    if (selectedFile && agentType !== 'all' && selectedFile.agent !== agentType) {
+      setSelectedFile(null)
+      setFileContent('')
+      setEditContent('')
+    }
+  }, [agentType, selectedFile])
 
   const loadFile = useCallback(async (file: FileEntry) => {
     setSelectedFile(file)
@@ -113,9 +126,12 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
     }
   }
 
-  const projectGroups = useMemo<ProjectGroup[]>(() => dbProjects.map((dp) => {
+  const projectGroups = useMemo<ProjectGroup[]>(() => dbProjects.map((dp: DbProject) => {
     const projectFiles = files.filter(
-      (f) => f.scope === 'project' && f.projectName === dp.project_name
+      (f: FileEntry) =>
+        f.scope === 'project' &&
+        f.projectName === dp.project_name &&
+        (agentType === 'all' || f.agent === agentType)
     )
     return {
       projectName: dp.project_name,
@@ -123,9 +139,12 @@ export const useConfigFiles = (): UseConfigFilesReturn => {
       loaded: true,
       agents: groupByAgent(projectFiles),
     }
-  }), [dbProjects, files])
+  }), [dbProjects, files, agentType])
 
-  const userFiles = useMemo(() => files.filter((f) => f.scope === 'user'), [files])
+  const userFiles = useMemo(
+    () => files.filter((f: FileEntry) => f.scope === 'user' && (agentType === 'all' || f.agent === agentType)),
+    [files, agentType]
+  )
 
   const userAgents = useMemo(() => groupByAgent(userFiles), [userFiles])
 
