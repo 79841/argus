@@ -6,15 +6,16 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 # /refactor — 리팩토링
 
-`/simplify`의 별칭이다. `/simplify`와 동일하게 동작한다.
+변경된 코드의 구조를 개선한다. 동작은 변경하지 않고 코드 구조만 정리한다.
 
 ## 실행 절차
 
-`/simplify`의 실행 절차를 따른다:
-
 1. 변경 범위를 파악한다 (`git diff develop --name-only`)
-2. 품질, 재사용성, 효율성 관점에서 검토한다
-3. 발견 즉시 수정하고 테스트를 실행한다
+2. 구조 개선 포인트를 식별한다:
+   - 중복 코드 → 공유 유틸/컴포넌트 추출
+   - 복잡한 로직 → 함수 분리, 네이밍 개선
+   - 반복 패턴 → 커스텀 훅 추출
+3. 수정하고 테스트를 실행한다
 
 ```bash
 cd dashboard && pnpm test:run
