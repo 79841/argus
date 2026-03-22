@@ -11,7 +11,7 @@ allowed-tools: Bash
 ### 1. 대시보드 시작
 
 ```bash
-cd dashboard && npm run dev &
+cd dashboard && pnpm dev &
 ```
 
 ### 2. 헬스체크

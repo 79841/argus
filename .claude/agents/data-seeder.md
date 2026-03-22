@@ -54,11 +54,9 @@ curl -s http://localhost:9845/api/sessions | python3 -m json.tool
 
 ### agent_logs 스키마
 
-필수 필드:
-- `Timestamp`: DateTime64(9), ISO 8601 나노초
-- `ServiceName`: `codex-cli`, `claude-code`, `gemini-cli`
-- `ResourceAttributes`: `{"agent_type": "...", "service.name": "..."}`
-- `LogAttributes`: `{"session.id": "...", "model": "...", "input_tokens": "...", ...}`
+시드 API: `dashboard/src/app/api/seed/route.ts`
+DB 초기화: `dashboard/src/shared/lib/db.ts`
+쿼리 함수: `dashboard/src/shared/lib/queries/`
 
 ### 현실적인 데이터 생성 가이드
 
