@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { AGENT_TOOL_CATEGORIES } from './agents'
 
 export type AnyValue = {
   stringValue?: string
@@ -180,15 +181,7 @@ export const getStatusCode = (attrs: KeyValue[] | undefined): string => {
 }
 
 export const getToolCategory = (toolName: string): string => {
-  const categories: Record<string, string[]> = {
-    'File Read': ['Read', 'read_file', 'cat'],
-    'File Write': ['Write', 'write_file', 'patch_file'],
-    'File Edit': ['Edit', 'edit_file'],
-    'Shell': ['Bash', 'shell', 'run_shell_command'],
-    'Search': ['Glob', 'Grep', 'grep', 'list_directory', 'web_search'],
-    'Orchestration': ['Agent', 'Skill'],
-  }
-  for (const [category, tools] of Object.entries(categories)) {
+  for (const [category, tools] of Object.entries(AGENT_TOOL_CATEGORIES)) {
     if (tools.includes(toolName)) return category
   }
   if (toolName.startsWith('mcp')) return 'MCP'

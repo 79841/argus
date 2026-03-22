@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { AGENT_CONFIG_FILE_PATHS } from './agents'
 
 type AgentSetupType = 'claude' | 'codex' | 'gemini'
 
@@ -30,15 +31,15 @@ const toDisplayPath = (absPath: string): string => {
 }
 
 const AGENT_CONFIG_PATHS: Record<AgentSetupType, string> = {
-  claude: path.join(HOME, '.claude', 'settings.json'),
-  codex: path.join(HOME, '.codex', 'config.toml'),
-  gemini: path.join(HOME, '.gemini', 'settings.json'),
+  claude: path.join(HOME, ...AGENT_CONFIG_FILE_PATHS.claude),
+  codex: path.join(HOME, ...AGENT_CONFIG_FILE_PATHS.codex),
+  gemini: path.join(HOME, ...AGENT_CONFIG_FILE_PATHS.gemini),
 }
 
 const AGENT_DIRS: Record<AgentSetupType, string> = {
-  claude: path.join(HOME, '.claude'),
-  codex: path.join(HOME, '.codex'),
-  gemini: path.join(HOME, '.gemini'),
+  claude: path.join(HOME, AGENT_CONFIG_FILE_PATHS.claude[0]),
+  codex: path.join(HOME, AGENT_CONFIG_FILE_PATHS.codex[0]),
+  gemini: path.join(HOME, AGENT_CONFIG_FILE_PATHS.gemini[0]),
 }
 
 const ARGUS_ENV_KEYS = [
