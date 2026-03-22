@@ -146,10 +146,10 @@ git worktree add ../argus-feature-xxx feature/xxx
 ## 개발 프로세스
 
 ```
-/plan → /tdd → /develop → /test → /review → /refactor
+/plan → /tdd → /develop → /test → /simplify
 ```
 
-6단계 프로세스를 따르되, 경우에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
+5단계 프로세스를 따르되, 경우에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
 
 | 단계 | 스킬 | 에이전트/도구 | 모델 | 설명 |
 |------|------|--------------|------|------|
@@ -157,14 +157,13 @@ git worktree add ../argus-feature-xxx feature/xxx
 | 2. TDD | `/tdd` | 직접 작성 | — | 테스트 코드 먼저 작성 (Red 단계) |
 | 3. Develop | `/develop` | `page-builder`, `infra-builder`, `data-seeder` | sonnet | 계획/테스트 기반 구현 (Green 단계) |
 | 4. Test | `/test` | vitest | — | 테스트 실행 및 통과 확인 |
-| 5. Review | `/review` | `code-reviewer` | sonnet | 코드 품질, 보안, 컨벤션 검토 |
-| 6. Refactor | `/refactor` | 직접 수정 | — | 리뷰 기반 개선 (테스트 유지) |
+| 5. Simplify | `/simplify` | 직접 수정 | — | 코드 품질·재사용성·효율성 검토 및 개선 (테스트 유지) |
 
 ### 유연한 실행
 
-- **전체 프로세스**: `/plan` → `/tdd` → `/develop` → `/test` → `/review` → `/refactor`
+- **전체 프로세스**: `/plan` → `/tdd` → `/develop` → `/test` → `/simplify`
 - **버그 수정**: `/bugfix` (재현 테스트 → 최소 수정 → 통과 확인)
-- **기존 코드 개선**: `/review` → `/refactor` → `/test`
+- **기존 코드 개선**: `/simplify` → `/test`
 - **테스트 추가**: `/tdd` → `/test`
 - **계획만 수립**: `/plan`
 
@@ -176,7 +175,7 @@ git worktree add ../argus-feature-xxx feature/xxx
   2. 실패 테스트 작성 — 버그를 재현하는 테스트 (Red)
   3. 최소 수정 — 버그만 고침, 관련 없는 변경 금지 (Green)
   4. 회귀 확인 — 전체 테스트 통과
-  5. 리뷰 (선택) — 핵심 로직 변경 시에만
+  5. 정리 (선택) — `/simplify`로 핵심 로직 변경 시에만
 ```
 
 - 한 번에 하나의 버그만 수정한다
@@ -190,7 +189,7 @@ git worktree add ../argus-feature-xxx feature/xxx
 | 플래닝 (`plan-writer`) | opus | 복잡한 요구사항 분석, 아키텍처 설계 |
 | 머지 (`merge-manager`) | opus | 충돌 해결, 통합 판단 |
 | 개발 (`page-builder`, `infra-builder`, `data-seeder`) | sonnet | 빠른 구현, 비용 효율 |
-| 리뷰 (`code-reviewer`) | sonnet | 패턴 검토, 체크리스트 기반 |
+| 정리 (`/simplify`) | — | 변경 코드 품질·재사용성·효율성 검토 및 수정 |
 
 ## Agent 목록
 
@@ -200,7 +199,6 @@ git worktree add ../argus-feature-xxx feature/xxx
 | `merge-manager` | Gitflow 브랜치 머지 | opus | 브랜치 머지 시 |
 | `infra-builder` | Docker/SQLite/OTel 인프라 구성 | sonnet | 인프라 변경 시 |
 | `page-builder` | 대시보드 페이지 + API + 컴포넌트 구현 | sonnet | 페이지 개발 시 |
-| `code-reviewer` | 코드 품질/패턴 리뷰 | sonnet | 구현 완료 후 |
 | `data-seeder` | 테스트 데이터 생성 및 파이프라인 검증 | sonnet | 데이터 검증 시 |
 
 ## 팀 구성 패턴
@@ -295,13 +293,12 @@ git worktree add ../argus-feature-xxx feature/xxx
 6. /tdd                        → 테스트 코드 작성 (Red)
 7. /develop                    → 구현 (Green)
 8. /test                       → 테스트 실행
-9. /review                     → 코드 리뷰
-10. /refactor                  → 리팩토링
-11. /feature-finish            → develop에 머지
-12. Linear 이슈 상태 업데이트   → Done
+9. /simplify                   → 코드 정리 (품질·재사용성·효율성)
+10. /feature-finish            → develop에 머지
+11. Linear 이슈 상태 업데이트   → Done
 ```
 
-단계 5~10은 상황에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
+단계 5~9는 상황에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
 
 ## 마일스톤
 
