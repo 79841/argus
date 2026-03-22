@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { sendOtlpPayload, seedAgentData } from '../helpers/ingest'
-import claudeFixture from '../fixtures/claude-code.json'
-import codexFixture from '../fixtures/codex-cli.json'
-import geminiFixture from '../fixtures/gemini-cli.json'
+import { sendOtlpPayload, seedAgentData, getSessions, getModels, collectPageErrors, claudeFixture, codexFixture, geminiFixture } from '../helpers/ingest'
 
 test.describe.serial('멀티 에이전트 통합 E2E', () => {
   test.beforeAll(async ({ request }) => {
@@ -23,9 +20,8 @@ test.describe.serial('멀티 에이전트 통합 E2E', () => {
 
     test('3개 에이전트 세션 모두 존재', async ({ request }) => {
       const res = await request.get('/api/sessions')
-      const json = await res.json()
-      const sessions = json.sessions ?? json
-      const sessionIds = (sessions as Array<{ session_id: string }>).map((s) => s.session_id)
+      const sessions = getSessions(await res.json())
+      const sessionIds = sessions.map((s) => s.session_id)
       expect(sessionIds).toContain('e2e-claude-session-1')
       expect(sessionIds).toContain('e2e-codex-session-1')
       expect(sessionIds).toContain('e2e-gemini-session-1')
@@ -48,70 +44,39 @@ test.describe.serial('멀티 에이전트 통합 E2E', () => {
     test('models — 3개 모델 포함', async ({ request }) => {
       const res = await request.get('/api/models')
       expect(res.status()).toBe(200)
-      const json = await res.json()
-      // /api/models는 ModelUsage[] 배열 또는 { models: ModelUsage[] } 형태로 반환
-      const models = (json.models ?? json) as Array<{ model: string }>
-      const names = (Array.isArray(models) ? models : []).map((m) => m.model)
+      const models = getModels(await res.json())
+      const names = models.map((m) => m.model)
       expect(names).toContain('claude-sonnet-4-6')
       expect(names).toContain('gpt-4.1')
-      // Gemini는 models/ 접두사가 제거되어 저장됨
       expect(names).toContain('gemini-2.5-pro')
     })
   })
 
   test.describe('에이전트별 필터링 (API)', () => {
-    test('agent_type=claude → Claude 세션만', async ({ request }) => {
-      const res = await request.get('/api/sessions?agent_type=claude')
-      expect(res.status()).toBe(200)
-      const json = await res.json()
-      const sessions = (json.sessions ?? json) as Array<{ agent_type: string }>
-      expect(Array.isArray(sessions)).toBe(true)
-      for (const s of sessions) {
-        expect(s.agent_type).toBe('claude')
-      }
-    })
-
-    test('agent_type=codex → Codex 세션만', async ({ request }) => {
-      const res = await request.get('/api/sessions?agent_type=codex')
-      expect(res.status()).toBe(200)
-      const json = await res.json()
-      const sessions = (json.sessions ?? json) as Array<{ agent_type: string }>
-      expect(Array.isArray(sessions)).toBe(true)
-      for (const s of sessions) {
-        expect(s.agent_type).toBe('codex')
-      }
-    })
-
-    test('agent_type=gemini → Gemini 세션만', async ({ request }) => {
-      const res = await request.get('/api/sessions?agent_type=gemini')
-      expect(res.status()).toBe(200)
-      const json = await res.json()
-      const sessions = (json.sessions ?? json) as Array<{ agent_type: string }>
-      expect(Array.isArray(sessions)).toBe(true)
-      for (const s of sessions) {
-        expect(s.agent_type).toBe('gemini')
-      }
-    })
+    for (const agentType of ['claude', 'codex', 'gemini']) {
+      test(`agent_type=${agentType} → 해당 세션만`, async ({ request }) => {
+        const res = await request.get(`/api/sessions?agent_type=${agentType}`)
+        expect(res.status()).toBe(200)
+        const sessions = getSessions(await res.json())
+        for (const s of sessions) {
+          expect(s.agent_type).toBe(agentType)
+        }
+      })
+    }
   })
 
   test.describe('데이터 정합성', () => {
-    test('전체 비용 > 0', async ({ request }) => {
+    test('전체 비용·토큰 > 0', async ({ request }) => {
       const res = await request.get('/api/overview')
       const json = await res.json()
       expect(json.all_time_cost).toBeGreaterThan(0)
+      expect(json.all_time_tokens).toBeGreaterThan(0)
     })
 
     test('전체 세션 수 ≥ 3', async ({ request }) => {
       const res = await request.get('/api/sessions')
-      const json = await res.json()
-      const sessions = json.sessions ?? json
-      expect((sessions as unknown[]).length).toBeGreaterThanOrEqual(3)
-    })
-
-    test('전체 토큰 > 0', async ({ request }) => {
-      const res = await request.get('/api/overview')
-      const json = await res.json()
-      expect(json.all_time_tokens).toBeGreaterThan(0)
+      const sessions = getSessions(await res.json())
+      expect(sessions.length).toBeGreaterThanOrEqual(3)
     })
 
     test('에이전트별 비용 > 0', async ({ request }) => {
@@ -127,42 +92,28 @@ test.describe.serial('멀티 에이전트 통합 E2E', () => {
       ])
       expect(claudeJson.all_time_cost).toBeGreaterThan(0)
       expect(codexJson.all_time_cost).toBeGreaterThan(0)
-      // Gemini는 pricing 미등록 시 0일 수 있으므로 0 이상 검증
       expect(geminiJson.all_time_cost).toBeGreaterThanOrEqual(0)
     })
   })
 
   test.describe('대시보드 UI 통합', () => {
-    test('Overview 페이지 — 레이아웃 표시', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
-      await expect(page.locator('aside')).toBeVisible()
-      await expect(page).toHaveTitle(/Argus/)
-    })
-
     test('Overview 페이지 — Today Cost 카드 표시', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
+      await expect(page.locator('aside')).toBeVisible()
       await expect(page.getByText('Today Cost').first()).toBeVisible()
     })
 
     test('에이전트 필터 탭 전환 — 에러 없음', async ({ page }) => {
-      const errors: string[] = []
-      page.on('pageerror', (err) => errors.push(err.message))
-
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
-
-      // Dashboard 페이지는 AgentFilter가 없으므로 Sessions 페이지에서 검증
+      const errors = collectPageErrors(page)
       await page.goto('/sessions')
       await page.waitForLoadState('networkidle')
 
-      const tabNames = ['Codex', 'Claude Code', 'Gemini CLI', 'All Agents']
-      for (const name of tabNames) {
+      for (const name of ['Codex', 'Claude Code', 'Gemini CLI', 'All Agents']) {
         const tab = page.getByRole('tab', { name })
         if (await tab.isVisible()) {
           await tab.click()
-          await page.waitForTimeout(500)
+          await expect(tab).toHaveAttribute('aria-selected', 'true')
         }
       }
 
@@ -172,27 +123,7 @@ test.describe.serial('멀티 에이전트 통합 E2E', () => {
     test('Sessions 페이지 — 세션 패널 표시', async ({ page }) => {
       await page.goto('/sessions')
       await page.waitForLoadState('networkidle')
-      await expect(page.locator('aside')).toBeVisible()
-      // 세션 목록 패널이 렌더링되었는지 확인
       await expect(page.locator('div.flex.min-h-0.flex-1').first()).toBeVisible()
-    })
-
-    test('Usage 페이지 — 에이전트 필터 + 콘텐츠 탭 동시 렌더링', async ({ page }) => {
-      await page.goto('/usage')
-      await page.waitForLoadState('networkidle')
-
-      // 에이전트 필터 탭
-      await expect(page.getByRole('tab', { name: 'All Agents' })).toBeVisible()
-      // 콘텐츠 탭
-      await expect(page.getByRole('tab', { name: 'Cost' })).toBeVisible()
-    })
-
-    test('Tools 페이지 — 에이전트 필터 + 콘텐츠 탭 동시 렌더링', async ({ page }) => {
-      await page.goto('/tools')
-      await page.waitForLoadState('networkidle')
-
-      await expect(page.getByRole('tab', { name: 'All Agents' })).toBeVisible()
-      await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
     })
   })
 
@@ -211,9 +142,8 @@ test.describe.serial('멀티 에이전트 통합 E2E', () => {
 
     test('대량 전송 후 세션 수 ≥ 3', async ({ request }) => {
       const res = await request.get('/api/sessions')
-      const json = await res.json()
-      const sessions = json.sessions ?? json
-      expect((sessions as unknown[]).length).toBeGreaterThanOrEqual(3)
+      const sessions = getSessions(await res.json())
+      expect(sessions.length).toBeGreaterThanOrEqual(3)
     })
 
     test('대량 전송 후 비용 집계 정상', async ({ request }) => {

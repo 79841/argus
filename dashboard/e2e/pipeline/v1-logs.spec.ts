@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { sendOtlpPayload } from '../helpers/ingest'
-import claudeFixture from '../fixtures/claude-code.json'
-import codexFixture from '../fixtures/codex-cli.json'
-import geminiFixture from '../fixtures/gemini-cli.json'
+import { sendOtlpPayload, claudeFixture, codexFixture, geminiFixture } from '../helpers/ingest'
 
 test.describe('OTLP v1/logs 엔드포인트', () => {
   test('정상 페이로드 — 200 응답', async ({ request }) => {
