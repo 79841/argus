@@ -131,8 +131,8 @@ export async function POST(request: NextRequest) {
               if (toolParams) {
                 try {
                   params = JSON.parse(toolParams)
-                } catch (_error) {
-                  console.warn('[ingest] Failed to parse tool_parameters:', toolParams?.slice(0, 200))
+                } catch (error) {
+                  console.warn('[ingest] Failed to parse tool_parameters:', toolParams?.slice(0, 200), error)
                 }
               }
 
