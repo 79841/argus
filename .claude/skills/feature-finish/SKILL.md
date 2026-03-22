@@ -4,9 +4,9 @@ disable-model-invocation: false
 allowed-tools: Bash, Read
 ---
 
-# /feature-finish — feature 브랜치를 develop에 머지
+# /feature-finish — feature 브랜치를 PR로 머지하고 worktree 정리
 
-현재 feature 브랜치를 develop에 머지하고 정리한다.
+현재 feature 브랜치를 리모트에 push하고 PR을 생성한다. PR 머지 후 worktree와 브랜치를 정리한다.
 
 ## 사용법
 
@@ -16,10 +16,7 @@ allowed-tools: Bash, Read
 
 ## 실행 절차
 
-1. 현재 브랜치가 `feature/*`인지 확인한다
-2. 변경사항이 모두 커밋되었는지 확인한다
-3. develop에 --no-ff 머지한다
-4. feature 브랜치를 삭제한다
+### 1. 사전 확인
 
 ```bash
 # 현재 브랜치 확인
@@ -35,16 +32,41 @@ if [ -n "$(git status --porcelain)" ]; then
   git status --short
   exit 1
 fi
-
-# develop으로 머지
-git checkout develop
-git merge --no-ff "$BRANCH" -m "Merge $BRANCH into develop"
-
-# feature 브랜치 삭제
-git branch -d "$BRANCH"
 ```
 
-5. 머지 결과를 출력한다:
-   - 머지된 커밋 수
-   - 변경된 파일 수
-   - develop 브랜치의 최신 로그
+### 2. Push + PR 생성
+
+```bash
+git push -u origin "$BRANCH"
+gh pr create --base develop --head "$BRANCH" --title "Merge $BRANCH" --body ""
+```
+
+### 3. PR 머지 후 정리
+
+PR이 머지되면 다음을 실행한다:
+
+```bash
+BRANCH_NAME="${BRANCH#feature/}"
+MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+
+# worktree 정리 (.claude/worktrees/ 하위)
+WORKTREE_PATH="$MAIN_REPO/.claude/worktrees/$BRANCH_NAME"
+if [ -d "$WORKTREE_PATH" ]; then
+  cd "$MAIN_REPO"
+  git worktree remove "$WORKTREE_PATH"
+fi
+
+# develop 최신화 및 feature 브랜치 삭제
+cd "$MAIN_REPO"
+git checkout develop
+git pull origin develop
+git branch -d "$BRANCH"
+git push origin --delete "$BRANCH" 2>/dev/null || true
+```
+
+### 4. 결과 출력
+
+- PR URL
+- 머지된 커밋 수
+- 변경된 파일 수
+- worktree 정리 완료 여부

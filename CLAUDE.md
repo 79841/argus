@@ -57,7 +57,7 @@ argus/
 | `pricing_model` | 에이전트×모델별 토큰 단가 (자동 시드) |
 | `config_snapshots` | 설정 파일 변경 스냅샷 |
 
-스키마는 `src/lib/db.ts`에서 앱 시작 시 자동 초기화된다 (마이그레이션 불필요).
+스키마는 `src/shared/lib/db.ts`에서 앱 시작 시 자동 초기화된다 (마이그레이션 불필요).
 
 ## 데이터 수집
 
@@ -106,14 +106,16 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 ### Dashboard (Next.js)
 - App Router 사용 (RSC 기본, 인터랙티브 컴포넌트만 `'use client'`)
 - API 라우트: `src/app/api/{name}/route.ts`
-- 쿼리: `src/lib/queries.ts`
-- 컴포넌트: `src/components/` (shadcn/ui는 `src/components/ui/`)
+- 쿼리: `src/shared/lib/queries/` (모듈별 분리)
+- 공유 컴포넌트: `src/shared/components/` (shadcn/ui는 `src/shared/components/ui/`)
+- Feature 컴포넌트: `src/features/{name}/components/`
+- import 경로: `@/shared/`, `@/features/` 접두사 사용
 - Tailwind CSS 클래스 사용, 인라인 스타일 금지
 
 ### 데이터
 - SQLite: `better-sqlite3` 동기 API, WAL 모드
-- 스키마: `src/lib/db.ts`에서 자동 초기화
-- 쿼리: `src/lib/queries.ts`
+- 스키마: `src/shared/lib/db.ts`에서 자동 초기화
+- 쿼리: `src/shared/lib/queries/` (모듈별 분리)
 
 ## Git 전략 (Gitflow)
 
@@ -138,10 +140,22 @@ feature/*     ← 기능 개발 (develop에서 분기, develop으로 머지)
 - develop에 직접 커밋하는 것은 단일 커밋으로 완결되는 소규모 수정에만 허용한다
 
 ### Worktree 활용
-병렬 작업 시 git worktree를 사용하여 격리된 작업 환경을 제공한다:
+feature 브랜치 작업 시 `.claude/worktrees/`에 worktree를 생성하여 격리된 작업 환경을 제공한다.
+`/feature-start`가 자동으로 worktree를 생성하고, `/feature-finish`가 PR 머지 후 정리한다.
+
 ```bash
-git worktree add ../argus-feature-xxx feature/xxx
+# 자동 생성 (/feature-start 사용)
+/feature-start <이름>  → .claude/worktrees/<이름> 디렉토리에 worktree 생성
+
+# 수동 생성
+git worktree add .claude/worktrees/<이름> feature/<이름>
+
+# 정리 (/feature-finish 사용 — PR 머지 후 자동 정리)
+# 또는 수동: git worktree remove .claude/worktrees/<이름>
 ```
+
+- `.claude/worktrees/`는 `.gitignore`에 포함되어 저장소에 커밋되지 않는다
+- Agent 도구의 `isolation: "worktree"` 옵션으로 에이전트를 격리 실행할 수도 있다
 
 ## 개발 프로세스
 
@@ -305,10 +319,10 @@ git worktree add ../argus-feature-xxx feature/xxx
 
 | M | 범위 | 핵심 파일 |
 |---|------|-----------|
-| M1 | 데이터 파이프라인 | `dashboard/src/lib/db.ts`, `dashboard/src/app/api/ingest/` |
-| M2 | 개인 대시보드 | `dashboard/src/app/`, `dashboard/src/lib/queries.ts` |
-| M3 | 효율성 분석 | `dashboard/src/lib/efficiency.ts`, `/efficiency` 페이지 |
-| M4 | 설정 변경 추적 | `dashboard/src/lib/config-tracker.ts`, `/config-history` 페이지 |
+| M1 | 데이터 파이프라인 | `dashboard/src/shared/lib/db.ts`, `dashboard/src/app/api/ingest/` |
+| M2 | 개인 대시보드 | `dashboard/src/app/`, `dashboard/src/shared/lib/queries/` |
+| M3 | 효율성 분석 | `dashboard/src/features/usage/`, `/usage` 페이지 |
+| M4 | 설정 변경 추적 | `dashboard/src/shared/lib/config-tracker.ts`, `/config-history` 페이지 |
 
 
 <claude-mem-context>
