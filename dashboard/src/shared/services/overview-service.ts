@@ -18,6 +18,11 @@ type DailyCostsResponse = {
 type PricingSyncResponse = {
   synced?: number
   error?: string
+  lastSyncedAt?: string
+}
+
+type PricingLastSyncResponse = {
+  lastSyncedAt: string | null
 }
 
 export const overviewService = {
@@ -32,4 +37,7 @@ export const overviewService = {
 
   syncPricing: (): Promise<PricingSyncResponse> =>
     dataClient.mutate('pricing-sync') as Promise<PricingSyncResponse>,
+
+  getPricingLastSync: (): Promise<PricingLastSyncResponse> =>
+    dataClient.query('pricing-sync') as Promise<PricingLastSyncResponse>,
 }
