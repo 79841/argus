@@ -1,6 +1,6 @@
 import { dataClient } from '@/shared/lib/data-client'
 import type { QueryParams } from '@/shared/types/electron'
-import type { ConfigCompareResult } from '@/shared/lib/queries'
+import type { ImpactCompareResult, DailyMetricPoint } from '@/shared/lib/queries'
 import type { ConfigChange } from '@/shared/lib/config-tracker'
 import type { FileEntry } from '@/features/rules/types/rules'
 
@@ -25,6 +25,12 @@ export const configService = {
   getConfigHistory: (params?: QueryParams): Promise<ConfigChange[]> =>
     dataClient.query('config-history', params) as Promise<ConfigChange[]>,
 
-  getConfigCompare: (params: QueryParams): Promise<ConfigCompareResult> =>
-    dataClient.query('config-history/compare', params) as Promise<ConfigCompareResult>,
+  getConfigCompare: (params: QueryParams): Promise<ImpactCompareResult> =>
+    dataClient.query('config-history/compare', params) as Promise<ImpactCompareResult>,
+
+  getConfigCompareBatch: (dates: string[], days: number): Promise<ImpactCompareResult[]> =>
+    dataClient.query('config-history/compare', { dates: dates.join(','), days }) as Promise<ImpactCompareResult[]>,
+
+  getDailyMetrics: (params: QueryParams): Promise<DailyMetricPoint[]> =>
+    dataClient.query('config-history/daily-metrics', params) as Promise<DailyMetricPoint[]>,
 }

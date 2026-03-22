@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfigCompareStats } from '@/shared/lib/queries'
+import { getImpactCompare, getImpactCompareBatch } from '@/shared/lib/queries'
 
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams
     const date = params.get('date')
+    const dates = params.get('dates')
     const days = parseInt(params.get('days') || '7', 10)
 
-    if (!date) {
-      return NextResponse.json({ error: 'date parameter is required' }, { status: 400 })
+    if (dates) {
+      const dateList = dates.split(',').filter(Boolean)
+      const data = getImpactCompareBatch(dateList, days)
+      return NextResponse.json(data)
     }
 
-    const data = await getConfigCompareStats(date, days)
+    if (!date) {
+      return NextResponse.json({ error: 'date or dates parameter is required' }, { status: 400 })
+    }
+
+    const data = getImpactCompare(date, days)
     return NextResponse.json(data)
   } catch (error) {
     console.error('[/api/config-history/compare] error:', error)
