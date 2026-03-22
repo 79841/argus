@@ -1,5 +1,4 @@
 export { GeneralSection } from './components/general-section'
-export { AgentsSection } from './components/agents-section'
 export { PricingSection } from './components/pricing-section'
 export { SetupSection } from './components/setup-section'
 export { ProjectConnectionSection } from './components/project-connection-section'
