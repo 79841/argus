@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   PieChart,
   Pie,
@@ -12,13 +12,7 @@ import { ChartCard } from '@/shared/components/ui/chart-card'
 import { AGENTS } from '@/shared/lib/agents'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { formatCostDetail, formatTokens } from '@/shared/lib/format'
-
-type AgentDistribution = {
-  agent_type: string
-  sessions: number
-  tokens: number
-  cost: number
-}
+import type { AgentDistribution } from '@/shared/lib/queries'
 
 type AgentDonutChartProps = {
   data: AgentDistribution[]
@@ -117,17 +111,17 @@ const renderCustomLabel = ({
 export const AgentDonutChart = ({ data }: AgentDonutChartProps) => {
   const [metric, setMetric] = useState<Metric>('sessions')
 
-  const filtered = data.filter((d) => d[metric] > 0)
-  const total = filtered.reduce((sum, d) => sum + d[metric], 0)
-
-  const chartData = filtered.map((d) => ({
-    name: AGENTS[d.agent_type as keyof typeof AGENTS]?.name ?? d.agent_type,
-    value: d[metric],
-    total,
-    agentType: d.agent_type,
-  }))
-
-  const isEmpty = chartData.length === 0
+  const { chartData, isEmpty } = useMemo(() => {
+    const filtered = data.filter((d) => d[metric] > 0)
+    const total = filtered.reduce((sum, d) => sum + d[metric], 0)
+    const items = filtered.map((d) => ({
+      name: AGENTS[d.agent_type as keyof typeof AGENTS]?.name ?? d.agent_type,
+      value: d[metric],
+      total,
+      agentType: d.agent_type,
+    }))
+    return { chartData: items, isEmpty: items.length === 0 }
+  }, [data, metric])
 
   const actions = (
     <div className="flex items-center gap-1">

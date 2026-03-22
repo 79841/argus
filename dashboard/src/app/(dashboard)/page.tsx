@@ -54,9 +54,9 @@ export default function DashboardPage() {
             </div>
             <div className="h-48 animate-pulse rounded-xl bg-muted" />
             <div className="grid grid-cols-3 gap-4">
-              <div className="h-48 animate-pulse rounded-xl bg-muted" />
-              <div className="h-48 animate-pulse rounded-xl bg-muted" />
-              <div className="h-48 animate-pulse rounded-xl bg-muted" />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-80 animate-pulse rounded-xl bg-muted" />
+              ))}
             </div>
           </div>
         </div>
