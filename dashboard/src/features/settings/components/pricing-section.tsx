@@ -61,11 +61,7 @@ export const PricingSection = () => {
           {lastSyncedAt && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3" />
-              <span>
-                {Date.now() - new Date(lastSyncedAt).getTime() < 10_000
-                  ? t('settings.pricing.justNow')
-                  : t('settings.pricing.lastSynced', { time: formatRelativeTime(lastSyncedAt, t) })}
-              </span>
+              <span>{t('settings.pricing.lastSynced', { time: formatRelativeTime(lastSyncedAt, t) })}</span>
             </div>
           )}
         </CardContent>

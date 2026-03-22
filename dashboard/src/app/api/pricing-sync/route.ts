@@ -4,12 +4,14 @@ import { syncPricingFromLiteLLM } from '@/shared/lib/pricing-sync'
 
 export const dynamic = 'force-dynamic'
 
+const META_KEY = 'pricing_last_synced_at'
+
 export async function GET() {
   try {
     const db = getDb()
     const row = db.prepare(
-      `SELECT value FROM app_meta WHERE key = 'pricing_last_synced_at'`
-    ).get() as { value: string } | undefined
+      `SELECT value FROM app_meta WHERE key = ?`
+    ).get(META_KEY) as { value: string } | undefined
     return NextResponse.json({ lastSyncedAt: row?.value ?? null })
   } catch (error) {
     console.error('[/api/pricing-sync] GET error:', error)
@@ -23,8 +25,8 @@ export async function POST() {
     const count = await syncPricingFromLiteLLM(db)
     const now = new Date().toISOString()
     db.prepare(
-      `INSERT OR REPLACE INTO app_meta (key, value) VALUES ('pricing_last_synced_at', ?)`
-    ).run(now)
+      `INSERT OR REPLACE INTO app_meta (key, value) VALUES (?, ?)`
+    ).run(META_KEY, now)
     return NextResponse.json({ synced: count, lastSyncedAt: now })
   } catch (error) {
     console.error('[/api/pricing-sync] error:', error)
