@@ -229,7 +229,8 @@ git worktree add ../argus-feature-xxx feature/xxx
 
 - **팀**: Argus (PIL)
 - **프로젝트**: Argus
-- 상태 흐름: `Todo` → `In Progress` → `Done`
+- 상태 흐름: `Backlog` → `In Progress` → `Done`
+- **`Todo` 상태는 사용하지 않는다** — 새 이슈는 반드시 `Backlog`로 생성한다
 
 ### 라벨 체계
 
