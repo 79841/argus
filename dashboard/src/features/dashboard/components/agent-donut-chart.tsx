@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import type { PieLabelRenderProps } from 'recharts'
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { AGENTS } from '@/shared/lib/agents'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
@@ -159,7 +160,17 @@ export const AgentDonutChart = ({ data }: AgentDonutChartProps) => {
             outerRadius={95}
             dataKey="value"
             nameKey="name"
-            label={(props) => renderCustomLabel({ ...props, metric })}
+            label={(props: PieLabelRenderProps) => renderCustomLabel({
+              cx: Number(props.cx),
+              cy: Number(props.cy),
+              midAngle: Number(props.midAngle),
+              innerRadius: Number(props.innerRadius),
+              outerRadius: Number(props.outerRadius),
+              name: String(props.name),
+              percent: Number(props.percent),
+              value: Number(props.value),
+              metric,
+            })}
             labelLine={false}
           >
             {chartData.map((entry) => (
