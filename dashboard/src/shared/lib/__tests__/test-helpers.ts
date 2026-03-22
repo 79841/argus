@@ -110,3 +110,50 @@ export const insertToolDetail = (db: Database.Database, overrides: ToolDetailOve
     overrides.metadata ?? '{}',
   )
 }
+
+export const insertLog = (db: Database.Database, overrides: Partial<{
+  timestamp: string
+  agent_type: string
+  session_id: string
+  event_name: string
+  prompt_id: string
+  model: string
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+  cache_creation_tokens: number
+  reasoning_tokens: number
+  cost_usd: number
+  duration_ms: number
+  tool_name: string
+  tool_success: number | null
+  body: string
+  project_name: string
+}> = {}) => {
+  const defaults = {
+    timestamp: new Date().toISOString(),
+    agent_type: 'claude',
+    session_id: 'test-session',
+    event_name: 'api_request',
+    prompt_id: '',
+    model: 'claude-sonnet-4-20250514',
+    input_tokens: 100,
+    output_tokens: 50,
+    cache_read_tokens: 0,
+    cache_creation_tokens: 0,
+    reasoning_tokens: 0,
+    cost_usd: 0.001,
+    duration_ms: 500,
+    tool_name: '',
+    tool_success: null,
+    body: '',
+    project_name: '',
+  }
+  const row = { ...defaults, ...overrides }
+  db.prepare(`INSERT INTO agent_logs (timestamp, agent_type, session_id, event_name, prompt_id, model, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens, reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success, body, project_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    row.timestamp, row.agent_type, row.session_id, row.event_name, row.prompt_id,
+    row.model, row.input_tokens, row.output_tokens, row.cache_read_tokens,
+    row.cache_creation_tokens, row.reasoning_tokens, row.cost_usd, row.duration_ms,
+    row.tool_name, row.tool_success, row.body, row.project_name
+  )
+}
