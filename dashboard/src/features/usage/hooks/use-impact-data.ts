@@ -8,7 +8,7 @@ import type { DateRange } from '@/shared/types/common'
 import type { CategoryType } from '@/features/usage/types/usage'
 import type { AgentType } from '@/shared/lib/agents'
 
-const TOOLS_FILES = ['.mcp.json', '.claude/settings.json']
+const TOOLS_FILES = ['.mcp.json', '.claude/settings.json', '.codex/config.toml', '.gemini/settings.json']
 
 const classifyChange = (filePath: string): 'rules' | 'tools' => {
   if (TOOLS_FILES.some(f => filePath.includes(f))) return 'tools'
@@ -51,7 +51,11 @@ export const useImpactData = ({ agentType, project, dateRange, category, compare
 
         setDailyMetrics(metrics)
 
-        const categorized = configHistory.map(c => ({
+        const agentFiltered = agentType === 'all'
+          ? configHistory
+          : configHistory.filter(c => c.agent_type === agentType)
+
+        const categorized = agentFiltered.map(c => ({
           ...c,
           category: classifyChange(c.file_path),
         }))
