@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { ToolDetailRow, DailyToolRow, IndividualToolRow, ToolUsageRow } from '@/shared/lib/queries'
 import { toolsService } from '@/shared/services'
 import type { AgentType } from '@/shared/lib/agents'
-import type { RegisteredTool } from '../lib/merge-tools'
+import type { RegisteredTool } from '@/shared/lib/registered-tools'
 
 type ToolsKpi = {
   total_calls: number

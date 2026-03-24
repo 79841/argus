@@ -222,6 +222,14 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.statusActive': '활성',
     'tools.detail.statusUnused': '미사용',
     'tools.detail.statusUnregistered': '미등록',
+    'tools.table.name': '이름',
+    'tools.table.server': '서버',
+    'tools.table.agent': '에이전트',
+    'tools.table.scope': '범위',
+    'tools.table.calls': '호출',
+    'tools.table.success': '성공',
+    'tools.table.fail': '실패',
+    'tools.table.lastUsed': '최근 사용',
 
     // Rules page
     'rules.subtitle': '에이전트 지침 · 스킬 · 설정 파일',
@@ -584,6 +592,14 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.statusActive': 'Active',
     'tools.detail.statusUnused': 'Unused',
     'tools.detail.statusUnregistered': 'Unregistered',
+    'tools.table.name': 'Name',
+    'tools.table.server': 'Server',
+    'tools.table.agent': 'Agent',
+    'tools.table.scope': 'Scope',
+    'tools.table.calls': 'Calls',
+    'tools.table.success': 'Success',
+    'tools.table.fail': 'Fail',
+    'tools.table.lastUsed': 'Last Used',
 
     // Rules page
     'rules.subtitle': 'Agent instructions · Skills · Config files',

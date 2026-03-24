@@ -1,84 +1,24 @@
 'use client'
 
-import React, { useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/shared/components/ui/table'
-import { Badge } from '@/shared/components/ui/badge'
+import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
-import { AGENTS } from '@/shared/lib/agents'
 import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
-import type { MergedMcpServer, MergedToolItem } from '@/features/tools/lib/merge-tools'
-import { TOP_COLORS, STATUS_BADGE, SCOPE_BADGE, formatToolDate } from './constants'
+import type { MergedMcpServer } from '@/features/tools/lib/merge-tools'
+import { TOP_COLORS, formatToolDate } from './constants'
+import { ScopeBadge } from './scope-badge'
 
 type McpTabProps = {
   data: MergedMcpServer[]
 }
 
-const AGENT_DOT: Record<string, string> = {
-  claude: 'bg-orange-500',
-  codex: 'bg-emerald-500',
-  gemini: 'bg-blue-500',
-}
-
-const ToolRows = ({ tools, noUsageLabel }: { tools: MergedToolItem[]; noUsageLabel: string }) => {
-  if (tools.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={6} className="py-3 text-center text-xs text-muted-foreground">
-          {noUsageLabel}
-        </TableCell>
-      </TableRow>
-    )
-  }
-
-  return (
-    <>
-      {tools.map((tool, idx) => {
-        const agent = tool.agent_type ? AGENTS[tool.agent_type as keyof typeof AGENTS] : null
-        const dot = tool.agent_type ? AGENT_DOT[tool.agent_type] ?? 'bg-gray-500' : null
-        return (
-          <TableRow key={`${tool.name}-${tool.agent_type ?? idx}`} className="bg-muted/30">
-            <TableCell className="pl-8 max-w-0">
-              <span className="block truncate font-mono text-xs text-muted-foreground">
-                {tool.name}
-              </span>
-            </TableCell>
-            <TableCell>
-              {agent && dot ? (
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className={cn('h-2 w-2 shrink-0 rounded-full', dot)} />
-                  {agent.name}
-                </span>
-              ) : (
-                <span className="text-xs text-muted-foreground">—</span>
-              )}
-            </TableCell>
-            <TableCell className="text-right font-medium text-xs">{tool.invocation_count}</TableCell>
-            <TableCell className="text-right text-xs text-green-600 dark:text-green-400">{tool.success_count}</TableCell>
-            <TableCell className="text-right text-xs">
-              {tool.fail_count > 0 ? (
-                <span className="text-red-600 dark:text-red-400">{tool.fail_count}</span>
-              ) : (
-                <span className="text-muted-foreground">0</span>
-              )}
-            </TableCell>
-            <TableCell className="text-right text-xs text-muted-foreground">
-              {tool.last_used ? formatToolDate(tool.last_used) : '—'}
-            </TableCell>
-          </TableRow>
-        )
-      })}
-    </>
-  )
-}
-
 export const McpTab = ({ data }: McpTabProps) => {
   const { t } = useLocale()
-  const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set())
 
   const registeredCount = data.filter((s) => s.status !== 'unregistered').length
   const activeCount = data.filter((s) => s.status === 'active').length
@@ -95,14 +35,6 @@ export const McpTab = ({ data }: McpTabProps) => {
       value: s.totalCalls,
       fill: TOP_COLORS[i % TOP_COLORS.length],
     }))
-
-  const toggleServer = (serverName: string) => {
-    setExpandedServers((prev) => {
-      const next = new Set(prev)
-      next.has(serverName) ? next.delete(serverName) : next.add(serverName)
-      return next
-    })
-  }
 
   return (
     <div className="space-y-4">
@@ -169,7 +101,7 @@ export const McpTab = ({ data }: McpTabProps) => {
                 <span className="text-xl font-bold tabular-nums leading-none">
                   {totalCalls.toLocaleString()}
                 </span>
-                <span className="mt-0.5 text-[11px] text-muted-foreground">total calls</span>
+                <span className="mt-0.5 text-[11px] text-muted-foreground">{t('tools.table.calls')}</span>
               </div>
             </div>
           </CardContent>
@@ -199,77 +131,52 @@ export const McpTab = ({ data }: McpTabProps) => {
               </colgroup>
               <TableHeader>
                 <TableRow className="text-xs text-muted-foreground">
-                  <TableHead>Server / Tool</TableHead>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Status / Scope</TableHead>
-                  <TableHead className="text-right">Calls</TableHead>
-                  <TableHead className="text-right">Success</TableHead>
-                  <TableHead className="text-right">Fail</TableHead>
-                  <TableHead className="text-right">Last Used</TableHead>
+                  <TableHead>{t('tools.table.server')}</TableHead>
+                  <TableHead>{t('tools.table.agent')}</TableHead>
+                  <TableHead>{t('tools.table.scope')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.calls')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.success')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.fail')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.lastUsed')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((server) => {
-                  const isExpanded = expandedServers.has(server.serverName)
-                  const statusCfg = STATUS_BADGE[server.status]
                   const isUnused = server.status === 'unused'
-
                   return (
-                    <React.Fragment key={server.serverName}>
-                      <TableRow
-                        className={cn(
-                          'cursor-pointer hover:bg-muted/50 transition-colors',
-                          isUnused && 'opacity-50'
-                        )}
-                        onClick={() => toggleServer(server.serverName)}
-                      >
-                        <TableCell className="max-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-muted-foreground text-xs select-none">
-                              {isExpanded ? '▾' : '▸'}
-                            </span>
-                            <span className="block truncate font-mono text-xs font-medium">
-                              {server.serverName}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
+                    <TableRow key={server.serverName} className={cn(isUnused && 'opacity-50')}>
+                      <TableCell className="max-w-0">
+                        <span className="block truncate font-mono text-xs font-medium">
+                          {server.serverName}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {server.agentType ? (
+                          <AgentBadge agent={server.agentType} />
+                        ) : (
                           <span className="text-xs text-muted-foreground">—</span>
-                        </TableCell>
-                        <TableCell className="space-y-1">
-                          <div>
-                            <Badge className={cn('text-[10px] px-1.5 py-0', statusCfg.className)}>
-                              {t(statusCfg.i18nKey)}
-                            </Badge>
-                          </div>
-                          {server.scope && (
-                            <div>
-                              <Badge className={cn('text-[10px] px-1.5 py-0', SCOPE_BADGE[server.scope].className)}>
-                                {SCOPE_BADGE[server.scope].label}
-                              </Badge>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {server.totalCalls > 0 ? server.totalCalls : <span className="text-muted-foreground">0</span>}
-                        </TableCell>
-                        <TableCell className="text-right text-green-600 dark:text-green-400">
-                          {server.successCount > 0 ? server.successCount : <span className="text-muted-foreground">0</span>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {server.failCount > 0 ? (
-                            <span className="text-red-600 dark:text-red-400">{server.failCount}</span>
-                          ) : (
-                            <span className="text-muted-foreground">0</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground text-xs">—</TableCell>
-                      </TableRow>
-
-                      {isExpanded && (
-                        <ToolRows tools={server.tools} noUsageLabel={t('tools.detail.noUsage')} />
-                      )}
-                    </React.Fragment>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <ScopeBadge scope={server.scope} projectName={server.projectName} />
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {server.totalCalls > 0 ? server.totalCalls : <span className="text-muted-foreground">0</span>}
+                      </TableCell>
+                      <TableCell className="text-right text-green-600 dark:text-green-400">
+                        {server.successCount > 0 ? server.successCount : <span className="text-muted-foreground">0</span>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {server.failCount > 0 ? (
+                          <span className="text-red-600 dark:text-red-400">{server.failCount}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground text-xs">
+                        {server.lastUsed ? formatToolDate(server.lastUsed) : '—'}
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
               </TableBody>

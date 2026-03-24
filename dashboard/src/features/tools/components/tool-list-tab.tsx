@@ -12,14 +12,15 @@ import {
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/shared/components/ui/table'
-import { Badge } from '@/shared/components/ui/badge'
+import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import type { MergedToolItem } from '@/features/tools/lib/merge-tools'
-import { TOP_COLORS, STATUS_BADGE, SCOPE_BADGE, formatToolDate } from './constants'
+import { TOP_COLORS, formatToolDate } from './constants'
+import { ScopeBadge } from './scope-badge'
 
 type ToolListTabProps = {
   data: MergedToolItem[]
@@ -105,7 +106,7 @@ export const ToolListTab = ({ data, emptyTitleKey, emptyDescKey, noRegisteredKey
                   />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {chartData.map((entry, i) => (
-                      <Cell key={entry.name} fill={TOP_COLORS[i % TOP_COLORS.length]} />
+                      <Cell key={`${entry.name}:${i}`} fill={TOP_COLORS[i % TOP_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -125,49 +126,44 @@ export const ToolListTab = ({ data, emptyTitleKey, emptyDescKey, noRegisteredKey
           ) : (
             <Table className="table-fixed">
               <colgroup>
-                <col className="w-[28%]" />
-                <col className="w-[10%]" />
-                <col className="w-[12%]" />
+                <col className="w-[26%]" />
                 <col className="w-[10%]" />
                 <col className="w-[10%]" />
                 <col className="w-[10%]" />
-                <col className="w-[20%]" />
+                <col className="w-[10%]" />
+                <col className="w-[10%]" />
+                <col className="w-[24%]" />
               </colgroup>
               <TableHeader>
                 <TableRow className="text-xs text-muted-foreground">
-                  <TableHead>Name</TableHead>
-                  <TableHead>Scope</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Calls</TableHead>
-                  <TableHead className="text-right">Success</TableHead>
-                  <TableHead className="text-right">Fail</TableHead>
-                  <TableHead className="text-right">Last Used</TableHead>
+                  <TableHead>{t('tools.table.name')}</TableHead>
+                  <TableHead>{t('tools.table.agent')}</TableHead>
+                  <TableHead>{t('tools.table.scope')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.calls')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.success')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.fail')}</TableHead>
+                  <TableHead className="text-right">{t('tools.table.lastUsed')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((item) => {
-                  const statusCfg = STATUS_BADGE[item.status]
                   const isUnused = item.status === 'unused'
                   return (
-                    <TableRow key={item.name} className={cn(isUnused && 'opacity-50')}>
+                    <TableRow key={`${item.name}:${item.agentType ?? 'unknown'}`} className={cn(isUnused && 'opacity-50')}>
                       <TableCell className="max-w-0">
                         <span className="block truncate font-mono text-xs font-medium">
                           {item.name}
                         </span>
                       </TableCell>
                       <TableCell>
-                        {item.scope ? (
-                          <Badge className={cn('text-[10px] px-1.5 py-0', SCOPE_BADGE[item.scope].className)}>
-                            {SCOPE_BADGE[item.scope].label}
-                          </Badge>
+                        {item.agentType ? (
+                          <AgentBadge agent={item.agentType} />
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn('text-[10px] px-1.5 py-0', statusCfg.className)}>
-                          {t(statusCfg.i18nKey)}
-                        </Badge>
+                        <ScopeBadge scope={item.scope} projectName={item.projectName} />
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {item.invocation_count > 0 ? item.invocation_count : <span className="text-muted-foreground">0</span>}

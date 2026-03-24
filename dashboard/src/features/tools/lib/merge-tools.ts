@@ -1,17 +1,13 @@
 import type { IndividualToolRow } from '@/shared/lib/queries'
-
-export type RegisteredTool = {
-  name: string
-  type: 'agent' | 'skill' | 'mcp' | 'hook'
-  scope: 'project' | 'global'
-  filePath: string
-}
+import type { RegisteredTool, RegisteredAgentType } from '@/shared/lib/registered-tools'
 
 export type ToolStatus = 'active' | 'unused' | 'unregistered'
 
 export type MergedToolItem = {
   name: string
   scope?: 'project' | 'global'
+  agentType?: RegisteredAgentType
+  projectName?: string
   filePath?: string
   status: ToolStatus
   invocation_count: number
@@ -25,12 +21,14 @@ export type MergedToolItem = {
 export type MergedMcpServer = {
   serverName: string
   scope?: 'project' | 'global'
+  agentType?: RegisteredAgentType
+  projectName?: string
   filePath?: string
   status: ToolStatus
   totalCalls: number
   successCount: number
   failCount: number
-  tools: MergedToolItem[]
+  lastUsed?: string
 }
 
 export const mergeTools = (
@@ -59,6 +57,8 @@ export const mergeTools = (
       merged.push({
         name: reg.name,
         scope: reg.scope,
+        agentType: reg.agentType,
+        projectName: reg.projectName,
         filePath: reg.filePath,
         status: 'active',
         ...total,
@@ -67,6 +67,8 @@ export const mergeTools = (
       merged.push({
         name: reg.name,
         scope: reg.scope,
+        agentType: reg.agentType,
+        projectName: reg.projectName,
         filePath: reg.filePath,
         status: 'unused',
         invocation_count: 0,
@@ -111,35 +113,36 @@ export const mergeMcpTools = (
     seen.add(reg.name)
     const rows = serverUsageMap.get(reg.name)
     if (rows && rows.length > 0) {
-      const tools = buildMcpToolItems(rows)
       const total = aggregateRows(rows)
       merged.push({
         serverName: reg.name,
         scope: reg.scope,
+        agentType: reg.agentType,
+        projectName: reg.projectName,
         filePath: reg.filePath,
         status: 'active',
         totalCalls: total.invocation_count,
         successCount: total.success_count,
         failCount: total.fail_count,
-        tools,
+        lastUsed: total.last_used,
       })
     } else {
       merged.push({
         serverName: reg.name,
         scope: reg.scope,
+        agentType: reg.agentType,
+        projectName: reg.projectName,
         filePath: reg.filePath,
         status: 'unused',
         totalCalls: 0,
         successCount: 0,
         failCount: 0,
-        tools: [],
       })
     }
   }
 
   for (const [serverName, rows] of serverUsageMap) {
     if (seen.has(serverName)) continue
-    const tools = buildMcpToolItems(rows)
     const total = aggregateRows(rows)
     merged.push({
       serverName,
@@ -147,7 +150,7 @@ export const mergeMcpTools = (
       totalCalls: total.invocation_count,
       successCount: total.success_count,
       failCount: total.fail_count,
-      tools,
+      lastUsed: total.last_used,
     })
   }
 
@@ -176,17 +179,4 @@ const aggregateRows = (rows: IndividualToolRow[]) => {
     avg_duration_ms: invocation_count > 0 ? totalDuration / invocation_count : 0,
     last_used: latest || undefined,
   }
-}
-
-const buildMcpToolItems = (rows: IndividualToolRow[]): MergedToolItem[] => {
-  return rows.map((r) => ({
-    name: r.tool_name.replace(/^mcp:/, ''),
-    status: 'active' as ToolStatus,
-    invocation_count: r.invocation_count,
-    success_count: r.success_count,
-    fail_count: r.fail_count,
-    avg_duration_ms: r.avg_duration_ms,
-    last_used: r.last_used,
-    agent_type: r.agent_type,
-  }))
 }
