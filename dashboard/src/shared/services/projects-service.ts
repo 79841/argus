@@ -31,5 +31,5 @@ export const projectsService = {
     dataClient.mutate('projects/registry', body),
 
   deleteProject: (name: string): Promise<unknown> =>
-    dataClient.mutate('projects/registry/delete', { name }),
+    dataClient.delete('projects/registry', { name }),
 }

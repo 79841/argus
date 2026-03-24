@@ -8,9 +8,11 @@ import { FilterBar } from '@/shared/components/filter-bar'
 import { formatCost } from '@/shared/lib/format'
 import { useDashboardData, AgentSummaryCard, AgentDonutChart, RecentSessionsCard } from '@/features/dashboard'
 import { STORAGE_KEYS } from '@/shared/lib/constants'
+import { useLocale } from '@/shared/lib/i18n'
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { t } = useLocale()
   const [onboardingChecked, setOnboardingChecked] = useState(false)
   const { data, loading } = useDashboardData()
   const { stats, delta, agentSummaries, agentDistribution, daily, sessions } = data
@@ -72,23 +74,23 @@ export default function DashboardPage() {
           {/* KPI 카드 4개 */}
           <div className="grid grid-cols-4 gap-4">
             <KpiCard
-              label="Today Cost"
+              label={t('dashboard.kpi.todayCost')}
               value={formatCost(stats?.total_cost ?? 0)}
               delta={delta?.cost_delta_pct ?? null}
               deltaInverted
             />
             <KpiCard
-              label="Sessions"
+              label={t('dashboard.kpi.sessions')}
               value={String(stats?.total_sessions ?? 0)}
               delta={delta?.sessions_delta_pct ?? null}
             />
             <KpiCard
-              label="Requests"
+              label={t('dashboard.kpi.requests')}
               value={String(stats?.total_requests ?? 0)}
               delta={delta?.requests_delta_pct ?? null}
             />
             <KpiCard
-              label="Cache Hit Rate"
+              label={t('dashboard.kpi.cacheHitRate')}
               value={`${((stats?.cache_hit_rate ?? 0) * 100).toFixed(1)}%`}
               delta={delta?.cache_rate_delta_pct ?? null}
             />

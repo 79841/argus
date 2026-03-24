@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { getDb } from '@/shared/lib/db'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 const getUserHome = () => os.homedir()
 
@@ -181,7 +182,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!isPathSafe(filePath, projectRoot ?? undefined)) {
-      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+      return errorResponse('Invalid file path')
     }
 
     const fullPath = filePath.startsWith('~/')
@@ -198,8 +199,7 @@ export async function GET(request: NextRequest) {
     const scope = filePath.startsWith('~/') ? 'user' : 'project'
     return NextResponse.json({ path: filePath, content, scope })
   } catch (error) {
-    console.error('[/api/config GET] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/config GET', error)
   }
 }
 
@@ -213,11 +213,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!filePath || typeof content !== 'string') {
-      return NextResponse.json({ error: 'path and content are required' }, { status: 400 })
+      return errorResponse('path and content are required')
     }
 
     if (!isPathSafe(filePath, projectRoot)) {
-      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+      return errorResponse('Invalid file path')
     }
 
     const fullPath = filePath.startsWith('~/')
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
         : null
 
     if (!fullPath) {
-      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+      return errorResponse('Invalid file path')
     }
 
     const dir = path.dirname(fullPath)
@@ -238,8 +238,7 @@ export async function POST(request: NextRequest) {
     fs.writeFileSync(fullPath, content, 'utf-8')
     return NextResponse.json({ success: true, path: filePath })
   } catch (error) {
-    console.error('[/api/config POST] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/config POST', error)
   }
 }
 

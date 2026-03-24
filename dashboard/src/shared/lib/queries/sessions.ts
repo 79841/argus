@@ -61,26 +61,33 @@ export const getSessions = (agentType: string, project: string = 'all', from?: s
   const dateParams = useDate ? [from, to] : []
 
   return db.prepare(`
+    WITH session_models AS (
+      SELECT session_id, GROUP_CONCAT(DISTINCT model) as model
+      FROM agent_logs
+      WHERE event_name = 'api_request' AND model != ''
+      GROUP BY session_id
+    )
     SELECT
-      session_id,
-      agent_type,
-      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
-      min(timestamp) as started_at,
-      COALESCE(sum(cost_usd), 0) as cost,
-      COALESCE(sum(input_tokens), 0) as input_tokens,
-      COALESCE(sum(output_tokens), 0) as output_tokens,
-      COALESCE(sum(cache_read_tokens), 0) as cache_read_tokens,
-      max(timestamp) as last_activity,
-      CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as duration_ms,
+      agent_logs.session_id,
+      agent_logs.agent_type,
+      sm.model,
+      min(agent_logs.timestamp) as started_at,
+      COALESCE(sum(agent_logs.cost_usd), 0) as cost,
+      COALESCE(sum(agent_logs.input_tokens), 0) as input_tokens,
+      COALESCE(sum(agent_logs.output_tokens), 0) as output_tokens,
+      COALESCE(sum(agent_logs.cache_read_tokens), 0) as cache_read_tokens,
+      max(agent_logs.timestamp) as last_activity,
+      CAST((julianday(max(agent_logs.timestamp)) - julianday(min(agent_logs.timestamp))) * 86400000 AS INTEGER) as duration_ms,
       count(*) as request_count,
-      project_name
+      agent_logs.project_name
     FROM agent_logs
+    LEFT JOIN session_models sm ON sm.session_id = agent_logs.session_id
     WHERE ${API_REQUEST_FILTER}
-      AND session_id != ''
+      AND agent_logs.session_id != ''
       ${dateClause}
       ${agentFilter(agentType)}
       ${projectFilter(project)}
-    GROUP BY session_id, agent_type
+    GROUP BY agent_logs.session_id, agent_logs.agent_type
     ORDER BY last_activity DESC
     LIMIT ?
   `).all(...dateParams, ...agentParams(agentType), ...projectParams(project), limit) as SessionRow[]
@@ -111,23 +118,30 @@ export const getSessionDetail = (sessionId: string, dbOverride?: Database.Databa
 export const getSessionSummary = (sessionId: string, dbOverride?: Database.Database): SessionSummary | null => {
   const db = dbOverride ?? getDb()
   const row = db.prepare(`
+    WITH session_models AS (
+      SELECT session_id, GROUP_CONCAT(DISTINCT model) as model
+      FROM agent_logs
+      WHERE session_id = ? AND event_name = 'api_request' AND model != ''
+      GROUP BY session_id
+    )
     SELECT
-      session_id,
-      agent_type,
-      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = agent_logs.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
+      agent_logs.session_id,
+      agent_logs.agent_type,
+      sm.model,
       COALESCE(sum(CASE WHEN event_name = 'api_request' THEN cost_usd ELSE 0 END), 0) as total_cost,
       COALESCE(sum(CASE WHEN event_name = 'api_request' THEN input_tokens ELSE 0 END), 0) as input_tokens,
       COALESCE(sum(CASE WHEN event_name = 'api_request' THEN output_tokens ELSE 0 END), 0) as output_tokens,
       COALESCE(sum(CASE WHEN event_name = 'api_request' THEN cache_read_tokens ELSE 0 END), 0) as cache_read_tokens,
-      CAST((julianday(max(timestamp)) - julianday(min(timestamp))) * 86400000 AS INTEGER) as duration_ms,
+      CAST((julianday(max(agent_logs.timestamp)) - julianday(min(agent_logs.timestamp))) * 86400000 AS INTEGER) as duration_ms,
       COALESCE(sum(CASE WHEN event_name = 'api_request' THEN 1 ELSE 0 END), 0) as request_count,
       COALESCE(sum(CASE WHEN event_name = 'tool_result' THEN 1 ELSE 0 END), 0) as tool_count,
-      project_name,
-      min(timestamp) as started_at
+      agent_logs.project_name,
+      min(agent_logs.timestamp) as started_at
     FROM agent_logs
-    WHERE session_id = ?
-    GROUP BY session_id, agent_type
-  `).get(sessionId) as SessionSummary | undefined
+    LEFT JOIN session_models sm ON sm.session_id = agent_logs.session_id
+    WHERE agent_logs.session_id = ?
+    GROUP BY agent_logs.session_id, agent_logs.agent_type
+  `).get(sessionId, sessionId) as SessionSummary | undefined
 
   return row ?? null
 }

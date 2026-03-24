@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getIngestStatus } from '@/shared/lib/queries'
+import { serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +9,6 @@ export async function GET() {
     const agents = await getIngestStatus()
     return NextResponse.json({ agents })
   } catch (error) {
-    console.error('[/api/ingest-status] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/ingest-status', error)
   }
 }

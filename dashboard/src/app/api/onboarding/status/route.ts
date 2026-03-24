@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
+import { serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,6 @@ export async function GET() {
       hasData: row.has_data === 1,
     })
   } catch (error) {
-    console.error('[/api/onboarding/status] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/onboarding/status', error)
   }
 }

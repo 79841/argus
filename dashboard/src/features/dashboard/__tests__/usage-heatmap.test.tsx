@@ -26,33 +26,33 @@ const makeStats = (overrides: Partial<DailyStats> = {}): DailyStats => ({
 describe('UsageHeatmap', () => {
   it('Usage Heatmap 제목을 렌더링한다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    expect(screen.getByText('Usage Heatmap')).toBeInTheDocument()
+    expect(screen.getByText('사용량 히트맵')).toBeInTheDocument()
   })
 
   it('4개 모드 탭을 렌더링한다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    expect(screen.getByRole('tab', { name: 'Agents' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Sessions' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Cost' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Cache' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '에이전트' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '세션' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '비용' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '캐시' })).toBeInTheDocument()
   })
 
-  it('기본 모드는 Agents이다', () => {
+  it('기본 모드는 에이전트이다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    const agentsTab = screen.getByRole('tab', { name: 'Agents' })
+    const agentsTab = screen.getByRole('tab', { name: '에이전트' })
     expect(agentsTab).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('Sessions 탭으로 전환할 수 있다', () => {
+  it('세션 탭으로 전환할 수 있다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    fireEvent.click(screen.getByRole('tab', { name: 'Sessions' }))
-    expect(screen.getByRole('tab', { name: 'Sessions' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(screen.getByRole('tab', { name: '세션' }))
+    expect(screen.getByRole('tab', { name: '세션' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('Cost 탭으로 전환할 수 있다', () => {
+  it('비용 탭으로 전환할 수 있다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    fireEvent.click(screen.getByRole('tab', { name: 'Cost' }))
-    expect(screen.getByRole('tab', { name: 'Cost' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(screen.getByRole('tab', { name: '비용' }))
+    expect(screen.getByRole('tab', { name: '비용' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('Agents 모드에서 에이전트 범례를 표시한다', () => {
@@ -62,9 +62,9 @@ describe('UsageHeatmap', () => {
     expect(screen.getByText('Gemini CLI')).toBeInTheDocument()
   })
 
-  it('Sessions 모드에서 에이전트 범례를 숨긴다', () => {
+  it('세션 모드에서 에이전트 범례를 숨긴다', () => {
     render(<UsageHeatmap data={[]} agentType="all" />)
-    fireEvent.click(screen.getByRole('tab', { name: 'Sessions' }))
+    fireEvent.click(screen.getByRole('tab', { name: '세션' }))
     // Sessions 모드에서는 범례가 없음
     expect(screen.queryByText('Claude Code')).not.toBeInTheDocument()
   })

@@ -59,3 +59,18 @@ export const AGENT_LIST: AgentConfig[] = [
 export const getAgentColor = (agentType: string): string => {
   return AGENTS[agentType as AgentType]?.hex ?? '#8b5cf6'
 }
+
+export const AGENT_TOOL_CATEGORIES: Record<string, string[]> = {
+  'File Read': ['Read', 'read_file', 'cat'],
+  'File Write': ['Write', 'write_file', 'patch_file'],
+  'File Edit': ['Edit', 'edit_file'],
+  'Shell': ['Bash', 'shell', 'run_shell_command'],
+  'Search': ['Glob', 'Grep', 'grep', 'list_directory', 'web_search'],
+  'Orchestration': ['Agent', 'Skill'],
+}
+
+export const AGENT_CONFIG_FILE_PATHS: Record<'claude' | 'codex' | 'gemini', string[]> = {
+  claude: ['.claude', 'settings.json'],
+  codex: ['.codex', 'config.toml'],
+  gemini: ['.gemini', 'settings.json'],
+}

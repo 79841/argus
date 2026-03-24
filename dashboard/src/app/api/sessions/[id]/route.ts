@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionDetail, getSessionSummary } from '@/shared/lib/queries'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params
     if (!id) {
-      return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
+      return errorResponse('Session ID required')
     }
 
     const summary = request.nextUrl.searchParams.get('summary') === 'true'
@@ -24,7 +25,6 @@ export async function GET(
     const events = await getSessionDetail(id)
     return NextResponse.json(events)
   } catch (error) {
-    console.error('[/api/sessions/[id]] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/sessions/[id]', error)
   }
 }

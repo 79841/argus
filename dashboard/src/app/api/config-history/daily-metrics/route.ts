@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDailyMetrics } from '@/shared/lib/queries'
+import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     const to = params.get('to')
 
     if (!from || !to) {
-      return NextResponse.json({ error: 'from and to parameters are required' }, { status: 400 })
+      return errorResponse('from and to parameters are required')
     }
 
     const agentType = params.get('agent_type') || 'all'
@@ -17,8 +18,7 @@ export async function GET(request: NextRequest) {
     const data = getDailyMetrics(from, to, agentType, project)
     return NextResponse.json(data)
   } catch (error) {
-    console.error('[/api/config-history/daily-metrics] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/config-history/daily-metrics', error)
   }
 }
 

@@ -5,6 +5,7 @@ import { AgentDot } from '@/shared/components/ui/agent-dot'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { AGENTS } from '@/shared/lib/agents'
 import { formatCost, formatDuration } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 
 type RecentSession = {
   session_id: string
@@ -22,22 +23,23 @@ type RecentSessionsCardProps = {
 }
 
 export const RecentSessionsCard = ({ sessions, onViewAll, onSelectSession }: RecentSessionsCardProps) => {
+  const { t } = useLocale()
   return (
     <Card>
       <CardHeader className="pb-2 pt-3 px-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">Recent Sessions</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('dashboard.recentSessions.title')}</CardTitle>
           <button
             onClick={onViewAll}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            View all →
+            {t('dashboard.recentSessions.viewAll')}
           </button>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-3">
         {sessions.length === 0 ? (
-          <EmptyState title="No sessions" />
+          <EmptyState title={t('dashboard.recentSessions.noSessions')} />
         ) : (
           <div className="space-y-1.5">
             {sessions.map((s) => {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfigHistory } from '@/shared/lib/config-tracker'
 import path from 'path'
+import { serverError } from '@/shared/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,8 +10,7 @@ export async function GET(request: NextRequest) {
     const data = await getConfigHistory(repoPath, days)
     return NextResponse.json(data)
   } catch (error) {
-    console.error('[/api/config-history] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/config-history', error)
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
 import { syncPricingFromLiteLLM } from '@/shared/lib/pricing-sync'
+import { serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,6 @@ export async function POST() {
     ).run(META_KEY, now)
     return NextResponse.json({ synced: count, lastSyncedAt: now })
   } catch (error) {
-    console.error('[/api/pricing-sync] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/pricing-sync', error)
   }
 }

@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { AGENT_TOOL_CATEGORIES } from './agents'
 
 export type AnyValue = {
   stringValue?: string
@@ -179,21 +180,14 @@ export const getStatusCode = (attrs: KeyValue[] | undefined): string => {
   return getAttr(attrs, 'status_code') || getAttr(attrs, 'http.response.status_code') || ''
 }
 
-export const getToolCategory = (toolName: string): string => {
-  const categories: Record<string, string[]> = {
-    'File Read': ['Read', 'read_file', 'cat'],
-    'File Write': ['Write', 'write_file', 'patch_file'],
-    'File Edit': ['Edit', 'edit_file'],
-    'Shell': ['Bash', 'shell', 'run_shell_command'],
-    'Search': ['Glob', 'Grep', 'grep', 'list_directory', 'web_search'],
-    'Orchestration': ['Agent', 'Skill'],
-  }
-  for (const [category, tools] of Object.entries(categories)) {
-    if (tools.includes(toolName)) return category
-  }
-  if (toolName.startsWith('mcp')) return 'MCP'
-  return 'Other'
-}
+const TOOL_CATEGORY_MAP = new Map(
+  Object.entries(AGENT_TOOL_CATEGORIES).flatMap(([cat, tools]) =>
+    tools.map((t): [string, string] => [t, cat])
+  )
+)
+
+export const getToolCategory = (toolName: string): string =>
+  TOOL_CATEGORY_MAP.get(toolName) ?? (toolName.startsWith('mcp') ? 'MCP' : 'Other')
 
 export const extractProjectFromArgs = (attrs: KeyValue[] | undefined): string => {
   const args = getAttr(attrs, 'arguments')

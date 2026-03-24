@@ -10,6 +10,7 @@ import { TopBarPortalProvider, useTopBarPortal } from '@/shared/components/top-b
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { STORAGE_KEYS } from '@/shared/lib/constants'
+import { useLocale } from '@/shared/lib/i18n'
 
 type TopBarProps = {
   onToggleNav: () => void
@@ -19,6 +20,7 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
   const { setTarget } = useTopBarPortal()
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [platform, setPlatform] = useState<'mac' | 'windows' | 'web'>('web')
+  const { t } = useLocale()
 
   useEffect(() => {
     const api = window.electronAPI
@@ -54,7 +56,7 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
           >
             <PanelLeft className="size-5" />
           </TooltipTrigger>
-          <TooltipContent side="bottom">Toggle sidebar</TooltipContent>
+          <TooltipContent side="bottom">{t('shared.navLayout.toggleSidebar')}</TooltipContent>
         </Tooltip>
       </div>
 

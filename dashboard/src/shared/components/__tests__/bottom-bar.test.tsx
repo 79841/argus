@@ -46,10 +46,10 @@ describe('BottomBar', () => {
     })
   })
 
-  it('에이전트 상태 데이터가 없으면 "no data"를 표시한다', async () => {
+  it('에이전트 상태 데이터가 없으면 "데이터 없음"을 표시한다', async () => {
     render(<BottomBar />)
     await waitFor(() => {
-      const noDataElements = screen.getAllByText('no data')
+      const noDataElements = screen.getAllByText(/데이터 없음/)
       expect(noDataElements.length).toBe(3)
     })
   })

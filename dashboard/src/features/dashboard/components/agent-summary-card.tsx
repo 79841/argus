@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { AgentDot } from '@/shared/components/ui/agent-dot'
 import { formatCost } from '@/shared/lib/format'
 import { formatRelativeTime } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 
 const AGENT_ORDER = ['claude', 'codex', 'gemini'] as const
 
@@ -20,10 +21,11 @@ type AgentSummaryCardProps = {
 }
 
 export const AgentSummaryCard = ({ agentSummaries }: AgentSummaryCardProps) => {
+  const { t } = useLocale()
   return (
     <Card>
       <CardHeader className="pb-2 pt-3 px-4">
-        <CardTitle className="text-sm font-medium">Today by Agent</CardTitle>
+        <CardTitle className="text-sm font-medium">{t('dashboard.agentSummary.title')}</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3 space-y-2">
         {AGENT_ORDER.map((agentId) => {
@@ -41,13 +43,13 @@ export const AgentSummaryCard = ({ agentSummaries }: AgentSummaryCardProps) => {
               {summary ? (
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">{formatCost(summary.today_cost)}</span>
-                  <span>{summary.today_requests} reqs</span>
+                  <span>{summary.today_requests} {t('dashboard.agentSummary.reqs')}</span>
                   {summary.last_active && (
                     <span>{formatRelativeTime(summary.last_active)}</span>
                   )}
                 </div>
               ) : (
-                <span className="text-xs text-muted-foreground">No activity today</span>
+                <span className="text-xs text-muted-foreground">{t('dashboard.agentSummary.noActivity')}</span>
               )}
             </div>
           )

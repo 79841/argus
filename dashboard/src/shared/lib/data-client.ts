@@ -5,7 +5,7 @@ const isElectron = (): boolean =>
 
 let ipcDisabled = false
 
-const fetchHttp = async (name: string, params?: QueryParams): Promise<unknown> => {
+const buildUrl = (name: string, params?: QueryParams): string => {
   const qs = params
     ? new URLSearchParams(
         Object.entries(params)
@@ -13,8 +13,11 @@ const fetchHttp = async (name: string, params?: QueryParams): Promise<unknown> =
           .map(([k, v]) => [k, String(v)]) as [string, string][]
       ).toString()
     : ''
-  const url = `/api/${name}${qs ? `?${qs}` : ''}`
-  const res = await fetch(url)
+  return `/api/${name}${qs ? `?${qs}` : ''}`
+}
+
+const fetchHttp = async (name: string, params?: QueryParams): Promise<unknown> => {
+  const res = await fetch(buildUrl(name, params))
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -25,6 +28,12 @@ const mutateHttp = async (name: string, body?: unknown): Promise<unknown> => {
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+const deleteHttp = async (name: string, params?: QueryParams): Promise<unknown> => {
+  const res = await fetch(buildUrl(name, params), { method: 'DELETE' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -50,5 +59,16 @@ export const dataClient = {
       }
     }
     return mutateHttp(name, body)
+  },
+
+  async delete(name: string, params?: QueryParams): Promise<unknown> {
+    if (isElectron() && !ipcDisabled) {
+      try {
+        return await window.electronAPI!.delete?.(name, params)
+      } catch {
+        ipcDisabled = true
+      }
+    }
+    return deleteHttp(name, params)
   },
 }

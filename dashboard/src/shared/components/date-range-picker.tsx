@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import type { DateRange } from '@/shared/components/top-bar-context'
 import { todayISO, daysAgoISO } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 
 type Preset = {
-  label: string
+  key: string
   getRange: () => DateRange
 }
 
@@ -22,31 +23,12 @@ const firstOfMonthISO = () => {
 }
 
 const PRESETS: Preset[] = [
-  { label: 'Today', getRange: () => ({ from: todayISO(), to: todayISO() }) },
-  { label: 'Yesterday', getRange: () => ({ from: yesterdayISO(), to: yesterdayISO() }) },
-  { label: 'Last 7 days', getRange: () => ({ from: daysAgoISO(7), to: todayISO() }) },
-  { label: 'Last 30 days', getRange: () => ({ from: daysAgoISO(30), to: todayISO() }) },
-  { label: 'This month', getRange: () => ({ from: firstOfMonthISO(), to: todayISO() }) },
+  { key: 'shared.datePicker.today', getRange: () => ({ from: todayISO(), to: todayISO() }) },
+  { key: 'shared.datePicker.yesterday', getRange: () => ({ from: yesterdayISO(), to: yesterdayISO() }) },
+  { key: 'shared.datePicker.last7days', getRange: () => ({ from: daysAgoISO(7), to: todayISO() }) },
+  { key: 'shared.datePicker.last30days', getRange: () => ({ from: daysAgoISO(30), to: todayISO() }) },
+  { key: 'shared.datePicker.thisMonth', getRange: () => ({ from: firstOfMonthISO(), to: todayISO() }) },
 ]
-
-const formatDisplay = (range: DateRange): string => {
-  const today = todayISO()
-  const yesterday = yesterdayISO()
-
-  if (range.from === today && range.to === today) return 'Today'
-  if (range.from === yesterday && range.to === yesterday) return 'Yesterday'
-
-  for (const preset of PRESETS) {
-    const pr = preset.getRange()
-    if (pr.from === range.from && pr.to === range.to) return preset.label
-  }
-
-  const fmtDate = (iso: string) => {
-    const [, m, d] = iso.split('-')
-    return `${parseInt(m)}/${parseInt(d)}`
-  }
-  return `${fmtDate(range.from)} - ${fmtDate(range.to)}`
-}
 
 type DateRangePickerProps = {
   value: DateRange
@@ -58,6 +40,26 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
   const [customFrom, setCustomFrom] = useState(value.from)
   const [customTo, setCustomTo] = useState(value.to)
   const ref = useRef<HTMLDivElement>(null)
+  const { t } = useLocale()
+
+  const formatDisplay = (range: DateRange): string => {
+    const today = todayISO()
+    const yesterday = yesterdayISO()
+
+    if (range.from === today && range.to === today) return t('shared.datePicker.today')
+    if (range.from === yesterday && range.to === yesterday) return t('shared.datePicker.yesterday')
+
+    for (const preset of PRESETS) {
+      const pr = preset.getRange()
+      if (pr.from === range.from && pr.to === range.to) return t(preset.key)
+    }
+
+    const fmtDate = (iso: string) => {
+      const [, m, d] = iso.split('-')
+      return `${parseInt(m)}/${parseInt(d)}`
+    }
+    return `${fmtDate(range.from)} - ${fmtDate(range.to)}`
+  }
 
   useEffect(() => {
     setCustomFrom(value.from)
@@ -122,7 +124,7 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
               const isActive = pr.from === value.from && pr.to === value.to
               return (
                 <button
-                  key={preset.label}
+                  key={preset.key}
                   type="button"
                   className={`w-full rounded-md px-2.5 py-1.5 text-left text-xs transition-colors ${
                     isActive
@@ -131,14 +133,14 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
                   }`}
                   onClick={() => handlePreset(preset)}
                 >
-                  {preset.label}
+                  {t(preset.key)}
                 </button>
               )
             })}
           </div>
 
           <div className="mt-3 border-t pt-3">
-            <div className="text-xs font-medium text-muted-foreground mb-2">Custom Range</div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">{t('shared.datePicker.customRange')}</div>
             <div className="flex items-center gap-2">
               <input
                 type="date"
@@ -163,7 +165,7 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
               disabled={!customFrom || !customTo || customFrom > customTo}
               onClick={handleCustomApply}
             >
-              Apply
+              {t('shared.datePicker.apply')}
             </button>
           </div>
         </div>

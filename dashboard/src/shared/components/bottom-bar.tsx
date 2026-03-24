@@ -5,6 +5,7 @@ import type { AgentType } from '@/shared/lib/agents'
 import { AgentDot } from '@/shared/components/ui/agent-dot'
 import { formatCost, formatRelativeTime, formatTokens } from '@/shared/lib/format'
 import { useBottomBarData } from '@/shared/hooks/use-bottom-bar-data'
+import { useLocale } from '@/shared/lib/i18n'
 
 const getStatusDot = (iso: string | null): string => {
   if (!iso) return 'bg-gray-300 dark:bg-gray-600'
@@ -24,6 +25,7 @@ const formatModel = (model: string): string => {
 
 export const BottomBar = () => {
   const { agents, totals, activeSessions, agentTypes } = useBottomBarData()
+  const { t } = useLocale()
 
   return (
     <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground">
@@ -40,7 +42,7 @@ export const BottomBar = () => {
               {status ? (
                 <span>{formatRelativeTime(status.last_received)}</span>
               ) : (
-                <span className="text-muted-foreground/50">no data</span>
+                <span className="text-muted-foreground/50">{t('shared.bottomBar.noData')}</span>
               )}
             </div>
           )

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToolUsageStats, getToolDetailStats, getDailyToolStats, getIndividualToolStats } from '@/shared/lib/queries'
-import { parseAgentType, parseDays } from '@/shared/lib/api-utils'
+import { parseAgentType, parseDays, serverError } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
     const tools = await getToolUsageStats(agentType, days, project, from, to)
     return NextResponse.json({ tools })
   } catch (error) {
-    console.error('[/api/tools] error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return serverError('/api/tools', error)
   }
 }
