@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "electron:build": "tsc -p electron/tsconfig.json",
     "electron:dev": "npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
+    "electron:dev:clean": "rm -rf .next dist-electron && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
     "electron:pack": "pnpm build && pnpm electron:build && electron-builder --dir",
     "electron:dist": "pnpm build && pnpm electron:build && electron-builder",
     "electron:dist:mac": "pnpm build && pnpm electron:build && electron-builder --mac",
