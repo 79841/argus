@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   issues: write
+  pull-requests: write
 
 jobs:
   check:
@@ -49,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Get yesterday's commits
+      - name: Get yesterday's diff
         id: commits
         run: |
           SINCE=$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -v-24H '+%Y-%m-%dT%H:%M:%SZ')
@@ -59,41 +60,32 @@ jobs:
             echo "No commits in the last 24 hours"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "$COMMITS"
             FIRST=$(git log --since="$SINCE" --reverse --format=%H | head -1)
-            DIFF=$(git diff "$FIRST^"..HEAD --stat 2>/dev/null || git diff "$FIRST"..HEAD --stat)
-            {
-              echo "summary<<EOF"
-              echo "## Commits (last 24h)"
-              echo ""
-              echo '```'
-              echo "$COMMITS"
-              echo '```'
-              echo ""
-              echo "## Changed Files"
-              echo ""
-              echo '```'
-              echo "$DIFF"
-              echo '```'
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
+            echo "first_commit=$FIRST" >> "$GITHUB_OUTPUT"
           fi
-      - name: Post review issue
+      - name: Claude Code Review
         if: steps.commits.outputs.skip == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SUMMARY: ${{ steps.commits.outputs.summary }}
-        run: |
-          BODY="${SUMMARY}
+        uses: anthropics/claude-code-action@v1
+        with:
+          use_claude_app_token: true
+          prompt: |
+            지난 24시간 커밋에 대한 코드 리뷰를 수행하고, 결과를 GitHub Issue로 생성해라.
 
-          ---
-          > Nightly review — 변경사항을 확인하고 코드 품질 이슈가 있으면 코멘트를 남겨주세요."
+            ## 리뷰 범위
+            `git diff ${{ steps.commits.outputs.first_commit }}^..HEAD` 의 변경사항을 분석해라.
 
-          EXISTING=$(gh issue list --search "Nightly Review" --state open --limit 1 --json number -q '.[0].number' 2>/dev/null || echo "")
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --body "$BODY"
-          else
-            gh issue create \
-              --title "Nightly Review — $(date -u '+%Y-%m-%d')" \
-              --body "$BODY"
-          fi
+            ## 리뷰 항목
+            1. **코드 품질**: 중복 코드, 불필요한 복잡성, 네이밍 문제
+            2. **재사용성**: 기존 유틸/컴포넌트를 사용할 수 있는 곳에서 새로 작성한 코드
+            3. **효율성**: 불필요한 연산, N+1 패턴, 메모리 누수
+            4. **테스트**: 변경에 대한 테스트가 적절한지
+            5. **i18n**: 하드코딩된 UI 텍스트
+            6. **보안**: 잠재적 취약점 (XSS, 인젝션 등)
+
+            ## 출력 형식
+            리뷰 결과를 GitHub Issue로 생성해라:
+            - 제목: "Nightly Review — YYYY-MM-DD"
+            - 기존에 열린 "Nightly Review" 이슈가 있으면 코멘트로 추가
+            - 문제가 없으면 "변경사항에 특별한 이슈가 없습니다" 라고 작성
+
+            한글로 작성해라.
