@@ -118,6 +118,20 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 - 새 텍스트 추가 시 `ko`와 `en` 양쪽 모두에 키를 등록한다
 - 날짜/숫자 포맷에 locale을 하드코딩하지 않는다 (`'ko-KR'` 대신 `undefined` 사용)
 
+### 테스트
+- **기능 추가·변경·버그 수정 시 반드시 해당 변경에 대한 테스트를 작성한다**
+- 테스트 프레임워크: vitest
+- 테스트 위치: 해당 모듈 옆 `__tests__/` 디렉토리 (co-location)
+- API 라우트 테스트: `src/app/api/{name}/__tests__/route.test.ts`
+- 공유 로직 테스트: `src/shared/lib/__tests__/*.test.ts`
+- Feature 로직 테스트: `src/features/{name}/__tests__/*.test.ts`
+- 순수 UI 표시 변경(컬럼 순서, 스타일)은 테스트 생략 가능
+- DB 관련 테스트는 `better-sqlite3` 인메모리 DB + `test-helpers.ts` 사용
+
+### 커밋 전 필수
+- **커밋 전에 반드시 `/simplify`를 실행한다** — 코드 품질·재사용성·효율성을 검토하고 수정한다
+- `/simplify` 없이 커밋하지 않는다
+
 ### 데이터
 - SQLite: `better-sqlite3` 동기 API, WAL 모드
 - 스키마: `src/shared/lib/db.ts`에서 자동 초기화
@@ -177,14 +191,16 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 | 2. TDD | `/tdd` | 직접 작성 | — | 테스트 코드 먼저 작성 (Red 단계) |
 | 3. Develop | `/develop` | `page-builder`, `infra-builder`, `data-seeder` | sonnet | 계획/테스트 기반 구현 (Green 단계) |
 | 4. Test | `/test` | vitest | — | 테스트 실행 및 통과 확인 |
-| 5. Simplify | `/simplify` | 직접 수정 | — | 코드 품질·재사용성·효율성 검토 및 개선 (테스트 유지) |
+| 5. Simplify | `/simplify` | 직접 수정 | — | **커밋 전 필수** — 코드 품질·재사용성·효율성 검토 및 개선 (테스트 유지) |
 
 ### 유연한 실행
 
-- **전체 프로세스**: `/plan` → `/tdd` → `/develop` → `/test` → `/simplify`
-- **버그 수정**: `/bugfix` (재현 테스트 → 최소 수정 → 통과 확인)
-- **기존 코드 개선**: `/simplify` → `/test`
-- **테스트 추가**: `/tdd` → `/test`
+어떤 워크플로우든 **커밋 전에 반드시 `/simplify`를 실행**한다.
+
+- **전체 프로세스**: `/plan` → `/tdd` → `/develop` → `/test` → `/simplify` → 커밋
+- **버그 수정**: `/bugfix` (재현 테스트 → 최소 수정 → 통과 확인 → `/simplify`) → 커밋
+- **기존 코드 개선**: `/simplify` → `/test` → 커밋
+- **테스트 추가**: `/tdd` → `/test` → 커밋
 - **계획만 수립**: `/plan`
 
 ### 버그 수정 워크플로우
