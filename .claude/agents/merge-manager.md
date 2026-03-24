@@ -33,14 +33,26 @@ git merge --no-commit --no-ff feature/xxx
 git merge --abort  # dry-run 후 복원
 ```
 
-### 2. feature → develop 머지
+### 2. 품질 게이트 (필수)
+
+머지 전에 반드시 4개 검사를 통과해야 한다. 하나라도 실패하면 머지를 중단하고 원인을 보고한다.
+
+```bash
+cd dashboard
+pnpm lint
+npx tsc --noEmit
+pnpm test:run
+pnpm build
+```
+
+### 3. feature → develop 머지
 
 ```bash
 git checkout develop
 git merge --no-ff feature/xxx -m "Merge feature/xxx into develop"
 ```
 
-### 3. develop → main 머지 (릴리스)
+### 4. develop → main 머지 (릴리스)
 
 ```bash
 git checkout main
@@ -48,7 +60,7 @@ git merge --no-ff develop -m "Release: [설명]"
 git tag -a v[버전] -m "[설명]"
 ```
 
-### 4. 머지 후 정리
+### 5. 머지 후 정리
 
 ```bash
 # feature 브랜치 삭제 (로컬)

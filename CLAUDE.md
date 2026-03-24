@@ -159,6 +159,22 @@ feature/*     ← 기능 개발 (develop에서 분기, develop으로 머지)
 - 분리 기준: 커밋 2~3개 이상, 여러 파일 변경, 1시간 이상 소요 예상
 - develop에 직접 커밋하는 것은 단일 커밋으로 완결되는 소규모 수정에만 허용한다
 
+### 품질 게이트
+
+**main 또는 develop에 커밋·머지·PR 하기 전에 반드시 아래 4개 검사를 통과해야 한다.**
+
+```bash
+cd dashboard
+pnpm lint          # ESLint
+npx tsc --noEmit   # TypeScript 타입 검사
+pnpm test:run      # vitest 단위 테스트
+pnpm build         # Next.js 프로덕션 빌드
+```
+
+- 4개 모두 통과해야 커밋·머지·PR이 가능하다
+- 실패 시 원인을 수정하고 다시 검증한다
+- `/feature-finish`, `merge-manager` 에이전트가 이 게이트를 자동 실행한다
+
 ### Worktree 활용
 feature 브랜치 작업 시 `.claude/worktrees/`에 worktree를 생성하여 격리된 작업 환경을 제공한다.
 `/feature-start`가 자동으로 worktree를 생성하고, `/feature-finish`가 PR 머지 후 정리한다.

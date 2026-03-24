@@ -34,14 +34,26 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 ```
 
-### 2. Push + PR 생성
+### 2. 품질 게이트 (필수)
+
+Push 전에 반드시 4개 검사를 통과해야 한다. 하나라도 실패하면 원인을 수정한 후 재실행한다.
+
+```bash
+cd dashboard
+pnpm lint
+npx tsc --noEmit
+pnpm test:run
+pnpm build
+```
+
+### 3. Push + PR 생성
 
 ```bash
 git push -u origin "$BRANCH"
 gh pr create --base develop --head "$BRANCH" --title "Merge $BRANCH" --body ""
 ```
 
-### 3. PR 머지 후 정리
+### 4. PR 머지 후 정리
 
 PR이 머지되면 다음을 실행한다:
 
@@ -64,7 +76,7 @@ git branch -d "$BRANCH"
 git push origin --delete "$BRANCH" 2>/dev/null || true
 ```
 
-### 4. 결과 출력
+### 5. 결과 출력
 
 - PR URL
 - 머지된 커밋 수
