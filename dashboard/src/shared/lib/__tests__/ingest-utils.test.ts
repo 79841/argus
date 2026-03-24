@@ -7,7 +7,7 @@ import {
   getStatusCode, extractProjectFromArgs, getToolCategory,
 } from '../ingest-utils'
 import type { KeyValue } from '../ingest-utils'
-import { initSchema, seedPricing } from '../db'
+import { initSchema } from '../db'
 
 const mkAttr = (key: string, value: string): KeyValue => ({
   key,
@@ -24,10 +24,7 @@ const mkDoubleAttr = (key: string, value: number): KeyValue => ({
   value: { doubleValue: value },
 })
 
-const mkBoolAttr = (key: string, value: boolean): KeyValue => ({
-  key,
-  value: { boolValue: value },
-})
+
 
 // --- getVal ---
 

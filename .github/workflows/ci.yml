@@ -24,6 +24,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: dashboard/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - run: npm rebuild better-sqlite3
       - run: npx tsc --noEmit
       - run: pnpm test:run
 

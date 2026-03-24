@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 
 const PortalContext = createContext<{

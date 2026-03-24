@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { STORAGE_KEYS } from '@/shared/lib/constants'
 import {
   useOnboarding,
   StepIndicator,

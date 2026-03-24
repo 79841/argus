@@ -6,6 +6,10 @@ on:
     - cron: '30 17 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   check:
     name: Lint / Type / Test / Build
@@ -26,6 +30,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: dashboard/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: Rebuild better-sqlite3 for Node.js
+        run: npm rebuild better-sqlite3
       - name: Lint
         run: pnpm lint
       - name: Type Check
@@ -54,7 +60,8 @@ jobs:
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
             echo "$COMMITS"
-            DIFF=$(git diff "$(git log --since="$SINCE" --reverse --format=%H | head -1)^"..HEAD --stat)
+            FIRST=$(git log --since="$SINCE" --reverse --format=%H | head -1)
+            DIFF=$(git diff "$FIRST^"..HEAD --stat 2>/dev/null || git diff "$FIRST"..HEAD --stat)
             {
               echo "summary<<EOF"
               echo "## Commits (last 24h)"
@@ -75,20 +82,18 @@ jobs:
         if: steps.commits.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUMMARY: ${{ steps.commits.outputs.summary }}
         run: |
-          BODY=$(cat <<'ISSUE_EOF'
-          ${{ steps.commits.outputs.summary }}
+          BODY="${SUMMARY}
 
           ---
-          > Nightly review — 변경사항을 확인하고 코드 품질 이슈가 있으면 코멘트를 남겨주세요.
-          ISSUE_EOF
-          )
-          EXISTING=$(gh issue list --label "nightly-review" --state open --limit 1 --json number -q '.[0].number')
+          > Nightly review — 변경사항을 확인하고 코드 품질 이슈가 있으면 코멘트를 남겨주세요."
+
+          EXISTING=$(gh issue list --search "Nightly Review" --state open --limit 1 --json number -q '.[0].number' 2>/dev/null || echo "")
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
           else
             gh issue create \
               --title "Nightly Review — $(date -u '+%Y-%m-%d')" \
-              --body "$BODY" \
-              --label "nightly-review"
+              --body "$BODY"
           fi

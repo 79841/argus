@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
 import { detectAgentType, getAttr, attrsToJson } from '@/shared/lib/ingest-utils'
-import type { AnyValue, KeyValue } from '@/shared/lib/ingest-utils'
+import type { KeyValue } from '@/shared/lib/ingest-utils'
 
 type DataPoint = {
   attributes?: Record<string, unknown> | KeyValue[]
@@ -72,7 +72,6 @@ const ExportMetricsServiceRequest = root.opentelemetry.proto.collector.metrics.v
 
 export async function POST(request: NextRequest) {
   try {
-    const ct = request.headers.get('content-type') || ''
     const buf = await request.arrayBuffer()
     let data: OtlpMetricsRequest
 
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     try {
       const text = new TextDecoder().decode(buf)
       data = JSON.parse(text) as OtlpMetricsRequest
-    } catch (_jsonErr) {
+    } catch {
       // intentional: fall through to protobuf decode
       try {
         const decoded = ExportMetricsServiceRequest.decode(new Uint8Array(buf))

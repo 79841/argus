@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Database from 'better-sqlite3'
 import { initSchema } from '../db'
-import { insertApiRequest, insertToolResult } from './test-helpers'
+import { insertApiRequest } from './test-helpers'
 
 let testDb: Database.Database
 

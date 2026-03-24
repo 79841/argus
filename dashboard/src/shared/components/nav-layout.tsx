@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+
 import { PanelLeft } from 'lucide-react'
 import { Nav } from '@/shared/components/nav'
 import { BottomBar } from '@/shared/components/bottom-bar'

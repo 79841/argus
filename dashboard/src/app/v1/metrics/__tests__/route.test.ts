@@ -83,7 +83,7 @@ describe('Gemini metrics deduplication (PER-19)', () => {
     }
 
     const res = await POST(mkRequest(payload) as never)
-    const json = await res.json()
+    await res.json()
 
     // Token/duration metrics should NOT produce api_request events
     const apiRequests = getApiRequestLogs()
@@ -119,7 +119,7 @@ describe('Gemini metrics deduplication (PER-19)', () => {
     }
 
     const res = await POST(mkRequest(payload) as never)
-    const json = await res.json()
+    await res.json()
 
     const logs = getLogs()
     const toolResults = logs.filter((l) => l.event_name === 'tool_result')

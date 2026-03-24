@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         body: text,
       })
       return ingestPOST(jsonRequest)
-    } catch (_jsonErr) {
+    } catch {
       // intentional: fall through to protobuf decode
     }
   }

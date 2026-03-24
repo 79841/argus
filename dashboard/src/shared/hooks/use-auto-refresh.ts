@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { STORAGE_KEYS } from '@/shared/lib/constants'
 
 const getIntervalFromStorage = (): number => {

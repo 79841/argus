@@ -19,7 +19,6 @@ vi.mock('@/shared/lib/api-utils', async (importOriginal) => {
 })
 
 import * as queries from '@/shared/lib/queries'
-import * as apiUtils from '@/shared/lib/api-utils'
 
 const { GET } = await import('../route')
 

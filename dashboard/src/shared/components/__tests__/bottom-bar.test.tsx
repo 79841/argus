@@ -18,7 +18,7 @@ vi.mock('@/shared/lib/format', async (importOriginal) => {
 })
 
 vi.mock('@/shared/components/ui/agent-dot', () => ({
-  AgentDot: ({ agent, size, pulse }: { agent: string; size?: string; pulse?: boolean }) => (
+  AgentDot: ({ agent }: { agent: string; size?: string; pulse?: boolean }) => (
     <span data-testid="agent-dot" data-agent={agent} />
   ),
 }))

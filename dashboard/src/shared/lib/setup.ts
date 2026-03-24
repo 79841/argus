@@ -36,11 +36,7 @@ const AGENT_CONFIG_PATHS: Record<AgentSetupType, string> = {
   gemini: path.join(HOME, ...AGENT_CONFIG_FILE_PATHS.gemini),
 }
 
-const AGENT_DIRS: Record<AgentSetupType, string> = {
-  claude: path.join(HOME, AGENT_CONFIG_FILE_PATHS.claude[0]),
-  codex: path.join(HOME, AGENT_CONFIG_FILE_PATHS.codex[0]),
-  gemini: path.join(HOME, AGENT_CONFIG_FILE_PATHS.gemini[0]),
-}
+
 
 const ARGUS_ENV_KEYS = [
   'CLAUDE_CODE_ENABLE_TELEMETRY',
@@ -139,7 +135,6 @@ const disconnectClaude = (configPath: string): ConnectResult => {
 
 // Codex
 
-const CODEX_OTEL_SECTION_RE = /\[otel(?:\.[^\]]+)?\][\s\S]*?(?=\n\[[^\]]+\](?!\.)|\s*$)/g
 
 const getCodexStatus = (configPath: string, defaultEndpoint: string): AgentStatus => {
   const installed = fs.existsSync(path.dirname(configPath))
