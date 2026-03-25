@@ -11,7 +11,7 @@ Codex CLI / Claude Code / Gemini CLI
         ↓ OTLP HTTP (POST /api/ingest)
     Next.js API Route (agent_type 태깅)
         ↓
-    SQLite (agent_logs + pricing_model + config_snapshots)
+    SQLite (agent_logs + tool_details + pricing_model + config_snapshots + project_registry + app_meta)
         ↓
     Dashboard (Next.js, 인증 없음, 로컬 전용)
 ```
@@ -31,19 +31,35 @@ Codex CLI / Claude Code / Gemini CLI
 
 ```
 argus/
-├── argus.db                         # SQLite 데이터베이스 (자동 생성, gitignore)
-├── dashboard/                       # Next.js 대시보드
-│   └── src/
-│       ├── app/                     # App Router — 라우팅만 담당
-│       │   ├── api/                 # API 라우트
-│       │   └── {page}/page.tsx      # 페이지 → features/{name} import
-│       ├── features/                # Feature 모듈 (도메인별 컴포넌트·로직·테스트)
-│       │   └── {feature-name}/      # components/, lib/, hooks/, __tests__/, index.ts
-│       ├── shared/                  # 공유 모듈 (2개+ feature에서 사용)
-│       │   ├── components/          # 공유 컴포넌트 (ui/, 필터, 네비게이션)
-│       │   ├── hooks/               # 공유 훅
-│       │   └── lib/                 # 유틸 (db, queries, format, agents)
-│       └── infra/                   # 외부 시스템 연동 (git, fetch)
+├── dashboard/                       # Next.js + Electron 대시보드
+│   ├── src/
+│   │   ├── app/                     # App Router — 라우팅만 담당
+│   │   │   ├── api/                 # API 라우트 (30개)
+│   │   │   ├── (dashboard)/         # 라우트 그룹 (공유 레이아웃)
+│   │   │   │   ├── page.tsx         # Overview
+│   │   │   │   ├── sessions/        # 세션 목록 + [id] 상세
+│   │   │   │   ├── usage/           # 사용량 분석 (M3)
+│   │   │   │   ├── tools/           # 도구 추적
+│   │   │   │   ├── insights/        # 인사이트
+│   │   │   │   ├── projects/        # 프로젝트 목록 + [name] 상세
+│   │   │   │   ├── rules/           # 설정 변경 추적 (M4)
+│   │   │   │   └── settings/        # 설정
+│   │   │   └── onboarding/          # 온보딩 플로우
+│   │   ├── features/                # Feature 모듈 (도메인별 컴포넌트·로직·테스트)
+│   │   │   └── {feature-name}/      # components/, lib/, hooks/, __tests__/, index.ts
+│   │   └── shared/                  # 공유 모듈 (2개+ feature에서 사용)
+│   │       ├── components/          # 공유 컴포넌트 (ui/, 필터, 네비게이션)
+│   │       ├── hooks/               # 공유 훅
+│   │       └── lib/                 # 유틸 (db, queries, format, agents)
+│   └── electron/                    # Electron 데스크톱 앱
+│       ├── main.ts                  # 진입점 (윈도우, 트레이, IPC)
+│       ├── preload.ts               # IPC 브리지
+│       ├── presentation/            # window.ts, tray.ts
+│       ├── infrastructure/          # Next.js 서버, IPC 핸들러
+│       └── domain/                  # config, mutation, query 서비스
+├── website/                         # 문서 사이트 (별도 Next.js)
+├── docs/                            # 사용자 문서
+├── scripts/                         # 유틸리티 스크립트
 └── .claude/                         # Claude Code 구성
     ├── agents/                      # 에이전트 정의
     └── skills/                      # 스킬 정의
@@ -54,10 +70,13 @@ argus/
 | 테이블 | 목적 |
 |--------|------|
 | `agent_logs` | 에이전트 로그 (agent_type, session_id, model, tokens, cost 등) |
+| `tool_details` | 오케스트레이션 도구 추적 (agent/skill/mcp 상세) |
 | `pricing_model` | 에이전트×모델별 토큰 단가 (자동 시드) |
-| `config_snapshots` | 설정 파일 변경 스냅샷 |
+| `config_snapshots` | 설정 파일 변경 스냅샷 (M4) |
+| `project_registry` | 연결된 프로젝트 경로 관리 |
+| `app_meta` | 앱 수준 메타데이터 (key-value) |
 
-스키마는 `src/shared/lib/db.ts`에서 앱 시작 시 자동 초기화된다 (마이그레이션 불필요).
+스키마는 `src/shared/lib/db.ts`에서 앱 시작 시 자동 초기화된다. `schema_version` 테이블로 마이그레이션을 추적하며, 새 컬럼/테이블 추가 시 버전 기반 마이그레이션이 자동 실행된다.
 
 ## 데이터 수집
 
@@ -89,10 +108,12 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
 - `session_id`: 세션 ID
 - `prompt_id`: 프롬프트 상관관계 ID
 - `model`: 모델 ID
-- `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_creation_tokens`: 토큰
+- `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_creation_tokens`, `reasoning_tokens`: 토큰
 - `cost_usd`: 비용
 - `duration_ms`: 응답 시간
 - `tool_name`: 도구 이름 (tool_result 이벤트)
+- `tool_success`: 도구 실행 성공 여부
+- `project_name`: 프로젝트 이름
 
 ## 코딩 컨벤션
 
@@ -355,12 +376,12 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 
 ## 마일스톤
 
-| M | 범위 | 핵심 파일 |
-|---|------|-----------|
-| M1 | 데이터 파이프라인 | `dashboard/src/shared/lib/db.ts`, `dashboard/src/app/api/ingest/` |
-| M2 | 개인 대시보드 | `dashboard/src/app/`, `dashboard/src/shared/lib/queries/` |
-| M3 | 효율성 분석 | `dashboard/src/features/usage/`, `/usage` 페이지 |
-| M4 | 설정 변경 추적 | `dashboard/src/shared/lib/config-tracker.ts`, `/config-history` 페이지 |
+| M | 범위 | 상태 | 핵심 파일 |
+|---|------|------|-----------|
+| M1 | 데이터 파이프라인 | 완료 | `db.ts`, `/api/ingest`, `/api/v1/logs`, `ingest-utils.ts` |
+| M2 | 개인 대시보드 | 완료 | `(dashboard)/` 페이지 10개, `/api/overview·sessions·daily` 등 |
+| M3 | 효율성 분석 | 완료 | `features/usage/`, `/api/efficiency`, `/usage` 페이지 |
+| M4 | 설정 변경 추적 | 완료 | `config-tracker.ts`, `/api/config-history`, `features/rules/` |
 
 
 <claude-mem-context>

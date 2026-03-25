@@ -126,7 +126,7 @@ MCP 서버/도구 이름, 스킬 이름, 서브 에이전트 상세를 추적하
 
 ### 4단계: 검증
 
-1. Argus 대시보드가 포트 3000에서 실행 중인지 확인합니다.
+1. Argus 대시보드가 포트 9845에서 실행 중인지 확인합니다.
 2. 프로젝트에서 Claude Code를 시작합니다.
 3. 프롬프트를 보내고 응답을 기다립니다.
 4. Argus 대시보드를 확인합니다 -- 몇 초 내에 새 세션 데이터가 표시됩니다.
@@ -166,7 +166,7 @@ log_user_prompt = true
 
 ### 3단계: 검증
 
-1. Argus 대시보드가 포트 3000에서 실행 중인지 확인합니다.
+1. Argus 대시보드가 포트 9845에서 실행 중인지 확인합니다.
 2. Codex CLI를 시작합니다: `codex`
 3. 프롬프트를 보내고 응답을 기다립니다.
 4. Argus 대시보드에서 새 세션 데이터를 확인합니다.
@@ -231,7 +231,7 @@ export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"
 
 ### 3단계: 검증
 
-1. Argus 대시보드가 포트 3000에서 실행 중인지 확인합니다.
+1. Argus 대시보드가 포트 9845에서 실행 중인지 확인합니다.
 2. Gemini CLI를 시작합니다: `gemini`
 3. 프롬프트를 보내고 응답을 기다립니다.
 4. Argus 대시보드에서 새 세션 데이터를 확인합니다.
@@ -320,7 +320,7 @@ curl -X POST http://localhost:9845/v1/logs \
 ### 대시보드에 데이터가 표시되지 않음
 
 1. **대시보드 실행 확인**: `curl http://localhost:9845/api/health`
-2. **포트 확인**: 모든 에이전트가 Argus가 실행 중인 동일한 포트를 가리켜야 합니다 (기본값: 3000).
+2. **포트 확인**: 모든 에이전트가 Argus가 실행 중인 동일한 포트를 가리켜야 합니다 (기본값: 9845).
 3. **프로토콜 확인**: Claude Code는 `http/json` 필요. Codex CLI는 `protocol = "json"` 필요. Gemini CLI는 `otlpProtocol: "http"` 필요.
 4. **환경 변수 로드 확인**: `env | grep OTEL` 또는 `env | grep CLAUDE_CODE`를 실행하여 확인합니다.
 
@@ -349,7 +349,7 @@ curl -X POST http://localhost:9845/v1/logs \
 
 ### 포트 충돌
 
-포트 3000이 이미 사용 중인 경우:
+포트 9845이 이미 사용 중인 경우:
 
 ```bash
 # 다른 포트에서 시작

@@ -123,7 +123,7 @@ To track MCP server/tool names, skill names, and sub-agent details:
 
 ### Step 4: Verify
 
-1. Make sure the Argus dashboard is running on port 3000.
+1. Make sure the Argus dashboard is running on port 9845.
 2. Start Claude Code in any project.
 3. Send a prompt and wait for a response.
 4. Check the Argus dashboard -- new session data should appear within seconds.
@@ -163,7 +163,7 @@ log_user_prompt = true
 
 ### Step 3: Verify
 
-1. Make sure the Argus dashboard is running on port 3000.
+1. Make sure the Argus dashboard is running on port 9845.
 2. Start Codex CLI: `codex`
 3. Send a prompt and wait for a response.
 4. Check the Argus dashboard for new session data.
@@ -228,7 +228,7 @@ export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"
 
 ### Step 3: Verify
 
-1. Make sure the Argus dashboard is running on port 3000.
+1. Make sure the Argus dashboard is running on port 9845.
 2. Start Gemini CLI: `gemini`
 3. Send a prompt and wait for a response.
 4. Check the Argus dashboard for new session data.
@@ -317,7 +317,7 @@ Expected response:
 ### No data appearing in the dashboard
 
 1. **Check the dashboard is running**: `curl http://localhost:9845/api/health`
-2. **Check the port**: All agents must point to the same port where Argus is running (default: 3000).
+2. **Check the port**: All agents must point to the same port where Argus is running (default: 9845).
 3. **Check the protocol**: Claude Code requires `http/json`. Codex CLI requires `protocol = "json"`. Gemini CLI requires `otlpProtocol: "http"`.
 4. **Check environment variables are loaded**: Run `env | grep OTEL` or `env | grep CLAUDE_CODE` to confirm.
 
@@ -346,7 +346,7 @@ Expected response:
 
 ### Port conflicts
 
-If port 3000 is already in use:
+If port 9845 is already in use:
 
 ```bash
 # Start on a different port

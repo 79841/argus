@@ -13,7 +13,7 @@ description: "Argus 다운로드 및 설치"
 | **Windows** | `Argus Setup x.x.x.exe` | NSIS 설치 프로그램 실행 → 시작 메뉴에서 실행 |
 
 실행 후 Argus는 **트레이 상주 앱**으로 동작하며 자동으로:
-- `http://localhost:3000`에서 Next.js 서버를 시작합니다
+- `http://localhost:9845`에서 Next.js 서버를 시작합니다
 - Electron 윈도우에서 대시보드를 엽니다
 - 텔레메트리 저장을 위한 SQLite 데이터베이스를 생성합니다
 
@@ -34,7 +34,7 @@ cd argus/dashboard
 pnpm install
 ```
 
-**웹 모드** (http://localhost:3000 에서 브라우저로 접속):
+**웹 모드** (http://localhost:9845 에서 브라우저로 접속):
 
 ```bash
 pnpm dev

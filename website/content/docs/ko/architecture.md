@@ -76,7 +76,7 @@ sequenceDiagram
 | 엔드포인트 | 형식 | 목적 |
 |------------|------|------|
 | `POST /v1/logs` | JSON + Protobuf | OTLP 표준 경로. 에이전트가 기본적으로 이곳으로 전송합니다. |
-| `POST /v1/metrics` | - | 수신하지만 무시합니다 (200 반환). |
+| `POST /v1/metrics` | JSON + Protobuf | Gemini CLI 도구/세션 메트릭과 Claude Code 생산성 메트릭을 처리합니다. |
 | `POST /v1/traces` | - | 수신하지만 무시합니다 (200 반환). |
 | `POST /api/ingest` | JSON 전용 | 내부 처리 라우트. `/v1/logs`가 이곳으로 프록시합니다. |
 
@@ -144,7 +144,7 @@ cost = (input_tokens * input_per_mtok
 
 ## 3. SQLite 스키마
 
-스키마는 애플리케이션 시작 시 `src/lib/db.ts`에서 자동 초기화됩니다. 마이그레이션 도구가 필요 없습니다.
+스키마는 애플리케이션 시작 시 `src/shared/lib/db.ts`에서 자동 초기화됩니다. `schema_version` 테이블로 마이그레이션을 추적하며, 새 컬럼/테이블 추가 시 버전 기반 마이그레이션이 자동 실행됩니다.
 
 ### agent_logs
 
@@ -229,15 +229,25 @@ cost = (input_tokens * input_per_mtok
 
 **인덱스**: `timestamp`, `(tool_name, detail_name)`, `session_id`
 
-### agent_limits
+### project_registry
 
-에이전트별 예산 한도입니다.
+연결된 프로젝트 경로 관리입니다.
 
 | 컬럼 | 타입 | 설명 |
 |------|------|------|
-| `agent_type` | TEXT | 기본 키 |
-| `daily_cost_limit` | REAL | 일일 비용 임계값 (USD) |
-| `monthly_cost_limit` | REAL | 월간 비용 임계값 (USD) |
+| `id` | INTEGER | 기본 키 |
+| `project_name` | TEXT | 프로젝트 이름 (고유) |
+| `project_path` | TEXT | 절대 파일시스템 경로 |
+| `created_at` | TEXT | ISO 8601 타임스탬프 |
+
+### app_meta
+
+앱 수준 메타데이터 (키-값 저장소)입니다.
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| `key` | TEXT | 기본 키 |
+| `value` | TEXT | 메타데이터 값 |
 
 ### 엔터티 관계
 
@@ -245,7 +255,7 @@ cost = (input_tokens * input_per_mtok
 erDiagram
     agent_logs ||--o{ tool_details : "session_id"
     agent_logs }o--|| pricing_model : "model → model_id"
-    agent_logs }o--o| agent_limits : "agent_type"
+    agent_logs }o--o| project_registry : "project_name"
     config_snapshots }o--|| agent_logs : "agent_type"
 
     agent_logs {
@@ -257,6 +267,7 @@ erDiagram
         text model
         int input_tokens
         int output_tokens
+        int reasoning_tokens
         real cost_usd
         text tool_name
         text project_name
@@ -276,12 +287,19 @@ erDiagram
         text tool_name
         text detail_name
         text detail_type
+        text agent_type
     }
 
-    agent_limits {
-        text agent_type PK
-        real daily_cost_limit
-        real monthly_cost_limit
+    project_registry {
+        int id PK
+        text project_name UK
+        text project_path
+        text created_at
+    }
+
+    app_meta {
+        text key PK
+        text value
     }
 
     config_snapshots {
@@ -328,7 +346,7 @@ graph LR
 1. `app.whenReady()`가 시작을 트리거합니다.
 2. `registerIpcHandlers()`가 `db:query`와 `db:mutate` IPC 채널을 등록합니다.
 3. 시스템 트레이 아이콘이 생성됩니다 (`createTray()`).
-4. Next.js 개발 서버가 포트 3000에서 자식 프로세스로 생성됩니다.
+4. Next.js 개발 서버가 포트 9845에서 자식 프로세스로 생성됩니다.
 5. `/api/health`가 응답하면 메인 `BrowserWindow`가 생성됩니다.
 6. 윈도우 닫기는 트레이로 숨기며 (macOS), 종료 시 Next.js 프로세스를 종료합니다.
 
@@ -358,7 +376,7 @@ graph LR
 | `insights` | `getHighCostSessions` + `getModelCostEfficiency` + `getBudgetStatus` |
 | `suggestions` | `getSuggestionMetrics` + `generateSuggestions` |
 | `config-history` | `getConfigHistory` (Git 기반) |
-| `settings/limits` | `agent_limits`에 대한 직접 DB 쿼리 |
+| `settings/limits` | `app_meta`에 대한 직접 DB 쿼리 |
 
 ## 5. 데이터 클라이언트 추상화
 
@@ -398,54 +416,46 @@ window.electronAPI = {
 
 ```
 argus/
-├── argus.db                           # SQLite 데이터베이스 (자동 생성, gitignore)
-├── docs/                              # 문서
-│   ├── architecture.md                # 이 파일
-│   ├── design-system.md               # UI 디자인 시스템
-│   └── telemetry-*.md                 # 에이전트 텔레메트리 스펙
 ├── dashboard/                         # Next.js + Electron 애플리케이션
-│   ├── package.json                   # 의존성 및 스크립트
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx             # 루트 레이아웃 (Nav)
-│   │   │   ├── page.tsx               # Overview 페이지
-│   │   │   ├── usage/                 # 일별 사용량 추이
-│   │   │   ├── sessions/              # 세션 목록 및 상세
-│   │   │   ├── tools/                 # 도구 분석
-│   │   │   ├── projects/              # 프로젝트 비용 분석
-│   │   │   ├── insights/              # AI 생성 제안
-│   │   │   ├── settings/              # 예산 한도 및 설정
-│   │   │   ├── rules/                 # 설정 파일 뷰어/에디터
-│   │   │   ├── v1/logs/route.ts       # OTLP 표준 엔드포인트
-│   │   │   └── api/
-│   │   │       ├── ingest/route.ts    # 핵심 수집 로직
-│   │   │       ├── seed/route.ts      # 테스트 데이터 시딩
-│   │   │       ├── overview/route.ts  # Overview 통계 API
-│   │   │       ├── daily/route.ts     # 일별 통계 API
-│   │   │       ├── sessions/route.ts  # Sessions API
-│   │   │       ├── models/route.ts    # 모델 사용량 API
-│   │   │       ├── efficiency/route.ts# 효율성 지표 API
-│   │   │       ├── tools/route.ts     # 도구 사용량 API
-│   │   │       ├── projects/route.ts  # 프로젝트 비용 API
-│   │   │       └── config-history/    # 설정 변경 이력 API
-│   │   ├── lib/
-│   │   │   ├── db.ts                  # SQLite 클라이언트 + 스키마 초기화
-│   │   │   ├── queries.ts            # 모든 SQL 쿼리 함수
-│   │   │   ├── ingest-utils.ts       # OTLP 파싱 및 정규화
-│   │   │   ├── data-client.ts        # IPC/HTTP 추상화 계층
-│   │   │   ├── suggestions.ts        # 규칙 기반 제안 엔진
-│   │   │   ├── config-tracker.ts     # Git 기반 설정 변경 추적
-│   │   │   ├── agents.ts             # 에이전트 정의 (색상, 아이콘)
-│   │   │   ├── efficiency.ts         # 효율성 점수 계산
-│   │   │   ├── pricing-sync.ts       # LiteLLM 가격 동기화
-│   │   │   └── registered-tools.ts   # MCP 도구 스캐너
-│   │   └── components/
-│   │       ├── ui/                    # shadcn/ui 프리미티브
-│   │       └── *.tsx                  # 대시보드 컴포넌트
-│   └── electron/
-│       ├── main.ts                    # Electron 메인 프로세스
-│       ├── preload.ts                 # 컨텍스트 브릿지 (IPC 노출)
-│       └── ipc-handlers.ts           # IPC 쿼리/뮤테이트 라우터
+│   │   ├── app/                       # App Router — 라우팅만 담당
+│   │   │   ├── api/                   # API 라우트 (30개 엔드포인트)
+│   │   │   ├── (dashboard)/           # 라우트 그룹 (공유 레이아웃)
+│   │   │   │   ├── page.tsx           # Overview
+│   │   │   │   ├── sessions/          # 세션 목록 + [id] 상세
+│   │   │   │   ├── usage/             # 사용량 분석 (M3)
+│   │   │   │   ├── tools/             # 도구 추적
+│   │   │   │   ├── insights/          # 인사이트
+│   │   │   │   ├── projects/          # 프로젝트 목록 + [name] 상세
+│   │   │   │   ├── rules/             # 설정 변경 추적 (M4)
+│   │   │   │   └── settings/          # 설정
+│   │   │   ├── onboarding/            # 온보딩 플로우
+│   │   │   └── v1/                    # OTLP 표준 엔드포인트
+│   │   ├── features/                  # Feature 모듈 (도메인별 컴포넌트·로직·테스트)
+│   │   │   └── {feature-name}/        # components/, lib/, hooks/, __tests__/, index.ts
+│   │   └── shared/                    # 공유 모듈 (2개+ feature에서 사용)
+│   │       ├── components/            # 공유 컴포넌트 (ui/, 필터, 네비게이션)
+│   │       ├── hooks/                 # 공유 훅
+│   │       └── lib/                   # 유틸 (db, queries, format, agents)
+│   │           ├── db.ts              # SQLite 클라이언트 + 스키마 + 마이그레이션
+│   │           ├── queries/           # SQL 쿼리 모듈 (11개 파일)
+│   │           ├── ingest-utils.ts    # OTLP 파싱 및 정규화
+│   │           ├── data-client.ts     # IPC/HTTP 추상화 계층
+│   │           ├── suggestions.ts     # 규칙 기반 제안 엔진
+│   │           ├── config-tracker.ts  # Git 기반 설정 변경 추적
+│   │           ├── agents.ts          # 에이전트 정의 (색상, 아이콘)
+│   │           ├── pricing-sync.ts    # LiteLLM 가격 동기화
+│   │           ├── registered-tools.ts# MCP/에이전트/스킬 도구 스캐너
+│   │           └── i18n.ts            # 다국어 지원 (ko/en)
+│   └── electron/                      # Electron 데스크톱 앱
+│       ├── main.ts                    # 진입점 (윈도우, 트레이, IPC)
+│       ├── preload.ts                 # IPC 브릿지
+│       ├── presentation/              # window.ts, tray.ts
+│       ├── infrastructure/            # Next.js 서버, IPC 핸들러
+│       └── domain/                    # config, mutation, query 서비스
+├── website/                           # 문서 사이트 (별도 Next.js)
+├── docs/                              # 사용자 문서
+├── scripts/                           # 유틸리티 스크립트
 └── .claude/                           # Claude Code 설정
     ├── agents/                        # 에이전트 정의
     └── skills/                        # 스킬 정의

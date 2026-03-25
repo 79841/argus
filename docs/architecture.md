@@ -73,7 +73,7 @@ sequenceDiagram
 | Endpoint | Format | Purpose |
 |----------|--------|---------|
 | `POST /v1/logs` | JSON + Protobuf | OTLP standard path. Agents send here by default. |
-| `POST /v1/metrics` | - | Accepted but ignored (returns 200). |
+| `POST /v1/metrics` | JSON + Protobuf | Processes Gemini CLI tool/session metrics and Claude Code productivity metrics. |
 | `POST /v1/traces` | - | Accepted but ignored (returns 200). |
 | `POST /api/ingest` | JSON only | Internal processing route. `/v1/logs` proxies here. |
 
@@ -141,7 +141,7 @@ Orchestration tools (Agent, Skill, MCP) are automatically extracted from `tool_r
 
 ## 3. SQLite Schema
 
-Schema is auto-initialized in `src/lib/db.ts` on application startup. No migration tool is needed.
+Schema is auto-initialized in `src/shared/lib/db.ts` on application startup. The `schema_version` table tracks migrations, and version-based migrations run automatically when new columns or tables are added.
 
 ### agent_logs
 
@@ -226,15 +226,25 @@ Detailed tracking of orchestration tool invocations (MCP servers, Skills, Sub-ag
 
 **Indexes**: `timestamp`, `(tool_name, detail_name)`, `session_id`
 
-### agent_limits
+### project_registry
 
-Per-agent budget limits.
+Connected project path management.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `agent_type` | TEXT | Primary key |
-| `daily_cost_limit` | REAL | Daily cost threshold (USD) |
-| `monthly_cost_limit` | REAL | Monthly cost threshold (USD) |
+| `id` | INTEGER | Primary key |
+| `project_name` | TEXT | Project name (unique) |
+| `project_path` | TEXT | Absolute filesystem path |
+| `created_at` | TEXT | ISO 8601 timestamp |
+
+### app_meta
+
+App-level metadata (key-value store).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `key` | TEXT | Primary key |
+| `value` | TEXT | Metadata value |
 
 ### Entity Relationship
 
@@ -242,7 +252,7 @@ Per-agent budget limits.
 erDiagram
     agent_logs ||--o{ tool_details : "session_id"
     agent_logs }o--|| pricing_model : "model → model_id"
-    agent_logs }o--o| agent_limits : "agent_type"
+    agent_logs }o--o| project_registry : "project_name"
     config_snapshots }o--|| agent_logs : "agent_type"
 
     agent_logs {
@@ -254,6 +264,7 @@ erDiagram
         text model
         int input_tokens
         int output_tokens
+        int reasoning_tokens
         real cost_usd
         text tool_name
         text project_name
@@ -273,12 +284,19 @@ erDiagram
         text tool_name
         text detail_name
         text detail_type
+        text agent_type
     }
 
-    agent_limits {
-        text agent_type PK
-        real daily_cost_limit
-        real monthly_cost_limit
+    project_registry {
+        int id PK
+        text project_name UK
+        text project_path
+        text created_at
+    }
+
+    app_meta {
+        text key PK
+        text value
     }
 
     config_snapshots {
@@ -325,7 +343,7 @@ graph LR
 1. `app.whenReady()` triggers startup.
 2. `registerIpcHandlers()` registers `db:query` and `db:mutate` IPC channels.
 3. System tray icon is created (`createTray()`).
-4. Next.js dev server is spawned as a child process on port 3000.
+4. Next.js dev server is spawned as a child process on port 9845.
 5. Once `/api/health` responds, the main `BrowserWindow` is created.
 6. Window close hides to tray (macOS); quit terminates the Next.js process.
 
@@ -355,7 +373,7 @@ The `ipc-handlers.ts` maps query names to the same functions used by API routes:
 | `insights` | `getHighCostSessions` + `getModelCostEfficiency` + `getBudgetStatus` |
 | `suggestions` | `getSuggestionMetrics` + `generateSuggestions` |
 | `config-history` | `getConfigHistory` (Git-based) |
-| `settings/limits` | Direct DB query on `agent_limits` |
+| `settings/limits` | Direct DB query on `app_meta` |
 
 ## 5. Data Client Abstraction
 
@@ -395,54 +413,46 @@ window.electronAPI = {
 
 ```
 argus/
-├── argus.db                           # SQLite database (auto-created, gitignored)
-├── docs/                              # Documentation
-│   ├── architecture.md                # This file
-│   ├── design-system.md               # UI design system
-│   └── telemetry-*.md                 # Agent telemetry specs
 ├── dashboard/                         # Next.js + Electron application
-│   ├── package.json                   # Dependencies & scripts
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx             # Root layout (Nav)
-│   │   │   ├── page.tsx               # Overview page
-│   │   │   ├── usage/                 # Daily usage trends
-│   │   │   ├── sessions/              # Session list & detail
-│   │   │   ├── tools/                 # Tool analytics
-│   │   │   ├── projects/              # Project cost breakdown
-│   │   │   ├── insights/              # AI-generated suggestions
-│   │   │   ├── settings/              # Budget limits & config
-│   │   │   ├── rules/                 # Config file viewer/editor
-│   │   │   ├── v1/logs/route.ts       # OTLP standard endpoint
-│   │   │   └── api/
-│   │   │       ├── ingest/route.ts    # Core ingestion logic
-│   │   │       ├── seed/route.ts      # Test data seeding
-│   │   │       ├── overview/route.ts  # Overview stats API
-│   │   │       ├── daily/route.ts     # Daily stats API
-│   │   │       ├── sessions/route.ts  # Sessions API
-│   │   │       ├── models/route.ts    # Model usage API
-│   │   │       ├── efficiency/route.ts# Efficiency metrics API
-│   │   │       ├── tools/route.ts     # Tool usage API
-│   │   │       ├── projects/route.ts  # Project costs API
-│   │   │       └── config-history/    # Config change history API
-│   │   ├── lib/
-│   │   │   ├── db.ts                  # SQLite client + schema init
-│   │   │   ├── queries.ts            # All SQL query functions
-│   │   │   ├── ingest-utils.ts       # OTLP parsing & normalization
-│   │   │   ├── data-client.ts        # IPC/HTTP abstraction layer
-│   │   │   ├── suggestions.ts        # Rule-based suggestion engine
-│   │   │   ├── config-tracker.ts     # Git-based config change tracking
-│   │   │   ├── agents.ts             # Agent definitions (colors, icons)
-│   │   │   ├── efficiency.ts         # Efficiency score calculation
-│   │   │   ├── pricing-sync.ts       # LiteLLM pricing sync
-│   │   │   └── registered-tools.ts   # MCP tool scanner
-│   │   └── components/
-│   │       ├── ui/                    # shadcn/ui primitives
-│   │       └── *.tsx                  # Dashboard components
-│   └── electron/
-│       ├── main.ts                    # Electron main process
-│       ├── preload.ts                 # Context bridge (IPC exposure)
-│       └── ipc-handlers.ts           # IPC query/mutate router
+│   │   ├── app/                       # App Router — routing only
+│   │   │   ├── api/                   # API routes (30 endpoints)
+│   │   │   ├── (dashboard)/           # Route group (shared layout)
+│   │   │   │   ├── page.tsx           # Overview
+│   │   │   │   ├── sessions/          # Session list + [id] detail
+│   │   │   │   ├── usage/             # Usage analytics (M3)
+│   │   │   │   ├── tools/             # Tool tracking
+│   │   │   │   ├── insights/          # Insights
+│   │   │   │   ├── projects/          # Project list + [name] detail
+│   │   │   │   ├── rules/             # Config change tracking (M4)
+│   │   │   │   └── settings/          # Settings
+│   │   │   ├── onboarding/            # Onboarding flow
+│   │   │   └── v1/                    # OTLP standard endpoints
+│   │   ├── features/                  # Feature modules (domain components/logic/tests)
+│   │   │   └── {feature-name}/        # components/, lib/, hooks/, __tests__/, index.ts
+│   │   └── shared/                    # Shared modules (used by 2+ features)
+│   │       ├── components/            # Shared components (ui/, filters, nav)
+│   │       ├── hooks/                 # Shared hooks
+│   │       └── lib/                   # Utilities (db, queries, format, agents)
+│   │           ├── db.ts              # SQLite client + schema + migrations
+│   │           ├── queries/           # SQL query modules (11 files)
+│   │           ├── ingest-utils.ts    # OTLP parsing & normalization
+│   │           ├── data-client.ts     # IPC/HTTP abstraction layer
+│   │           ├── suggestions.ts     # Rule-based suggestion engine
+│   │           ├── config-tracker.ts  # Git-based config change tracking
+│   │           ├── agents.ts          # Agent definitions (colors, icons)
+│   │           ├── pricing-sync.ts    # LiteLLM pricing sync
+│   │           ├── registered-tools.ts# MCP/agent/skill tool scanner
+│   │           └── i18n.ts            # Internationalization (ko/en)
+│   └── electron/                      # Electron desktop app
+│       ├── main.ts                    # Entry point (window, tray, IPC)
+│       ├── preload.ts                 # IPC bridge
+│       ├── presentation/              # window.ts, tray.ts
+│       ├── infrastructure/            # Next.js server, IPC handlers
+│       └── domain/                    # config, mutation, query services
+├── website/                           # Documentation site (separate Next.js)
+├── docs/                              # User documentation
+├── scripts/                           # Utility scripts
 └── .claude/                           # Claude Code configuration
     ├── agents/                        # Agent definitions
     └── skills/                        # Skill definitions
