@@ -17,14 +17,17 @@ export const resolvePath = (filePath: string): string => {
   return path.join(getProjectRoot(), filePath)
 }
 
+const normalizePath = (p: string): string =>
+  process.platform === 'win32' ? p.toLowerCase() : p
+
 export const isPathSafe = (filePath: string): boolean => {
   if (filePath.startsWith('~/')) {
-    const resolved = path.resolve(resolvePath(filePath))
-    const home = getUserHome()
+    const resolved = normalizePath(path.resolve(resolvePath(filePath)))
+    const home = normalizePath(getUserHome())
     return resolved.startsWith(home) && !filePath.includes('..')
   }
-  const resolved = path.resolve(getProjectRoot(), filePath)
-  const root = getProjectRoot()
+  const resolved = normalizePath(path.resolve(getProjectRoot(), filePath))
+  const root = normalizePath(getProjectRoot())
   return resolved.startsWith(root) && !filePath.includes('..')
 }
 

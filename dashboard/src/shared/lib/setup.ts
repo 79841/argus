@@ -23,9 +23,9 @@ type ConnectResult = {
 
 const HOME = os.homedir()
 
-const toDisplayPath = (absPath: string): string => {
+export const toDisplayPath = (absPath: string): string => {
   if (absPath.startsWith(HOME)) {
-    return '~' + absPath.slice(HOME.length)
+    return ('~' + absPath.slice(HOME.length)).replace(/\\/g, '/')
   }
   return absPath
 }
@@ -100,7 +100,7 @@ const connectClaude = (configPath: string, endpoint: string): ConnectResult => {
     const existingEnv = (data.env as Record<string, string> | undefined) ?? {}
     data.env = { ...existingEnv, ...ARGUS_ENV(endpoint) }
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
-    return { agent: 'claude', success: true, action: 'OTel 환경 변수를 ~/.claude/settings.json에 병합했다' }
+    return { agent: 'claude', success: true, action: `OTel 환경 변수를 ${toDisplayPath(configPath)}에 병합했다` }
   } catch (err) {
     return { agent: 'claude', success: false, action: '연결 실패', error: err instanceof Error ? err.message : String(err) }
   }
@@ -127,7 +127,7 @@ const disconnectClaude = (configPath: string): ConnectResult => {
       data.env = env
     }
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
-    return { agent: 'claude', success: true, action: 'OTel 환경 변수를 ~/.claude/settings.json에서 제거했다' }
+    return { agent: 'claude', success: true, action: `OTel 환경 변수를 ${toDisplayPath(configPath)}에서 제거했다` }
   } catch (err) {
     return { agent: 'claude', success: false, action: '연결 해제 실패', error: err instanceof Error ? err.message : String(err) }
   }
@@ -162,24 +162,24 @@ const connectCodex = (configPath: string, endpoint: string): ConnectResult => {
         fs.mkdirSync(dir, { recursive: true })
       }
       fs.writeFileSync(configPath, section.trimStart(), 'utf-8')
-      return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml에 새로 썼다' }
+      return { agent: 'codex', success: true, action: `OTel 섹션을 ${toDisplayPath(configPath)}에 새로 썼다` }
     }
     let content = fs.readFileSync(configPath, 'utf-8')
     if (/\[otel[\.\]]/.test(content)) {
       content = replaceCodexOtelSections(content, section)
       fs.writeFileSync(configPath, content, 'utf-8')
-      return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml에서 교체했다' }
+      return { agent: 'codex', success: true, action: `OTel 섹션을 ${toDisplayPath(configPath)}에서 교체했다` }
     }
     content = content.trimEnd() + section
     fs.writeFileSync(configPath, content, 'utf-8')
-    return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml 끝에 추가했다' }
+    return { agent: 'codex', success: true, action: `OTel 섹션을 ${toDisplayPath(configPath)} 끝에 추가했다` }
   } catch (err) {
     return { agent: 'codex', success: false, action: '연결 실패', error: err instanceof Error ? err.message : String(err) }
   }
 }
 
 const replaceCodexOtelSections = (content: string, newSection: string): string => {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const result: string[] = []
   let inOtel = false
   for (const line of lines) {
@@ -204,7 +204,7 @@ const disconnectCodex = (configPath: string): ConnectResult => {
       return { agent: 'codex', success: true, action: '설정 파일이 없어 건너뜀' }
     }
     const content = fs.readFileSync(configPath, 'utf-8')
-    const lines = content.split('\n')
+    const lines = content.split(/\r?\n/)
     const result: string[] = []
     let inOtel = false
     for (const line of lines) {
@@ -220,7 +220,7 @@ const disconnectCodex = (configPath: string): ConnectResult => {
       }
     }
     fs.writeFileSync(configPath, result.join('\n').trimEnd() + '\n', 'utf-8')
-    return { agent: 'codex', success: true, action: 'OTel 섹션을 ~/.codex/config.toml에서 제거했다' }
+    return { agent: 'codex', success: true, action: `OTel 섹션을 ${toDisplayPath(configPath)}에서 제거했다` }
   } catch (err) {
     return { agent: 'codex', success: false, action: '연결 해제 실패', error: err instanceof Error ? err.message : String(err) }
   }
@@ -262,7 +262,7 @@ const connectGemini = (configPath: string, endpoint: string): ConnectResult => {
     const existingTelemetry = (data.telemetry as Record<string, unknown> | undefined) ?? {}
     data.telemetry = { ...existingTelemetry, ...ARGUS_GEMINI_TELEMETRY(endpoint) }
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
-    return { agent: 'gemini', success: true, action: 'telemetry 설정을 ~/.gemini/settings.json에 병합했다' }
+    return { agent: 'gemini', success: true, action: `telemetry 설정을 ${toDisplayPath(configPath)}에 병합했다` }
   } catch (err) {
     return { agent: 'gemini', success: false, action: '연결 실패', error: err instanceof Error ? err.message : String(err) }
   }
@@ -281,7 +281,7 @@ const disconnectGemini = (configPath: string): ConnectResult => {
     }
     delete data.telemetry
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
-    return { agent: 'gemini', success: true, action: 'telemetry 키를 ~/.gemini/settings.json에서 제거했다' }
+    return { agent: 'gemini', success: true, action: `telemetry 키를 ${toDisplayPath(configPath)}에서 제거했다` }
   } catch (err) {
     return { agent: 'gemini', success: false, action: '연결 해제 실패', error: err instanceof Error ? err.message : String(err) }
   }
