@@ -2,9 +2,13 @@
   "name": "argus",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "main": "dist-electron/electron/main.js",
   "scripts": {
-    "dev": "next dev --port 9845",
+    "rebuild:sqlite": "node -e \"try{require('better-sqlite3')}catch{process.exit(1)}\" || npm rebuild better-sqlite3 --silent",
+    "dev": "npm run rebuild:sqlite && next dev --port 9845",
     "build": "next build",
     "start": "next start --port 9845",
     "lint": "eslint",
@@ -14,13 +18,13 @@
     "test:e2e:live": "playwright test e2e/integration/live-agents.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "electron:build": "tsc -p electron/tsconfig.json",
-    "electron:dev": "npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
-    "electron:dev:clean": "rimraf .next dist-electron && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
+    "electron:dev": "npm run rebuild:sqlite && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
+    "electron:dev:clean": "rimraf .next dist-electron && npm run rebuild:sqlite && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
     "electron:pack": "pnpm build && pnpm electron:build && electron-builder --dir",
     "electron:dist": "pnpm build && pnpm electron:build && electron-builder",
     "electron:dist:mac": "pnpm build && pnpm electron:build && electron-builder --mac",
     "electron:dist:win": "pnpm build && pnpm electron:build && electron-builder --win",
-    "dev:onboarding": "npm rebuild better-sqlite3 --silent && npm run electron:build && npx concurrently -n next,electron \"cross-env ARGUS_DB_PATH=../argus-onboarding-test.db next dev --port 9847\" \"npx wait-on http://localhost:9847/api/health && cross-env ARGUS_PORT=9847 npx electron .\"",
+    "dev:onboarding": "npm run rebuild:sqlite && npm run electron:build && npx concurrently -n next,electron \"cross-env ARGUS_DB_PATH=../argus-onboarding-test.db next dev --port 9847\" \"npx wait-on http://localhost:9847/api/health && cross-env ARGUS_PORT=9847 npx electron .\"",
     "dev:onboarding:clean": "node ../scripts/clean-onboarding.mjs",
     "electron:rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3"
