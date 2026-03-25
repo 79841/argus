@@ -26,15 +26,19 @@ const USER_STATIC_FILES = [
 const resolveUserPath = (filePath: string): string =>
   path.join(getUserHome(), filePath.slice(2))
 
+const normalizePath = (p: string): string =>
+  process.platform === 'win32' ? p.toLowerCase() : p
+
 const isPathSafe = (filePath: string, projectRoot?: string): boolean => {
   if (filePath.startsWith('~/')) {
-    const resolved = path.resolve(resolveUserPath(filePath))
-    const home = getUserHome()
+    const resolved = normalizePath(path.resolve(resolveUserPath(filePath)))
+    const home = normalizePath(getUserHome())
     return resolved.startsWith(home + path.sep) || resolved === home
   }
   if (!projectRoot) return false
-  const resolved = path.resolve(projectRoot, filePath)
-  return resolved.startsWith(projectRoot + path.sep) || resolved === projectRoot
+  const normalizedRoot = normalizePath(projectRoot)
+  const resolved = normalizePath(path.resolve(projectRoot, filePath))
+  return resolved.startsWith(normalizedRoot + path.sep) || resolved === normalizedRoot
 }
 
 const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> => {
