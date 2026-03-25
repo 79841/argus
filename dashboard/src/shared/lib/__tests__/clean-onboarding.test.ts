@@ -3,36 +3,38 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, it, expect, beforeEach } from 'vitest';
 
-// Import from the scripts directory using a relative path
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — .mjs module outside src
 import { getElectronAppDataDir, cleanOnboarding, DB_FILES, APP_DATA_SUBDIRS } from '../../../../../scripts/clean-onboarding.mjs';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const env = (obj: Record<string, string>) => obj as any
+
 describe('getElectronAppDataDir', () => {
   it('returns AppData/Roaming/argus on Windows with APPDATA env', () => {
-    const result = getElectronAppDataDir('win32', '/home/user', { APPDATA: 'C:\\Users\\user\\AppData\\Roaming' });
+    const result = getElectronAppDataDir('win32', '/home/user', env({ APPDATA: 'C:\\Users\\user\\AppData\\Roaming' }));
     expect(result).toContain('argus');
     expect(result).toContain('AppData\\Roaming');
   });
 
   it('returns AppData/Roaming/argus on Windows without APPDATA env', () => {
-    const result = getElectronAppDataDir('win32', '/home/user', {});
+    const result = getElectronAppDataDir('win32', '/home/user', env({}));
     expect(result).toContain('argus');
     expect(result).toContain('AppData');
   });
 
   it('returns Library/Application Support/argus on macOS', () => {
-    const result = getElectronAppDataDir('darwin', '/Users/user', {});
+    const result = getElectronAppDataDir('darwin', '/Users/user', env({}));
     expect(result).toBe('/Users/user/Library/Application Support/argus');
   });
 
   it('returns XDG_CONFIG_HOME/argus on Linux with XDG_CONFIG_HOME set', () => {
-    const result = getElectronAppDataDir('linux', '/home/user', { XDG_CONFIG_HOME: '/home/user/.config' });
+    const result = getElectronAppDataDir('linux', '/home/user', env({ XDG_CONFIG_HOME: '/home/user/.config' }));
     expect(result).toBe('/home/user/.config/argus');
   });
 
   it('returns ~/.config/argus on Linux without XDG_CONFIG_HOME', () => {
-    const result = getElectronAppDataDir('linux', '/home/user', {});
+    const result = getElectronAppDataDir('linux', '/home/user', env({}));
     expect(result).toBe('/home/user/.config/argus');
   });
 });
