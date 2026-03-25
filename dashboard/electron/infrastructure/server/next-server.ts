@@ -1,6 +1,6 @@
 import { app } from 'electron'
 import path from 'path'
-import { spawn, exec, type ChildProcess } from 'child_process'
+import { spawn, execSync, type ChildProcess } from 'child_process'
 import net from 'net'
 
 export const PORT = Number(process.env.ARGUS_PORT) || 9845
@@ -88,7 +88,11 @@ export const startNextServer = async (): Promise<void> => {
 export const killNextProcess = (): void => {
   if (!nextProcess) return
   if (process.platform === 'win32' && nextProcess.pid) {
-    exec(`taskkill /pid ${nextProcess.pid} /T /F`)
+    try {
+      execSync(`taskkill /pid ${nextProcess.pid} /T /F`, { timeout: 5000, stdio: 'ignore' })
+    } catch {
+      nextProcess.kill()
+    }
   } else {
     nextProcess.kill()
   }
