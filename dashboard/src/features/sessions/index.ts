@@ -8,3 +8,7 @@ export type { CostChartDatum, PromptCostChartProps } from './components/prompt-c
 export { SessionHeader } from './components/session-header'
 export type { SessionHeaderProps } from './components/session-header'
 export { SessionListItem } from './components/session-list-item'
+export { SessionPreview } from './components/session-preview'
+export type { SessionPreviewProps } from './components/session-preview'
+export { computeSummary } from './lib/compute-summary'
+export type { SessionSummary } from './lib/compute-summary'

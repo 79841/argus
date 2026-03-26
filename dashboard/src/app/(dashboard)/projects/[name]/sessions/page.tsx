@@ -1,10 +1,9 @@
 'use client'
 
+import { useParams } from 'next/navigation'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/components/ui/select'
 import { AgentFilter } from '@/shared/components/agent-filter'
-import { ProjectFilter } from '@/shared/components/project-filter'
 import { DateRangePicker } from '@/shared/components/date-range-picker'
-import { FilterBar } from '@/shared/components/filter-bar'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { SessionPreview } from '@/features/sessions/components/session-preview'
 import type { SortOption } from '@/shared/types/common'
@@ -12,8 +11,11 @@ import { useLocale } from '@/shared/lib/i18n'
 import { formatCost, computeCacheRate } from '@/shared/lib/format'
 import { useSessions, SessionListItem } from '@/features/sessions'
 
-export default function SessionsPage() {
+export default function ProjectSessionsPage() {
+  const params = useParams()
+  const projectName = decodeURIComponent(params.name as string)
   const { t } = useLocale()
+
   const {
     loading,
     selectedId,
@@ -21,26 +23,23 @@ export default function SessionsPage() {
     detailEvents,
     detailLoading,
     agentType,
-    project,
     dateRange,
     search,
     sortBy,
     sortedSessions,
     totalCost,
     setAgentType,
-    setProject,
     setDateRange,
     setSearch,
     setSortBy,
     handleSelect,
-  } = useSessions()
+  } = useSessions({ initialProject: projectName })
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Filter Bar */}
-      <FilterBar>
+      <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
         <AgentFilter value={agentType} onChange={setAgentType} />
-        <ProjectFilter value={project} onChange={setProject} />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <div className="flex flex-1 items-center gap-2 min-w-[180px]">
           <input
@@ -61,7 +60,7 @@ export default function SessionsPage() {
             <SelectItem value="tokens">{t('sessions.sort.tokens')}</SelectItem>
           </SelectContent>
         </Select>
-      </FilterBar>
+      </div>
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">

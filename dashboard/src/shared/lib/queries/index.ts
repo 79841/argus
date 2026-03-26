@@ -7,8 +7,8 @@ export { getDailyStats } from './daily'
 export type { SessionRow, SessionDetailEvent, SessionSummary, ModelUsage } from './sessions'
 export { getSessions, getSessionDetail, getSessionSummary, getModelUsage } from './sessions'
 
-export type { ToolUsageRow, DailyToolRow, ToolDetailRow, IndividualToolRow } from './tools'
-export { getToolUsageStats, getDailyToolStats, getToolDetailStats, getIndividualToolStats } from './tools'
+export type { ToolUsageRow, DailyToolRow, ToolDetailRow, IndividualToolRow, ToolSingleStat, ToolDailyRow, ToolSessionRow } from './tools'
+export { getToolUsageStats, getDailyToolStats, getToolDetailStats, getIndividualToolStats, getToolSingleStat, getToolDailyStats, getToolRelatedSessions } from './tools'
 
 export type { ProjectRow, ProjectDetailStats, ProjectDailyCost, ProjectComparisonRow } from './projects'
 export { getProjects, getProjectCosts, getProjectDetailStats, getProjectDailyCosts, getProjectComparison } from './projects'

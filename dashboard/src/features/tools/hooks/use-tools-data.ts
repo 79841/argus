@@ -23,7 +23,7 @@ type UseToolsDataReturn = {
   loading: boolean
 }
 
-export const useToolsData = (agentType: AgentType, days: string): UseToolsDataReturn => {
+export const useToolsData = (agentType: AgentType, days: string, project?: string): UseToolsDataReturn => {
   const [tools, setTools] = useState<ToolDetailRow[]>([])
   const [topTools, setTopTools] = useState<ToolUsageRow[]>([])
   const [daily, setDaily] = useState<DailyToolRow[]>([])
@@ -35,9 +35,15 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
   const fetchData = useCallback(() => {
     setLoading(true)
 
+    const baseParams = {
+      agent_type: agentType,
+      days: Number(days),
+      ...(project && project !== 'all' ? { project } : {}),
+    }
+
     Promise.all([
-      toolsService.getTools({ agent_type: agentType, days: Number(days), detail: true }),
-      toolsService.getTools({ agent_type: agentType, days: Number(days) }),
+      toolsService.getTools({ ...baseParams, detail: true }),
+      toolsService.getTools(baseParams),
       toolsService.getRegisteredTools(),
     ])
       .then(([detail, simple, reg]) => {
@@ -80,7 +86,7 @@ export const useToolsData = (agentType: AgentType, days: string): UseToolsDataRe
         setKpi(null)
         setLoading(false)
       })
-  }, [agentType, days])
+  }, [agentType, days, project])
 
   useEffect(() => {
     fetchData()

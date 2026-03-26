@@ -30,9 +30,13 @@ type UseSessionsReturn = {
   handleSelect: (sessionId: string) => void
 }
 
-export const useSessions = (): UseSessionsReturn => {
+type UseSessionsOptions = {
+  initialProject?: string
+}
+
+export const useSessions = (options?: UseSessionsOptions): UseSessionsReturn => {
   const [agentType, setAgentType] = useState<AgentType>('all')
-  const [project, setProject] = useState<string>('all')
+  const [project, setProject] = useState<string>(options?.initialProject ?? 'all')
   const [dateRange, setDateRange] = useState<DateRange>({ from: daysAgoISO(7), to: todayISO() })
   const [search, setSearch] = useState<string>('')
   const [sortBy, setSortBy] = useState<SortOption>('latest')
@@ -43,11 +47,13 @@ export const useSessions = (): UseSessionsReturn => {
   const [detailEvents, setDetailEvents] = useState<SessionDetailEvent[]>([])
   const [detailLoading, setDetailLoading] = useState(false)
 
+  const effectiveProject = options?.initialProject ?? project
+
   useEffect(() => {
     setLoading(true)
     setSelectedId(null)
     setDetailEvents([])
-    sessionsService.getSessions({ agent_type: agentType, project, from: dateRange.from, to: dateRange.to })
+    sessionsService.getSessions({ agent_type: agentType, project: effectiveProject, from: dateRange.from, to: dateRange.to })
       .then((data) => {
         setSessions(Array.isArray(data) ? data : [])
         setLoading(false)
@@ -56,7 +62,7 @@ export const useSessions = (): UseSessionsReturn => {
         setSessions([])
         setLoading(false)
       })
-  }, [agentType, project, dateRange])
+  }, [agentType, effectiveProject, dateRange])
 
   const handleSelect = useCallback((sessionId: string) => {
     setSelectedId(sessionId)
@@ -101,7 +107,7 @@ export const useSessions = (): UseSessionsReturn => {
     detailEvents,
     detailLoading,
     agentType,
-    project,
+    project: effectiveProject,
     dateRange,
     search,
     sortBy,

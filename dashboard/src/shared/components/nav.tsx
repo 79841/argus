@@ -76,7 +76,7 @@ export const Nav = () => {
                     href={item.href}
                     className={cn(
                       'flex items-center justify-center rounded-md p-2 transition-colors',
-                      pathname === item.href
+                      pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
@@ -93,7 +93,7 @@ export const Nav = () => {
               href={item.href}
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
-                pathname === item.href
+                pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}

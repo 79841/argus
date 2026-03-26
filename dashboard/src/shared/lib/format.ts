@@ -50,6 +50,27 @@ export const computeCacheRate = (inputTokens: number, cacheReadTokens: number): 
   return (cacheReadTokens / total) * 100
 }
 
+export const formatDate = (iso: string): string => {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export const formatDateLong = (iso: string): string => {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export const formatNumber = (n: number): string => n.toLocaleString()
+
+export const formatPercent = (n: number): string => `${(n * 100).toFixed(1)}%`
+
 export const formatRelativeTime = (iso: string, tFn?: (key: string) => string): string => {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
 

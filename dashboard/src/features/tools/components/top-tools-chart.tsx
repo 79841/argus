@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import {
   BarChart,
   Bar,
@@ -20,6 +21,7 @@ const formatNumber = (n: number): string => n.toLocaleString()
 
 export const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
   const { t } = useLocale()
+  const router = useRouter()
   const chartData = data.slice(0, 15).map((r) => ({
     name: r.tool_name,
     count: r.invocation_count,
@@ -69,7 +71,14 @@ export const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
                 )
               }}
             />
-            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+            <Bar
+              dataKey="count"
+              radius={[0, 4, 4, 0]}
+              onClick={(d: { name?: string }) => {
+                if (d.name) router.push(`/tools/${encodeURIComponent(d.name)}`)
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               {chartData.map((entry, i) => (
                 <Cell key={entry.name} fill={TOP_COLORS[i % TOP_COLORS.length]} />
               ))}

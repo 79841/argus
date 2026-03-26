@@ -196,6 +196,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.chart.dailyTrend': '일별 도구 사용 추이',
     'tools.chart.dailyTotal': '일별 총 호출 추이',
     'tools.chart.totalCalls': '총 호출',
+    'tools.tab.overview': 'Overview',
+    'tools.tab.details': 'Details',
+    'tools.tab.trends': 'Trends',
     'tools.empty': '도구 데이터 없음',
     'tools.detail.utilization': '활용률',
     'tools.detail.successRate': '성공률',
@@ -362,6 +365,49 @@ const translations: Record<Locale, Record<string, string>> = {
     'dashboard.kpi.sessions': '세션',
     'dashboard.kpi.requests': '요청',
     'dashboard.kpi.cacheHitRate': '캐시 히트율',
+
+    // 프로젝트 서브 네비게이션
+    'projects.tab.overview': '개요',
+    'projects.tab.sessions': '세션',
+    'projects.tab.usage': '사용량',
+    'projects.tab.tools': '도구',
+    'projects.tab.rules': '규칙',
+
+    // 미리보기 공통
+    'common.viewDetail': '상세 보기',
+    'common.selectItem': '항목을 선택하세요',
+    'common.loading': '로딩 중...',
+
+    // 세션 미리보기
+    'sessions.preview.placeholder': '세션을 선택하세요',
+
+    // 프로젝트 미리보기
+    'projects.preview.placeholder': '프로젝트를 선택하세요',
+    'projects.preview.period': '활동 기간',
+
+    // 프로젝트 개요
+    'projects.overview.recentSessions': '최근 세션',
+    'projects.overview.topTools': '자주 사용한 도구',
+    'projects.overview.viewAllSessions': '세션 전체 보기',
+    'projects.overview.viewAllTools': '도구 전체 보기',
+
+    // 도구 상세
+    'tools.detail.back': '← 도구 목록',
+    'tools.detail.category': '카테고리',
+    'tools.detail.scope': '스코프',
+    'tools.detail.lastUsed': '마지막 사용',
+    'tools.detail.avgDuration': '평균 소요 시간',
+    'tools.detail.totalCost': '총 비용',
+    'tools.detail.callTrend': '호출 추이',
+    'tools.detail.successTrend': '성공률 추이',
+    'tools.detail.durationTrend': '소요 시간 추이',
+    'tools.detail.relatedSessions': '관련 세션',
+    'tools.detail.successRateKpi': '성공률',
+    'tools.detail.noData': '데이터 없음',
+    'tools.detail.session': '세션 ID',
+    'tools.detail.project': '프로젝트',
+    'tools.detail.calls': '호출',
+    'tools.detail.date': '날짜',
 
     // Shared components
     'shared.datePicker.today': '오늘',
@@ -566,6 +612,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.chart.dailyTrend': 'Daily Tool Usage Trend',
     'tools.chart.dailyTotal': 'Daily Total Calls Trend',
     'tools.chart.totalCalls': 'Total Calls',
+    'tools.tab.overview': 'Overview',
+    'tools.tab.details': 'Details',
+    'tools.tab.trends': 'Trends',
     'tools.empty': 'No tool data',
     'tools.detail.utilization': 'Utilization',
     'tools.detail.successRate': 'Success Rate',
@@ -732,6 +781,49 @@ const translations: Record<Locale, Record<string, string>> = {
     'dashboard.kpi.sessions': 'Sessions',
     'dashboard.kpi.requests': 'Requests',
     'dashboard.kpi.cacheHitRate': 'Cache Hit Rate',
+
+    // 프로젝트 서브 네비게이션
+    'projects.tab.overview': 'Overview',
+    'projects.tab.sessions': 'Sessions',
+    'projects.tab.usage': 'Usage',
+    'projects.tab.tools': 'Tools',
+    'projects.tab.rules': 'Rules',
+
+    // 미리보기 공통
+    'common.viewDetail': 'View Details',
+    'common.selectItem': 'Select an item',
+    'common.loading': 'Loading...',
+
+    // 세션 미리보기
+    'sessions.preview.placeholder': 'Select a session',
+
+    // 프로젝트 미리보기
+    'projects.preview.placeholder': 'Select a project',
+    'projects.preview.period': 'Activity Period',
+
+    // 프로젝트 개요
+    'projects.overview.recentSessions': 'Recent Sessions',
+    'projects.overview.topTools': 'Top Tools',
+    'projects.overview.viewAllSessions': 'View All Sessions',
+    'projects.overview.viewAllTools': 'View All Tools',
+
+    // 도구 상세
+    'tools.detail.back': '← Tools',
+    'tools.detail.category': 'Category',
+    'tools.detail.scope': 'Scope',
+    'tools.detail.lastUsed': 'Last Used',
+    'tools.detail.avgDuration': 'Avg Duration',
+    'tools.detail.totalCost': 'Total Cost',
+    'tools.detail.callTrend': 'Call Trend',
+    'tools.detail.successTrend': 'Success Rate Trend',
+    'tools.detail.durationTrend': 'Duration Trend',
+    'tools.detail.relatedSessions': 'Related Sessions',
+    'tools.detail.successRateKpi': 'Success Rate',
+    'tools.detail.noData': 'No data',
+    'tools.detail.session': 'Session ID',
+    'tools.detail.project': 'Project',
+    'tools.detail.calls': 'Calls',
+    'tools.detail.date': 'Date',
 
     // Shared components
     'shared.datePicker.today': 'Today',

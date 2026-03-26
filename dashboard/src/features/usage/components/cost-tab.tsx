@@ -8,6 +8,7 @@ import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { formatCost, formatCostChart } from '@/shared/lib/format'
+import { cn } from '@/shared/lib/utils'
 import { useCostData } from '../hooks/use-cost-data'
 import type { CostTabProps } from '@/features/usage/types/usage'
 
@@ -44,7 +45,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         </ResponsiveContainer>
       </ChartCard>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className={cn('grid gap-4', project !== 'all' ? 'grid-cols-1' : 'grid-cols-2')}>
         <ChartCard title="Cost by Agent" height={160}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>
@@ -60,7 +61,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Cost by Project" height={160} empty={projectCosts.length === 0} emptyMessage="No project data">
+        {project === 'all' && <ChartCard title="Cost by Project" height={160} empty={projectCosts.length === 0} emptyMessage="No project data">
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={projectCosts.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} />
@@ -69,7 +70,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
               <Bar dataKey="cost" fill={AGENT_CHART_COLORS.all} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </ChartCard>
+        </ChartCard>}
       </div>
     </div>
   )
