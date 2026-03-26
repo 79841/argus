@@ -4,7 +4,7 @@ import { getDb } from '@/shared/lib/db'
 import { serverError } from '@/shared/lib/api-utils'
 import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
-  getTokenAttr, getSessionId, normalizeModelId, calculateCost,
+  getTokenAttr, getSessionId, getToolParams, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
   extractProjectFromArgs,
 } from '@/shared/lib/ingest-utils'
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
             // Auto-extract orchestration tool details from Claude Code
             if (agentType === 'claude' && eventName === 'tool_result' && toolName) {
-              const toolParams = getAttr(attrs, 'tool_parameters')
+              const toolParams = getToolParams(attrs)
               let params: Record<string, string> = {}
               if (toolParams) {
                 try {
@@ -146,9 +146,9 @@ export async function POST(request: NextRequest) {
                   durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
                   resolvedProject, agentType
                 )
-              } else if (toolName === 'Skill' && params.skill_name) {
+              } else if (toolName === 'Skill' && (params.skill_name || params.skill)) {
                 insertToolDetail.run(
-                  timestamp, sessionId, 'Skill', params.skill_name, 'skill',
+                  timestamp, sessionId, 'Skill', params.skill_name || params.skill, 'skill',
                   durationMs, toolSuccess === '' ? null : toolSuccess === 'true' ? 1 : 0,
                   resolvedProject, agentType
                 )

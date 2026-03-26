@@ -127,6 +127,10 @@ export const getSessionId = (attrs: KeyValue[] | undefined): string => {
   return getAttr(attrs, 'session.id') || getAttr(attrs, 'conversation.id')
 }
 
+export const getToolParams = (attrs: KeyValue[] | undefined): string => {
+  return getAttr(attrs, 'tool_parameters') || getAttr(attrs, 'tool_input')
+}
+
 export const normalizeModelId = (model: string): string => {
   return model.replace(/^models\//, '')
 }

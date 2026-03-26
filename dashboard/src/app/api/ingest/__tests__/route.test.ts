@@ -378,6 +378,44 @@ describe('Claude tool_parameters extraction', () => {
     expect(details[0].tool_name).toBe('mcp:linear-server')
   })
 
+  it('extracts Agent subagent_type from tool_input (new telemetry format)', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'Agent'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 60000),
+      mkAttr('tool_input', '{"description":"Ingest 파이프라인 분석","subagent_type":"Explore","mode":"auto"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('Agent')
+    expect(details[0].detail_name).toBe('Explore')
+    expect(details[0].detail_type).toBe('agent')
+  })
+
+  it('extracts Skill name from tool_input (new telemetry format)', async () => {
+    const payload = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'c-sess-1'),
+      mkAttr('tool_name', 'Skill'),
+      mkAttr('success', 'true'),
+      mkIntAttr('duration_ms', 100),
+      mkAttr('tool_input', '{"skill":"simplify"}'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+
+    const details = getToolDetails()
+    expect(details).toHaveLength(1)
+    expect(details[0].tool_name).toBe('Skill')
+    expect(details[0].detail_name).toBe('simplify')
+    expect(details[0].detail_type).toBe('skill')
+  })
+
   it('skips Agent without tool_parameters', async () => {
     const payload = mkPayload('claude-code', [
       mkAttr('event.name', 'claude_code.tool_result'),
