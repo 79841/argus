@@ -54,12 +54,14 @@ const ARGUS_ENV = (endpoint: string) => ({
   OTEL_LOG_USER_PROMPTS: '1',
 })
 
-const ARGUS_GEMINI_TELEMETRY = (endpoint: string) => ({
+export const buildGeminiTelemetry = (endpoint: string) => ({
   enabled: true,
   target: 'local',
   otlpEndpoint: endpoint,
   otlpProtocol: 'http',
+  logPrompts: true,
 })
+
 
 const CODEX_OTEL_SECTION = (endpoint: string) =>
   `\n[otel]\nlog_user_prompt = true\n\n[otel.exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.trace_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n\n[otel.metrics_exporter.otlp-http]\nendpoint = "${endpoint}/v1/logs"\nprotocol = "json"\n`
@@ -260,7 +262,7 @@ const connectGemini = (configPath: string, endpoint: string): ConnectResult => {
       }
     }
     const existingTelemetry = (data.telemetry as Record<string, unknown> | undefined) ?? {}
-    data.telemetry = { ...existingTelemetry, ...ARGUS_GEMINI_TELEMETRY(endpoint) }
+    data.telemetry = { ...existingTelemetry, ...buildGeminiTelemetry(endpoint) }
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
     return { agent: 'gemini', success: true, action: `telemetry 설정을 ${toDisplayPath(configPath)}에 병합했다` }
   } catch (err) {

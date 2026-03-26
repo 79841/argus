@@ -160,6 +160,67 @@ describe('scanRegisteredTools', () => {
     expect(agents).toHaveLength(1)
   })
 
+  it('~/.gemini/settings.json에서 글로벌 MCP 서버 스캔', () => {
+    mockFs['/mock-home/.gemini/settings.json'] = JSON.stringify({
+      mcpServers: {
+        'gemini-mcp-server': { command: 'npx', args: ['-y', 'some-server'] },
+        'another-server': { command: 'node', args: ['server.js'] },
+      },
+    })
+
+    const result = scanRegisteredTools()
+    const geminiMcps = result.filter((t) => t.type === 'mcp' && t.agentType === 'gemini')
+
+    expect(geminiMcps).toHaveLength(2)
+    expect(geminiMcps.find((t) => t.name === 'gemini-mcp-server')).toMatchObject({
+      name: 'gemini-mcp-server',
+      type: 'mcp',
+      scope: 'global',
+      agentType: 'gemini',
+    })
+    expect(geminiMcps.find((t) => t.name === 'another-server')).toMatchObject({
+      name: 'another-server',
+      type: 'mcp',
+      scope: 'global',
+      agentType: 'gemini',
+    })
+  })
+
+  it('~/.gemini/settings.json에 mcpServers가 없으면 MCP를 반환하지 않는다', () => {
+    mockFs['/mock-home/.gemini/settings.json'] = JSON.stringify({
+      theme: 'dark',
+    })
+
+    const result = scanRegisteredTools()
+    const geminiMcps = result.filter((t) => t.type === 'mcp' && t.agentType === 'gemini')
+    expect(geminiMcps).toHaveLength(0)
+  })
+
+  it('~/.gemini/settings.json이 없으면 MCP를 반환하지 않는다', () => {
+    const result = scanRegisteredTools()
+    const geminiMcps = result.filter((t) => t.type === 'mcp' && t.agentType === 'gemini')
+    expect(geminiMcps).toHaveLength(0)
+  })
+
+  it('claude, codex, gemini MCP를 모두 동시에 스캔한다', () => {
+    mockFs['/mock-home/.claude/.mcp.json'] = JSON.stringify({
+      mcpServers: { 'claude-server': {} },
+    })
+    mockFs['/mock-home/.codex/.mcp.json'] = JSON.stringify({
+      mcpServers: { 'codex-server': {} },
+    })
+    mockFs['/mock-home/.gemini/settings.json'] = JSON.stringify({
+      mcpServers: { 'gemini-server': {} },
+    })
+
+    const result = scanRegisteredTools()
+    const mcps = result.filter((t) => t.type === 'mcp' && t.scope === 'global')
+
+    expect(mcps.find((t) => t.name === 'claude-server' && t.agentType === 'claude')).toBeDefined()
+    expect(mcps.find((t) => t.name === 'codex-server' && t.agentType === 'codex')).toBeDefined()
+    expect(mcps.find((t) => t.name === 'gemini-server' && t.agentType === 'gemini')).toBeDefined()
+  })
+
   it('DB 에러 시 throw (catch하지 않음)', () => {
     testDb.close()
     expect(() => scanRegisteredTools()).toThrow()

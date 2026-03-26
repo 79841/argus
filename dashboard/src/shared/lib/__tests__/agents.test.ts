@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { AGENTS, AGENT_LIST, getAgentColor } from '@/shared/lib/agents'
+import { AGENTS, AGENT_LIST, getAgentColor, AGENT_TOOL_CATEGORIES } from '@/shared/lib/agents'
 import type { AgentType, AgentConfig } from '@/shared/lib/agents'
 
 describe('AGENTS', () => {
@@ -89,5 +89,47 @@ describe('getAgentColor', () => {
     expect(getAgentColor('unknown')).toBe('#8b5cf6')
     expect(getAgentColor('')).toBe('#8b5cf6')
     expect(getAgentColor('invalid')).toBe('#8b5cf6')
+  })
+})
+
+describe('AGENT_TOOL_CATEGORIES', () => {
+  it('File Read 카테고리에 Gemini read_many_files가 포함된다', () => {
+    expect(AGENT_TOOL_CATEGORIES['File Read']).toContain('read_many_files')
+  })
+
+  it('File Edit 카테고리에 Gemini replace가 포함된다', () => {
+    expect(AGENT_TOOL_CATEGORIES['File Edit']).toContain('replace')
+  })
+
+  it('Search 카테고리에 Gemini glob, grep_search, google_web_search가 포함된다', () => {
+    const search = AGENT_TOOL_CATEGORIES['Search']
+    expect(search).toContain('glob')
+    expect(search).toContain('grep_search')
+    expect(search).toContain('google_web_search')
+  })
+
+  it('Web 카테고리가 존재하고 web_fetch를 포함한다', () => {
+    expect(AGENT_TOOL_CATEGORIES['Web']).toBeDefined()
+    expect(AGENT_TOOL_CATEGORIES['Web']).toContain('web_fetch')
+  })
+
+  it('Memory 카테고리가 존재하고 save_memory를 포함한다', () => {
+    expect(AGENT_TOOL_CATEGORIES['Memory']).toBeDefined()
+    expect(AGENT_TOOL_CATEGORIES['Memory']).toContain('save_memory')
+  })
+
+  it('기존 카테고리(File Read, File Write, File Edit, Shell, Search, Orchestration)가 유지된다', () => {
+    const expectedCategories = ['File Read', 'File Write', 'File Edit', 'Shell', 'Search', 'Orchestration']
+    for (const category of expectedCategories) {
+      expect(AGENT_TOOL_CATEGORIES[category], `${category} 카테고리가 존재해야 한다`).toBeDefined()
+    }
+  })
+
+  it('기존 도구들이 그대로 유지된다', () => {
+    expect(AGENT_TOOL_CATEGORIES['File Read']).toContain('Read')
+    expect(AGENT_TOOL_CATEGORIES['File Edit']).toContain('Edit')
+    expect(AGENT_TOOL_CATEGORIES['Shell']).toContain('Bash')
+    expect(AGENT_TOOL_CATEGORIES['Search']).toContain('Glob')
+    expect(AGENT_TOOL_CATEGORIES['Orchestration']).toContain('Agent')
   })
 })
