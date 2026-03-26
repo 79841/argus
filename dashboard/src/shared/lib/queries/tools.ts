@@ -146,6 +146,90 @@ export const getToolDetailStats = (agentType: string, days: number = 7, project:
   ) as ToolDetailRow[]
 }
 
+export type ToolSingleStat = {
+  tool_name: string
+  invocation_count: number
+  success_count: number
+  fail_count: number
+  avg_duration_ms: number
+  total_cost: number
+  last_used: string
+}
+
+export type ToolDailyRow = {
+  date: string
+  count: number
+  success_count: number
+  fail_count: number
+  avg_duration_ms: number
+}
+
+export type ToolSessionRow = {
+  session_id: string
+  project_name: string
+  agent_type: string
+  call_count: number
+  success_count: number
+  date: string
+}
+
+export const getToolSingleStat = (toolName: string, days: number): ToolSingleStat | null => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      tool_name,
+      count(*) as invocation_count,
+      COALESCE(sum(CASE WHEN tool_success = 1 THEN 1 ELSE 0 END), 0) as success_count,
+      COALESCE(sum(CASE WHEN tool_success = 0 THEN 1 ELSE 0 END), 0) as fail_count,
+      COALESCE(avg(duration_ms), 0) as avg_duration_ms,
+      COALESCE(sum(cost_usd), 0) as total_cost,
+      max(timestamp) as last_used
+    FROM agent_logs
+    WHERE event_name = 'tool_result'
+      AND tool_name = ?
+      AND date(timestamp) >= date('now', '-' || ? || ' days')
+    GROUP BY tool_name
+  `).get(toolName, days) as ToolSingleStat | null
+}
+
+export const getToolDailyStats = (toolName: string, days: number): ToolDailyRow[] => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      date(timestamp) as date,
+      count(*) as count,
+      COALESCE(sum(CASE WHEN tool_success = 1 THEN 1 ELSE 0 END), 0) as success_count,
+      COALESCE(sum(CASE WHEN tool_success = 0 THEN 1 ELSE 0 END), 0) as fail_count,
+      COALESCE(avg(duration_ms), 0) as avg_duration_ms
+    FROM agent_logs
+    WHERE event_name = 'tool_result'
+      AND tool_name = ?
+      AND date(timestamp) >= date('now', '-' || ? || ' days')
+    GROUP BY date(timestamp)
+    ORDER BY date ASC
+  `).all(toolName, days) as ToolDailyRow[]
+}
+
+export const getToolRelatedSessions = (toolName: string, days: number, limit: number = 20): ToolSessionRow[] => {
+  const db = getDb()
+  return db.prepare(`
+    SELECT
+      session_id,
+      project_name,
+      agent_type,
+      count(*) as call_count,
+      COALESCE(sum(CASE WHEN tool_success = 1 THEN 1 ELSE 0 END), 0) as success_count,
+      date(max(timestamp)) as date
+    FROM agent_logs
+    WHERE event_name = 'tool_result'
+      AND tool_name = ?
+      AND date(timestamp) >= date('now', '-' || ? || ' days')
+    GROUP BY session_id
+    ORDER BY max(timestamp) DESC
+    LIMIT ?
+  `).all(toolName, days, limit) as ToolSessionRow[]
+}
+
 export const getIndividualToolStats = (agentType: string, days: number = 30, project: string = 'all', from?: string, to?: string): IndividualToolRow[] => {
   const db = getDb()
   const useDate = from && to

@@ -1,30 +1,14 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { FilterBar } from '@/shared/components/filter-bar'
 import { KpiCard } from '@/shared/components/ui/kpi-card'
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { useLocale } from '@/shared/lib/i18n'
 import type { AgentType } from '@/shared/lib/agents'
-import { formatCost, formatCostDetail, formatTokens } from '@/shared/lib/format'
+import { formatCost, formatCostDetail, formatTokens, formatDate, formatPercent } from '@/shared/lib/format'
 import { useProjectDetail, AgentDistChart, DailyCostChart } from '@/features/projects'
-const formatPct = (v: number) => `${(v * 100).toFixed(1)}%`
-const formatDate = (iso: string) => {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-const shortenDate = (iso: string) => {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
 
 export default function ProjectDetailPage() {
   const params = useParams()
@@ -40,7 +24,7 @@ export default function ProjectDetailPage() {
 
   const areaData = daily.map((d) => ({
     date: d.date,
-    label: shortenDate(d.date),
+    label: formatDate(d.date),
     cost: d.cost,
   }))
 
@@ -64,28 +48,8 @@ export default function ProjectDetailPage() {
     },
   ]
 
-  const activityPeriod =
-    stats?.first_activity && stats?.last_activity
-      ? `${formatDate(stats.first_activity)} — ${formatDate(stats.last_activity)}`
-      : '—'
-
   return (
-    <div className="flex h-full flex-col">
-      <FilterBar>
-        <Link
-          href="/projects"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="size-4" />
-          {t('projects.title')}
-        </Link>
-        <span className="text-sm font-semibold">{projectName}</span>
-        {activityPeriod !== '—' && (
-          <span className="text-xs text-muted-foreground">{activityPeriod}</span>
-        )}
-      </FilterBar>
-
-      <div className="flex-1 overflow-auto px-4 py-4">
+    <div className="px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 6개 */}
       <div className="grid grid-cols-3 gap-4 xl:grid-cols-6">
@@ -116,7 +80,7 @@ export default function ProjectDetailPage() {
         />
         <KpiCard
           label={t('projects.detail.kpi.cacheHitRate')}
-          value={loading ? '—' : formatPct(stats?.cache_hit_rate ?? 0)}
+          value={loading ? '—' : formatPercent(stats?.cache_hit_rate ?? 0)}
           loading={loading}
         />
       </div>
@@ -157,7 +121,6 @@ export default function ProjectDetailPage() {
           data={(stats?.agent_breakdown ?? []) as unknown as Record<string, unknown>[]}
         />
       </ChartCard>
-      </div>
       </div>
     </div>
   )
