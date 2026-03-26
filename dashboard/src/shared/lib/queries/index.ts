@@ -24,3 +24,6 @@ export { getConfigCompareStats } from './config-history'
 
 export type { ImpactMetrics, ImpactCompareResult, DailyMetricPoint } from './impact'
 export { getImpactCompare, getImpactCompareBatch, getDailyMetrics } from './impact'
+
+export type { HeartbeatPoint } from './heartbeat'
+export { getHeartbeatData } from './heartbeat'
