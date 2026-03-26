@@ -97,6 +97,7 @@ const scanMcp = (rootDir: string, scope: RegisteredToolScope, projectName?: stri
     return [
       ...scanMcpFile(path.join(rootDir, '.claude', '.mcp.json'), scope, 'claude'),
       ...scanMcpFile(path.join(rootDir, '.codex', '.mcp.json'), scope, 'codex'),
+      ...scanMcpFile(path.join(rootDir, '.gemini', 'settings.json'), scope, 'gemini'),
     ]
   }
   return scanMcpFile(path.join(rootDir, '.mcp.json'), scope, 'claude', projectName)

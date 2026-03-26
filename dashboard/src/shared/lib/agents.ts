@@ -61,11 +61,13 @@ export const getAgentColor = (agentType: string): string => {
 }
 
 export const AGENT_TOOL_CATEGORIES: Record<string, string[]> = {
-  'File Read': ['Read', 'read_file', 'cat'],
+  'File Read': ['Read', 'read_file', 'cat', 'read_many_files'],
   'File Write': ['Write', 'write_file', 'patch_file'],
-  'File Edit': ['Edit', 'edit_file'],
+  'File Edit': ['Edit', 'edit_file', 'replace'],
   'Shell': ['Bash', 'shell', 'run_shell_command'],
-  'Search': ['Glob', 'Grep', 'grep', 'list_directory', 'web_search'],
+  'Search': ['Glob', 'Grep', 'grep', 'list_directory', 'web_search', 'glob', 'grep_search', 'google_web_search'],
+  'Web': ['web_fetch'],
+  'Memory': ['save_memory'],
   'Orchestration': ['Agent', 'Skill'],
 }
 

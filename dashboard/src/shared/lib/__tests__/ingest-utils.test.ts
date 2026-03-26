@@ -181,12 +181,40 @@ describe('normalizeEventName', () => {
       expect(normalizeEventName('gemini_cli.ide_connection')).toBe('')
       expect(normalizeEventName('gemini_cli.tool_output_masked')).toBe('')
       expect(normalizeEventName('gemini_cli.ripgrep_fallback')).toBe('')
-      expect(normalizeEventName('gemini_cli.retry_attempt')).toBe('')
+    })
+    it('skips v0.35 renamed network_retry_attempt (was retry_attempt)', () => {
+      expect(normalizeEventName('gemini_cli.network_retry_attempt')).toBe('')
+    })
+    it('does not skip legacy retry_attempt — passes through as unknown event', () => {
+      expect(normalizeEventName('gemini_cli.retry_attempt')).toBe('retry_attempt')
+    })
+    it('skips v0.35 single events', () => {
+      expect(normalizeEventName('gemini_cli.startup_stats')).toBe('')
+      expect(normalizeEventName('gemini_cli.llm_loop_check')).toBe('')
+      expect(normalizeEventName('gemini_cli.hook_call')).toBe('')
+      expect(normalizeEventName('gemini_cli.edit_strategy')).toBe('')
+      expect(normalizeEventName('gemini_cli.edit_correction')).toBe('')
+      expect(normalizeEventName('gemini_cli.web_fetch_fallback_attempt')).toBe('')
+    })
+    it('skips billing events', () => {
+      expect(normalizeEventName('gemini_cli.overage_menu_shown')).toBe('')
+      expect(normalizeEventName('gemini_cli.overage_option_selected')).toBe('')
+      expect(normalizeEventName('gemini_cli.empty_wallet_menu_shown')).toBe('')
+      expect(normalizeEventName('gemini_cli.credit_purchase_click')).toBe('')
+      expect(normalizeEventName('gemini_cli.credits_used')).toBe('')
     })
     it('skips pattern-based events', () => {
       expect(normalizeEventName('gemini_cli.chat.some_event')).toBe('')
       expect(normalizeEventName('gemini_cli.extension_install')).toBe('')
       expect(normalizeEventName('gemini_cli.conseca.check')).toBe('')
+    })
+    it('skips v0.35 prefix-based events', () => {
+      expect(normalizeEventName('gemini_cli.onboarding.step1')).toBe('')
+      expect(normalizeEventName('gemini_cli.approval_mode_set')).toBe('')
+      expect(normalizeEventName('gemini_cli.agent.start')).toBe('')
+      expect(normalizeEventName('gemini_cli.keychain.read')).toBe('')
+      expect(normalizeEventName('gemini_cli.plan.created')).toBe('')
+      expect(normalizeEventName('gemini_cli.token_storage.saved')).toBe('')
     })
     it('passes through other gemini events', () => {
       expect(normalizeEventName('gemini_cli.user_prompt')).toBe('user_prompt')
@@ -221,6 +249,21 @@ describe('getTokenAttr', () => {
   })
   it('returns 0 when neither exists', () => {
     expect(getTokenAttr([], 'input_tokens', 'input_token_count')).toBe(0)
+  })
+  it('falls back to gemini key (cached_content_token_count)', () => {
+    const attrs = [mkIntAttr('cached_content_token_count', 200)]
+    expect(getTokenAttr(attrs, 'cache_read_tokens', 'cached_token_count', 'cached_content_token_count')).toBe(200)
+  })
+  it('prefers claude key over gemini key', () => {
+    const attrs = [mkIntAttr('cache_read_tokens', 100), mkIntAttr('cached_content_token_count', 200)]
+    expect(getTokenAttr(attrs, 'cache_read_tokens', 'cached_token_count', 'cached_content_token_count')).toBe(100)
+  })
+  it('returns 0 when all three keys are missing', () => {
+    expect(getTokenAttr([], 'cache_read_tokens', 'cached_token_count', 'cached_content_token_count')).toBe(0)
+  })
+  it('supports reasoning token fallback (thoughts_token_count)', () => {
+    const attrs = [mkIntAttr('thoughts_token_count', 500)]
+    expect(getTokenAttr(attrs, 'reasoning_token_count', 'thoughts_token_count')).toBe(500)
   })
 })
 

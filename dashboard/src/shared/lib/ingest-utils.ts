@@ -63,6 +63,22 @@ export const detectAgentType = (serviceName: string): string => {
   return 'claude'
 }
 
+const GEMINI_SKIP_EVENTS = new Set([
+  'tool_output_truncated', 'malformed_json_response', 'flash_fallback',
+  'chat_compression', 'model_routing', 'slash_command', 'conversation_finished',
+  'rewind', 'next_speaker_check', 'ide_connection', 'tool_output_masked',
+  'ripgrep_fallback', 'network_retry_attempt',
+  'startup_stats', 'llm_loop_check', 'hook_call',
+  'edit_strategy', 'edit_correction', 'web_fetch_fallback_attempt',
+  'overage_menu_shown', 'overage_option_selected', 'empty_wallet_menu_shown',
+  'credit_purchase_click', 'credits_used',
+])
+
+const GEMINI_SKIP_PREFIXES = [
+  'chat.', 'extension_', 'conseca.',
+  'onboarding.', 'approval_mode', 'agent.', 'keychain.', 'plan.', 'token_storage.',
+]
+
 export const normalizeEventName = (raw: string, attrs?: KeyValue[]): string => {
   if (raw.startsWith('codex.')) {
     const name = raw.slice(6)
@@ -91,19 +107,20 @@ export const normalizeEventName = (raw: string, attrs?: KeyValue[]): string => {
     if (name === 'api_request') return ''
     if (name === 'tool_call') return 'tool_result'
     if (name === 'config') return 'session_start'
-    if (name === 'tool_output_truncated' || name === 'malformed_json_response' || name === 'flash_fallback' || name === 'chat_compression' || name === 'model_routing' || name === 'slash_command' || name === 'conversation_finished') return ''
-    if (name === 'rewind' || name === 'next_speaker_check' || name === 'ide_connection' || name === 'tool_output_masked' || name === 'ripgrep_fallback' || name === 'retry_attempt') return ''
-    if (name.startsWith('chat.') || name.startsWith('extension_') || name.startsWith('conseca.')) return ''
+    if (GEMINI_SKIP_EVENTS.has(name)) return ''
+    if (GEMINI_SKIP_PREFIXES.some((p) => name.startsWith(p))) return ''
     return name
   }
   if (raw.startsWith('gen_ai.')) return ''
   return raw
 }
 
-export const getTokenAttr = (attrs: KeyValue[] | undefined, claudeKey: string, codexKey: string): number => {
+export const getTokenAttr = (attrs: KeyValue[] | undefined, claudeKey: string, codexKey: string, geminiKey?: string): number => {
   const val = getNumAttr(attrs, claudeKey)
   if (val > 0) return val
-  return getNumAttr(attrs, codexKey)
+  const codexVal = getNumAttr(attrs, codexKey)
+  if (codexVal > 0) return codexVal
+  return geminiKey ? getNumAttr(attrs, geminiKey) : 0
 }
 
 export const getSessionId = (attrs: KeyValue[] | undefined): string => {

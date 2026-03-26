@@ -82,11 +82,22 @@ argus/
 
 Claude Code의 OTel 텔레메트리를 직접 수신한다. 설정:
 
+### Claude Code
+
 ```bash
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
+```
+
+### Gemini CLI
+
+```bash
+export GEMINI_TELEMETRY_ENABLED=true
+export GEMINI_TELEMETRY_TARGET=local
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
+export GEMINI_TELEMETRY_OTLP_PROTOCOL=http
 ```
 
 ### 수신 엔드포인트

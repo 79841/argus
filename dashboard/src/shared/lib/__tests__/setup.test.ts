@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import os from 'os'
-import { toDisplayPath } from '@/shared/lib/setup'
+import { toDisplayPath, buildGeminiTelemetry } from '@/shared/lib/setup'
 
 const HOME = os.homedir()
 
@@ -26,5 +26,30 @@ describe('toDisplayPath', () => {
     const mixedPath = `${HOME}/.claude\\settings.json`
     const result = toDisplayPath(mixedPath)
     expect(result).not.toContain('\\')
+  })
+})
+
+describe('buildGeminiTelemetry', () => {
+  it('logPrompts: true를 포함한다', () => {
+    const result = buildGeminiTelemetry('http://localhost:9845')
+    expect(result.logPrompts).toBe(true)
+  })
+
+  it('필수 필드를 모두 포함한다', () => {
+    const endpoint = 'http://localhost:9845'
+    const result = buildGeminiTelemetry(endpoint)
+    expect(result).toEqual({
+      enabled: true,
+      target: 'local',
+      otlpEndpoint: endpoint,
+      otlpProtocol: 'http',
+      logPrompts: true,
+    })
+  })
+
+  it('전달된 endpoint를 otlpEndpoint에 그대로 설정한다', () => {
+    const endpoint = 'http://custom:3000'
+    const result = buildGeminiTelemetry(endpoint)
+    expect(result.otlpEndpoint).toBe(endpoint)
   })
 })

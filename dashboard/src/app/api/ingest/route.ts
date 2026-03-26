@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
             const sessionId = getSessionId(attrs)
             const inputTokens = getTokenAttr(attrs, 'input_tokens', 'input_token_count')
             const outputTokens = getTokenAttr(attrs, 'output_tokens', 'output_token_count')
-            const cacheReadTokens = getTokenAttr(attrs, 'cache_read_tokens', 'cached_token_count') || getNumAttr(attrs, 'cached_content_token_count')
+            const cacheReadTokens = getTokenAttr(attrs, 'cache_read_tokens', 'cached_token_count', 'cached_content_token_count')
             const cacheCreationTokens = getNumAttr(attrs, 'cache_creation_tokens')
-            const reasoningTokens = getNumAttr(attrs, 'reasoning_token_count') || getNumAttr(attrs, 'thoughts_token_count')
+            const reasoningTokens = getTokenAttr(attrs, 'reasoning_token_count', 'thoughts_token_count')
             const model = normalizeModelId(getAttr(attrs, 'model'))
 
             let costUsd = getNumAttr(attrs, 'cost_usd')
