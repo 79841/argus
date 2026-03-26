@@ -8,7 +8,8 @@ import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { useLocale } from '@/shared/lib/i18n'
 import type { AgentType } from '@/shared/lib/agents'
 import { formatCost, formatCostDetail, formatTokens, formatDate, formatPercent } from '@/shared/lib/format'
-import { useProjectDetail, AgentDistChart, DailyCostChart } from '@/features/projects'
+import { useProjectDetail, useProjectHeatmap, AgentDistChart, DailyCostChart } from '@/features/projects'
+import { UsageHeatmap } from '@/features/dashboard/components/usage-heatmap'
 
 export default function ProjectDetailPage() {
   const params = useParams()
@@ -16,6 +17,7 @@ export default function ProjectDetailPage() {
   const { t } = useLocale()
 
   const { loading, stats, daily } = useProjectDetail(projectName)
+  const { data: heatmapData } = useProjectHeatmap(projectName)
 
   const pieData = (stats?.agent_breakdown ?? []).map((b) => ({
     name: b.agent_type,
@@ -84,6 +86,9 @@ export default function ProjectDetailPage() {
           loading={loading}
         />
       </div>
+
+      {/* 히트맵 */}
+      <UsageHeatmap data={heatmapData} agentType="all" />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* 에이전트별 비용 분포 PieChart */}

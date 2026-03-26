@@ -109,6 +109,12 @@ export const getOverviewStats = async (agentType: string) => {
 - shadcn/ui 컴포넌트는 `src/shared/components/ui/`에 위치
 - 차트: Recharts (`ResponsiveContainer`, `LineChart`, `BarChart`, `PieChart`)
 
+### Borderless 디자인
+
+- 영역 구분에 테두리(border)를 사용하지 않는다
+- 배경색 차이, 간격(gap/padding), 그림자(shadow)로 영역을 구분한다
+- 카드 컴포넌트의 테두리는 허용 (ChartCard, KpiCard 등)
+
 ### Import 경로
 
 ```typescript

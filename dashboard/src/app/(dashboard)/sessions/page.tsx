@@ -6,7 +6,7 @@ import { ProjectFilter } from '@/shared/components/project-filter'
 import { DateRangePicker } from '@/shared/components/date-range-picker'
 import { FilterBar } from '@/shared/components/filter-bar'
 import { EmptyState } from '@/shared/components/ui/empty-state'
-import { SessionPreview } from '@/features/sessions/components/session-preview'
+import { SessionDetail } from '@/features/sessions/components/session-detail'
 import type { SortOption } from '@/shared/types/common'
 import { useLocale } from '@/shared/lib/i18n'
 import { formatCost, computeCacheRate } from '@/shared/lib/format'
@@ -65,8 +65,8 @@ export default function SessionsPage() {
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">
-        {/* Left Panel: Session List (35%) */}
-        <div className="flex w-[35%] flex-col border-r border-[var(--border-subtle)]">
+        {/* Session List */}
+        <div className={`flex flex-col ${selectedId ? 'w-[35%]' : 'w-full'}`}>
           <div className="flex items-center justify-between px-4 py-2">
             <span className="text-xs text-muted-foreground">
               {loading ? t('sessions.loading') : `${sortedSessions.length}${t('sessions.count')}`}
@@ -97,31 +97,18 @@ export default function SessionsPage() {
           </div>
         </div>
 
-        {/* Right Panel: Session Detail (65%) */}
-        <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide">
-          {!selectedId ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-30"
-              >
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <span className="text-sm">{t('sessions.detail.placeholder')}</span>
-            </div>
-          ) : selectedSession ? (
-            <SessionPreview session={selectedSession} events={detailEvents} loading={detailLoading} />
-          ) : null}
-        </div>
+        {/* Session Detail (65%) — 선택 시에만 표시 */}
+        {selectedId && (
+          <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide">
+            {detailLoading ? (
+              <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                {t('sessions.loading')}
+              </div>
+            ) : selectedSession ? (
+              <SessionDetail session={selectedSession} events={detailEvents} />
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   )

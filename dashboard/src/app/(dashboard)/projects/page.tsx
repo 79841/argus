@@ -65,60 +65,69 @@ export default function ProjectsPage() {
     cost: p.total_cost,
   }))
 
+  const mainContent = (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-3 gap-4">
+        <KpiCard
+          label={t('projects.kpi.totalProjects')}
+          value={loading ? '—' : projects.length.toLocaleString()}
+          loading={loading}
+        />
+        <KpiCard
+          label={t('projects.kpi.totalCost')}
+          value={loading ? '—' : formatCost(totalCost)}
+          loading={loading}
+        />
+        <KpiCard
+          label={t('projects.kpi.mostActive')}
+          value={loading ? '—' : (mostActive?.project_name ?? '—')}
+          sub={mostActive ? `${mostActive.session_count.toLocaleString()} ${t('projects.sessions')}` : undefined}
+          loading={loading}
+        />
+      </div>
+
+      <ChartCard
+        title={t('projects.chart.costComparison')}
+        height={320}
+        loading={loading}
+        empty={!loading && projects.length === 0}
+        emptyMessage={t('projects.chart.noData')}
+      >
+        <CostComparisonChart data={chartData} />
+      </ChartCard>
+
+      <ChartCard
+        title={t('projects.table.title')}
+        loading={loading}
+        empty={!loading && projects.length === 0}
+        emptyMessage={t('projects.chart.noData')}
+      >
+        <DataTable
+          columns={columns}
+          data={projects as unknown as Record<string, unknown>[]}
+          onRowClick={(row) => setSelectedProject(row.project_name as string)}
+        />
+      </ChartCard>
+    </div>
+  )
+
   return (
     <div className="flex h-full flex-col">
       <FilterBar><span className="text-sm font-semibold">{t('projects.title')}</span></FilterBar>
-      <div className="flex flex-1 min-h-0">
-        <div className="w-[65%] overflow-y-auto px-4 py-4">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-3 gap-4">
-              <KpiCard
-                label={t('projects.kpi.totalProjects')}
-                value={loading ? '—' : projects.length.toLocaleString()}
-                loading={loading}
-              />
-              <KpiCard
-                label={t('projects.kpi.totalCost')}
-                value={loading ? '—' : formatCost(totalCost)}
-                loading={loading}
-              />
-              <KpiCard
-                label={t('projects.kpi.mostActive')}
-                value={loading ? '—' : (mostActive?.project_name ?? '—')}
-                sub={mostActive ? `${mostActive.session_count.toLocaleString()} ${t('projects.sessions')}` : undefined}
-                loading={loading}
-              />
-            </div>
-
-            <ChartCard
-              title={t('projects.chart.costComparison')}
-              height={320}
-              loading={loading}
-              empty={!loading && projects.length === 0}
-              emptyMessage={t('projects.chart.noData')}
-            >
-              <CostComparisonChart data={chartData} />
-            </ChartCard>
-
-            <ChartCard
-              title={t('projects.table.title')}
-              loading={loading}
-              empty={!loading && projects.length === 0}
-              emptyMessage={t('projects.chart.noData')}
-            >
-              <DataTable
-                columns={columns}
-                data={projects as unknown as Record<string, unknown>[]}
-                onRowClick={(row) => setSelectedProject(row.project_name as string)}
-              />
-            </ChartCard>
+      {selectedProject ? (
+        <div className="flex flex-1 min-h-0">
+          <div className="w-[65%] overflow-y-auto px-4 py-4">
+            {mainContent}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ProjectPreviewSidebar projectName={selectedProject} />
           </div>
         </div>
-
-        <div className="flex-1 border-l border-[var(--border-subtle)] overflow-y-auto">
-          <ProjectPreviewSidebar projectName={selectedProject} />
+      ) : (
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {mainContent}
         </div>
-      </div>
+      )}
     </div>
   )
 }

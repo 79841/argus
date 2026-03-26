@@ -68,7 +68,7 @@ export default function ProjectRulesPage() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-        <div className="w-[35%] border-r border-[var(--border-subtle)] flex flex-col overflow-auto">
+        <div className="w-[35%] flex flex-col overflow-auto">
           <FileTree
             loading={loading}
             projectGroups={filteredProjectGroups}

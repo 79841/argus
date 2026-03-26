@@ -144,6 +144,11 @@ export GEMINI_TELEMETRY_OTLP_PROTOCOL=http
 - import 경로: `@/shared/`, `@/features/` 접두사 사용
 - Tailwind CSS 클래스 사용, 인라인 스타일 금지
 
+#### Borderless 디자인
+- 영역 구분에 테두리(border)를 사용하지 않는다
+- 배경색 차이, 간격(gap/padding), 그림자(shadow)로 영역을 구분한다
+- 카드 컴포넌트의 테두리는 허용 (ChartCard, KpiCard 등)
+
 ### i18n (다국어)
 - **UI 텍스트에 한글을 직접 하드코딩하지 않는다** — 반드시 `src/shared/lib/i18n.ts`의 번역 키를 사용한다
 - `useLocale()` 훅의 `t('key')` 함수로 번역 문자열을 가져온다
