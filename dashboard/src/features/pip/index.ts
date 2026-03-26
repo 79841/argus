@@ -1,0 +1,13 @@
+export { HeartbeatChart } from './components/heartbeat-chart'
+export { useHeartbeat } from './hooks/use-heartbeat'
+export { transformHeartbeat } from './lib/transform'
+export type { ChartDataPoint, HeartbeatRaw } from './lib/transform'
+
+export { SessionToast } from './components/session-toast'
+export { SessionToastContainer } from './components/session-toast-container'
+export { detectCompletedSessions, buildSessionSummary, formatNotificationText } from './lib/session-completion'
+export type { SessionSummary } from './lib/session-completion'
+export { sendSystemNotification } from './lib/electron-notification'
+export { useNotificationQueue } from './hooks/use-notification-queue'
+export type { Notification } from './hooks/use-notification-queue'
+export { useSessionCompletion } from './hooks/use-session-completion'

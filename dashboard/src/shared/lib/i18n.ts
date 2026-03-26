@@ -409,6 +409,16 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.calls': '호출',
     'tools.detail.date': '날짜',
 
+    // PIP (Picture-in-Picture) 심박 모니터
+    'pip.heartbeat.title': '토큰 심박',
+    'pip.heartbeat.noData': '활동 데이터 없음',
+    'pip.heartbeat.tokens': '토큰',
+
+    // PIP — 세션 완료 알림
+    'pip.session.complete': '{agent} 세션 완료',
+    'pip.session.summary': '{cost}, {count} 요청, {duration}',
+    'pip.session.requests': '요청',
+
     // Shared components
     'shared.datePicker.today': '오늘',
     'shared.datePicker.yesterday': '어제',
@@ -824,6 +834,16 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.project': 'Project',
     'tools.detail.calls': 'Calls',
     'tools.detail.date': 'Date',
+
+    // PIP (Picture-in-Picture) heartbeat monitor
+    'pip.heartbeat.title': 'Token Heartbeat',
+    'pip.heartbeat.noData': 'No activity data',
+    'pip.heartbeat.tokens': 'Tokens',
+
+    // PIP — Session completion notifications
+    'pip.session.complete': '{agent} session complete',
+    'pip.session.summary': '{cost}, {count} requests, {duration}',
+    'pip.session.requests': 'requests',
 
     // Shared components
     'shared.datePicker.today': 'Today',
