@@ -19,7 +19,7 @@ export default function ProjectUsagePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
+      <div className="flex items-center gap-2 px-4 py-2">
         <AgentFilter value={agentType} onChange={setAgentType} />
         <div className="ml-auto">
           <DateRangePicker value={dateRange} onChange={setDateRange} />

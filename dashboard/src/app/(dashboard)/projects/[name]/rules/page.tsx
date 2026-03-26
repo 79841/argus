@@ -62,7 +62,7 @@ export default function ProjectRulesPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border-subtle)]">
+      <div className="flex items-center gap-2 px-4 py-2">
         <span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span>
         <AgentFilter value={agentType} onChange={setAgentType} />
       </div>

@@ -33,7 +33,7 @@ export const SessionListItem = ({ session: s, selected, cacheRate, onSelect }: S
 
   return (
     <div
-      className={`group relative border-b border-[var(--border-subtle)] transition-colors hover:bg-muted/50 ${
+      className={`group relative mx-2 rounded-lg transition-colors hover:bg-muted/50 ${
         selected ? 'bg-muted ring-1 ring-inset ring-muted-foreground/20' : ''
       }`}
     >

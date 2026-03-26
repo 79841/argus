@@ -38,7 +38,7 @@ export default function ProjectSessionsPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Filter Bar */}
-      <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
+      <div className="flex items-center gap-2 px-4 py-2">
         <AgentFilter value={agentType} onChange={setAgentType} />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
         <div className="flex flex-1 items-center gap-2 min-w-[180px]">
@@ -65,7 +65,7 @@ export default function ProjectSessionsPage() {
       {/* Main Content */}
       <div className="flex min-h-0 flex-1">
         {/* Session List */}
-        <div className={`flex flex-col ${selectedId ? 'w-[35%]' : 'w-full'}`}>
+        <div className="flex w-[35%] flex-col">
           <div className="flex items-center justify-between px-4 py-2">
             <span className="text-xs text-muted-foreground">
               {loading ? t('sessions.loading') : `${sortedSessions.length}${t('sessions.count')}`}
@@ -96,18 +96,20 @@ export default function ProjectSessionsPage() {
           </div>
         </div>
 
-        {/* Session Detail (65%) — 선택 시에만 표시 */}
-        {selectedId && (
-          <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide">
-            {detailLoading ? (
-              <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-                {t('sessions.loading')}
-              </div>
-            ) : selectedSession ? (
-              <SessionDetail session={selectedSession} events={detailEvents} />
-            ) : null}
-          </div>
-        )}
+        {/* Session Detail (65%) */}
+        <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide">
+          {!selectedId ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
+              <EmptyState title={t('sessions.detail.placeholder')} />
+            </div>
+          ) : detailLoading ? (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {t('sessions.loading')}
+            </div>
+          ) : selectedSession ? (
+            <SessionDetail session={selectedSession} events={detailEvents} />
+          ) : null}
+        </div>
       </div>
     </div>
   )
