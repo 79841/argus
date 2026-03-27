@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import path from 'path'
 import os from 'os'
+import fs from 'fs'
 
 // isPathSafe 로직을 직접 검증하기 위해 동일한 구현을 테스트용으로 재현
 // route.ts의 private 함수이므로 로직을 추출하여 단위 테스트
+
+const MAX_PATH_LENGTH = 500
 
 const normalizePath = (p: string): string =>
   process.platform === 'win32' ? p.toLowerCase() : p
@@ -14,14 +17,29 @@ const resolveUserPath = (filePath: string): string =>
   path.join(getUserHome(), filePath.slice(2))
 
 const isPathSafe = (filePath: string, projectRoot?: string): boolean => {
+  if (filePath.length > MAX_PATH_LENGTH) return false
   if (filePath.startsWith('~/')) {
-    const resolved = normalizePath(path.resolve(resolveUserPath(filePath)))
+    const absPath = resolveUserPath(filePath)
+    let realPath: string
+    try {
+      realPath = fs.realpathSync(absPath)
+    } catch {
+      realPath = path.resolve(absPath)
+    }
+    const resolved = normalizePath(realPath)
     const home = normalizePath(getUserHome())
     return resolved.startsWith(home + path.sep) || resolved === home
   }
   if (!projectRoot) return false
-  const normalizedRoot = normalizePath(projectRoot)
-  const resolved = normalizePath(path.resolve(projectRoot, filePath))
+  const normalizedRoot = normalizePath(path.resolve(projectRoot))
+  const absPath = path.resolve(projectRoot, filePath)
+  let realPath: string
+  try {
+    realPath = fs.realpathSync(absPath)
+  } catch {
+    realPath = absPath
+  }
+  const resolved = normalizePath(realPath)
   return resolved.startsWith(normalizedRoot + path.sep) || resolved === normalizedRoot
 }
 
@@ -73,6 +91,24 @@ describe('isPathSafe — 프로젝트 루트 경로', () => {
   it('프로젝트 루트 자체(.)는 resolved === normalizedRoot 조건으로 허용된다', () => {
     // path.resolve(projectRoot, '.') === projectRoot 이므로 isPathSafe는 true를 반환한다
     expect(isPathSafe('.', projectRoot)).toBe(true)
+  })
+})
+
+describe('isPathSafe — 경로 길이 제한', () => {
+  it('500자를 초과하는 경로는 거부한다', () => {
+    const longPath = '~/' + 'a'.repeat(500)
+    expect(isPathSafe(longPath)).toBe(false)
+  })
+
+  it('정확히 500자인 경로는 거부한다', () => {
+    const path500 = '~/' + 'a'.repeat(499)
+    expect(path500.length).toBe(501)
+    expect(isPathSafe(path500)).toBe(false)
+  })
+
+  it('500자 이하인 경로는 길이 제한으로 거부되지 않는다', () => {
+    const shortPath = '~/.claude/settings.json'
+    expect(isPathSafe(shortPath)).toBe(true)
   })
 })
 

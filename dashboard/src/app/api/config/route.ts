@@ -5,6 +5,8 @@ import os from 'os'
 import { getDb } from '@/shared/lib/db'
 import { errorResponse, serverError } from '@/shared/lib/api-utils'
 
+const MAX_PATH_LENGTH = 500
+
 const getUserHome = () => os.homedir()
 
 const CONFIG_FILE_PATTERNS = [
@@ -30,14 +32,29 @@ const normalizePath = (p: string): string =>
   process.platform === 'win32' ? p.toLowerCase() : p
 
 const isPathSafe = (filePath: string, projectRoot?: string): boolean => {
+  if (filePath.length > MAX_PATH_LENGTH) return false
   if (filePath.startsWith('~/')) {
-    const resolved = normalizePath(path.resolve(resolveUserPath(filePath)))
+    const absPath = resolveUserPath(filePath)
+    let realPath: string
+    try {
+      realPath = fs.realpathSync(absPath)
+    } catch {
+      realPath = path.resolve(absPath)
+    }
+    const resolved = normalizePath(realPath)
     const home = normalizePath(getUserHome())
     return resolved.startsWith(home + path.sep) || resolved === home
   }
   if (!projectRoot) return false
-  const normalizedRoot = normalizePath(projectRoot)
-  const resolved = normalizePath(path.resolve(projectRoot, filePath))
+  const normalizedRoot = normalizePath(path.resolve(projectRoot))
+  const absPath = path.resolve(projectRoot, filePath)
+  let realPath: string
+  try {
+    realPath = fs.realpathSync(absPath)
+  } catch {
+    realPath = absPath
+  }
+  const resolved = normalizePath(realPath)
   return resolved.startsWith(normalizedRoot + path.sep) || resolved === normalizedRoot
 }
 
@@ -209,15 +226,26 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { path: filePath, content, projectRoot } = body as {
-      path: string
-      content: string
-      projectRoot?: string
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return errorResponse('Invalid JSON')
+    }
+    const filePath = body['path']
+    const content = body['content']
+    const projectRoot = typeof body['projectRoot'] === 'string' ? body['projectRoot'] : undefined
+
+    if (!filePath || typeof filePath !== 'string') {
+      return errorResponse('path is required')
     }
 
-    if (!filePath || typeof content !== 'string') {
-      return errorResponse('path and content are required')
+    if (filePath.length > MAX_PATH_LENGTH) {
+      return errorResponse('path too long')
+    }
+
+    if (typeof content !== 'string') {
+      return errorResponse('content is required')
     }
 
     if (!isPathSafe(filePath, projectRoot)) {

@@ -3,6 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ConfigTimeline } from '@/features/usage/components/config-timeline'
 import type { ConfigChange } from '@/shared/lib/config-tracker'
 
+vi.mock('@/shared/lib/i18n', () => ({
+  useLocale: () => ({
+    t: (key: string) => key,
+    locale: 'ko',
+    setLocale: vi.fn(),
+  }),
+}))
+
 vi.mock('@/shared/lib/data-client', () => ({
   dataClient: {
     query: vi.fn(),
@@ -34,7 +42,7 @@ describe('ConfigTimeline', () => {
 
   it('빈 데이터에서 "No config change history" 메시지를 표시한다', () => {
     render(<ConfigTimeline data={[]} />)
-    expect(screen.getByText('No config change history found.')).toBeInTheDocument()
+    expect(screen.getByText('config.timeline.empty')).toBeInTheDocument()
   })
 
   it('변경 항목의 파일 경로를 표시한다', () => {
@@ -58,7 +66,7 @@ describe('ConfigTimeline', () => {
   it('초기에는 "Select an item" 안내를 표시한다', () => {
     const data = [makeChange()]
     render(<ConfigTimeline data={data} />)
-    expect(screen.getByText('Select an item from the timeline to view its diff.')).toBeInTheDocument()
+    expect(screen.getByText('config.timeline.selectItem')).toBeInTheDocument()
   })
 
   it('항목 클릭 시 diff를 오른쪽 패널에 표시한다', () => {
@@ -82,7 +90,7 @@ describe('ConfigTimeline', () => {
     fireEvent.click(button)
     fireEvent.click(button)
 
-    expect(screen.getByText('Select an item from the timeline to view its diff.')).toBeInTheDocument()
+    expect(screen.getByText('config.timeline.selectItem')).toBeInTheDocument()
   })
 
   it('항목 클릭 시 ComparePanel을 로드한다', async () => {
@@ -98,7 +106,7 @@ describe('ConfigTimeline', () => {
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(screen.getByText('Before vs After (7 days)')).toBeInTheDocument()
+      expect(screen.getByText('config.timeline.beforeAfter')).toBeInTheDocument()
     })
   })
 
@@ -109,7 +117,7 @@ describe('ConfigTimeline', () => {
     const button = screen.getByRole('button', { name: /chore: update settings/ })
     fireEvent.click(button)
 
-    expect(screen.getByText('No diff data available.')).toBeInTheDocument()
+    expect(screen.getByText('config.timeline.noDiff')).toBeInTheDocument()
   })
 
   it('diff에서 추가된 줄(+)을 녹색으로 렌더링한다', () => {

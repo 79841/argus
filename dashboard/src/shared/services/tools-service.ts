@@ -1,20 +1,22 @@
 import { dataClient } from '@/shared/lib/data-client'
 import type { QueryParams } from '@/shared/types/electron'
+import type { ToolUsageRow, ToolDetailRow, DailyToolRow, IndividualToolRow, ToolSingleStat, ToolDailyRow, ToolSessionRow } from '@/shared/lib/queries'
+import type { RegisteredTool } from '@/shared/lib/registered-tools'
 
 type ToolsResponse = {
-  tools?: unknown[]
-  daily?: unknown[]
-  individual?: unknown[]
+  tools?: ToolUsageRow[] | ToolDetailRow[]
+  daily?: DailyToolRow[]
+  individual?: IndividualToolRow[]
 }
 
 type RegisteredToolsResponse = {
-  tools?: unknown[]
+  tools?: RegisteredTool[]
 }
 
 type ToolDetailResponse = {
-  tool?: unknown
-  daily?: unknown[]
-  sessions?: unknown[]
+  tool?: ToolSingleStat | null
+  daily?: ToolDailyRow[]
+  sessions?: ToolSessionRow[]
 }
 
 export const toolsService = {

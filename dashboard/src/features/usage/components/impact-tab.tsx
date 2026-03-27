@@ -14,6 +14,7 @@ import { DiffLine } from '@/shared/components/ui/diff-line'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { formatCostChart, formatTokens, formatDuration } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
+import { useLocale } from '@/shared/lib/i18n'
 import { useImpactData } from '../hooks/use-impact-data'
 import type { EnrichedChange } from '../hooks/use-impact-data'
 import type { ImpactTabProps, CategoryType } from '@/features/usage/types/usage'
@@ -72,9 +73,10 @@ const MetricCell = ({ before, after, metric }: { before: number; after: number; 
 }
 
 const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDays: number }) => {
+  const { t } = useLocale()
   const [diffOpen, setDiffOpen] = useState(false)
 
-  const dateStr = new Date(change.date).toLocaleDateString('ko-KR', {
+  const dateStr = new Date(change.date).toLocaleDateString(undefined, {
     year: 'numeric', month: '2-digit', day: '2-digit',
   })
 
@@ -117,7 +119,7 @@ const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDa
           </>
         ) : (
           <div className="py-2 text-xs text-muted-foreground">
-            No metric data available for comparison period
+            {t('impact.noMetricData')}
           </div>
         )}
 
@@ -129,7 +131,7 @@ const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDa
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               {diffOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-              View Diff
+              {t('impact.viewDiff')}
             </button>
             {diffOpen && (
               <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-muted/30 p-3 text-[11px] font-mono leading-5">
@@ -146,6 +148,7 @@ const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDa
 }
 
 export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => {
+  const { t } = useLocale()
   const [category, setCategory] = useState<CategoryType>('all')
   const [compareDays, setCompareDays] = useState<number>(7)
 
@@ -170,7 +173,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Category:</span>
+          <span className="text-xs font-medium text-muted-foreground">{t('impact.category')}</span>
           <div className="flex gap-1">
             {CATEGORY_OPTIONS.map(c => (
               <button
@@ -191,7 +194,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Compare:</span>
+          <span className="text-xs font-medium text-muted-foreground">{t('impact.compare')}</span>
           <div className="flex gap-1">
             {COMPARE_OPTIONS.map(d => (
               <button
@@ -213,15 +216,15 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">Loading...</div>
+        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">{t('impact.loading')}</div>
       ) : changes.length === 0 ? (
         <EmptyState
-          title="No config changes"
-          description="Config changes to CLAUDE.md, .mcp.json, etc. will appear here with before/after impact analysis."
+          title={t('impact.empty.title')}
+          description={t('impact.empty.desc')}
         />
       ) : (
         <>
-          <ChartCard title="Impact Timeline" height={220} empty={dailyMetrics.length === 0}>
+          <ChartCard title={t('impact.timeline')} height={220} empty={dailyMetrics.length === 0}>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={dailyMetrics} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid {...CHART_THEME.grid} />
@@ -273,7 +276,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
           </ChartCard>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Change Impact Details</h3>
+            <h3 className="text-sm font-semibold">{t('impact.changeDetails')}</h3>
             {changes.map((change) => (
               <ChangeCard
                 key={`${change.commit_hash}-${change.file_path}`}

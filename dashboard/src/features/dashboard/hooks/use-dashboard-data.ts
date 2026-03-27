@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAutoRefresh } from '@/shared/hooks/use-auto-refresh'
 import { overviewService, dailyService, sessionsService } from '@/shared/services'
 import type { OverviewStats, OverviewDelta, AgentTodaySummary, AgentDistribution, DailyStats, SessionRow } from '@/shared/lib/queries'
+import type { OverviewResponse } from '@/shared/services/overview-service'
 
 type DashboardData = {
   stats: OverviewStats | null
@@ -41,13 +42,12 @@ export const useDashboardData = (): UseDashboardDataReturn => {
       dailyService.getDailyStats({ days: 112 }),
       sessionsService.getSessions({ limit: 5 }),
     ])
-      .then(([overviewData, dailyData, sessionsData]) => {
-        const rawOverview = overviewData as unknown as Record<string, unknown>
+      .then(([overviewData, dailyData, sessionsData]: [OverviewResponse, unknown, unknown]) => {
         setData({
-          stats: overviewData as unknown as OverviewStats,
-          delta: (rawOverview.delta as OverviewDelta) ?? null,
-          agentSummaries: (rawOverview.agent_summaries as AgentTodaySummary[]) ?? [],
-          agentDistribution: (rawOverview.agent_distribution as AgentDistribution[]) ?? [],
+          stats: overviewData,
+          delta: overviewData.delta ?? null,
+          agentSummaries: overviewData.agent_summaries ?? [],
+          agentDistribution: overviewData.agent_distribution ?? [],
           daily: Array.isArray(dailyData) ? (dailyData as DailyStats[]) : [],
           sessions: Array.isArray(sessionsData) ? (sessionsData as SessionRow[]) : [],
         })

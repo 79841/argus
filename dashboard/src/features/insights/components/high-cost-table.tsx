@@ -95,9 +95,9 @@ export const HighCostTable = ({ data, loading }: HighCostTableProps) => {
       ) : !data.length ? (
         <EmptyState title={t('insights.noHighCost')} />
       ) : (
-        <DataTable
+        <DataTable<HighCostSession>
           columns={sessionColumns}
-          data={data as unknown as Record<string, unknown>[]}
+          data={data}
         />
       )}
     </ChartCard>

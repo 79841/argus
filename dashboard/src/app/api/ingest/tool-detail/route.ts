@@ -15,8 +15,22 @@ type ToolDetailPayload = {
 }
 
 export async function POST(request: NextRequest) {
+  let data: ToolDetailPayload
   try {
-    const data = (await request.json()) as ToolDetailPayload
+    data = (await request.json()) as ToolDetailPayload
+  } catch {
+    return errorResponse('Invalid JSON')
+  }
+
+  if (!data.session_id || typeof data.session_id !== 'string' || data.session_id.trim() === '') {
+    return errorResponse('session_id is required')
+  }
+
+  if (!data.tool_name || typeof data.tool_name !== 'string' || data.tool_name.trim() === '') {
+    return errorResponse('tool_name is required')
+  }
+
+  try {
     const db = getDb()
 
     db.prepare(`
@@ -25,8 +39,8 @@ export async function POST(request: NextRequest) {
         duration_ms, success, project_name, metadata, agent_type
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      data.session_id ?? '',
-      data.tool_name ?? '',
+      data.session_id,
+      data.tool_name,
       data.detail_name ?? '',
       data.detail_type ?? '',
       data.duration_ms ?? 0,

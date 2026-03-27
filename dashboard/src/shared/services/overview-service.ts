@@ -1,18 +1,21 @@
 import { dataClient } from '@/shared/lib/data-client'
 import type { QueryParams } from '@/shared/types/electron'
-import type { OverviewStats } from '@/shared/lib/queries'
+import type { OverviewStats, OverviewDelta, AgentTodaySummary, AgentDistribution, IngestStatusRow, AgentDailyCost } from '@/shared/lib/queries'
 
 type IngestStatusResponse = {
-  agents?: unknown[]
+  agents?: IngestStatusRow[]
 }
 
-type AllTimeTotalsResponse = {
+export type OverviewResponse = OverviewStats & {
   all_time_cost?: number
   all_time_tokens?: number
+  delta?: OverviewDelta
+  agent_summaries?: AgentTodaySummary[]
+  agent_distribution?: AgentDistribution[]
 }
 
 type DailyCostsResponse = {
-  costs?: unknown[]
+  costs?: AgentDailyCost[]
 }
 
 type PricingSyncResponse = {
@@ -26,8 +29,8 @@ type PricingLastSyncResponse = {
 }
 
 export const overviewService = {
-  getOverview: (params?: QueryParams): Promise<OverviewStats & AllTimeTotalsResponse> =>
-    dataClient.query('overview', params) as Promise<OverviewStats & AllTimeTotalsResponse>,
+  getOverview: (params?: QueryParams): Promise<OverviewResponse> =>
+    dataClient.query('overview', params) as Promise<OverviewResponse>,
 
   getIngestStatus: (): Promise<IngestStatusResponse> =>
     dataClient.query('ingest-status') as Promise<IngestStatusResponse>,

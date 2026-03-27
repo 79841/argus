@@ -4,14 +4,19 @@ import type { AgentSetupType } from '@/shared/lib/setup'
 import { errorResponse } from '@/shared/lib/api-utils'
 
 export async function POST(request: NextRequest) {
-  const body = await request.json() as { agents: string[] }
-  const { agents } = body
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return errorResponse('Invalid JSON')
+  }
+  const agents = body['agents']
 
   if (!Array.isArray(agents) || agents.length === 0) {
     return errorResponse('agents array is required')
   }
 
-  const validAgents = agents.filter((a) => ['claude', 'codex', 'gemini'].includes(a)) as AgentSetupType[]
+  const validAgents = agents.filter((a): a is AgentSetupType => ['claude', 'codex', 'gemini'].includes(a as string))
   const results = disconnectAgents(validAgents)
   return NextResponse.json({ results })
 }

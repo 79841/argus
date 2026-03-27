@@ -431,6 +431,66 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.projectFilter.allProjects': '전체 프로젝트',
     'shared.navLayout.toggleSidebar': '사이드바 토글',
     'shared.dataTable.noData': '데이터 없음',
+
+    // Settings — Agent Connection
+    'settings.agentConnection.title': '에이전트 연결',
+    'settings.agentConnection.description': 'Argus에 AI 코딩 에이전트를 연결하여 텔레메트리를 수집합니다.',
+    'settings.agentConnection.endpoint': '엔드포인트',
+    'settings.agentConnection.endpointLocked': '엔드포인트를 변경하려면 모든 에이전트를 연결 해제하세요.',
+    'settings.agentConnection.loading': '로딩 중...',
+    'settings.agentConnection.connected': '연결됨',
+    'settings.agentConnection.disconnecting': '연결 해제 중...',
+    'settings.agentConnection.disconnect': '연결 해제',
+    'settings.agentConnection.notConfigured': '설정 안 됨',
+    'settings.agentConnection.connecting': '연결 중...',
+    'settings.agentConnection.connect': '연결',
+    'settings.agentConnection.connectAll': '모두 연결',
+    'settings.agentConnection.manualGuide': '수동 설정 가이드',
+
+    // Settings — Project Connection (additional)
+    'settings.projectConnection.loading': '로딩 중...',
+    'settings.projectConnection.connecting': '연결 중...',
+    'settings.projectConnection.disconnect': '연결 해제',
+    'settings.projectConnection.tracking.unsupported': '미지원',
+
+    // Config timeline
+    'config.timeline.loading': '로딩 중...',
+    'config.timeline.beforeAfter': '이전 vs 이후 (7일)',
+    'config.timeline.before': '이전:',
+    'config.timeline.after': '이후:',
+    'config.timeline.empty': '설정 변경 이력이 없습니다.',
+    'config.timeline.diffViewer': 'Diff Viewer',
+    'config.timeline.noDiff': 'Diff 데이터가 없습니다.',
+    'config.timeline.selectItem': '타임라인에서 항목을 선택하면 diff를 확인할 수 있습니다.',
+
+    // Impact tab
+    'impact.avgCost': '평균 비용',
+    'impact.avgTokens': '평균 토큰',
+    'impact.category': '카테고리:',
+    'impact.compare': '비교:',
+    'impact.loading': '로딩 중...',
+    'impact.timeline': '영향 타임라인',
+    'impact.before': '이전:',
+    'impact.after': '이후:',
+    'impact.changeDetails': '변경 영향 상세',
+    'impact.viewDiff': 'Diff 보기',
+    'impact.noMetricData': '비교 기간에 메트릭 데이터가 없습니다.',
+    'impact.empty.title': '설정 변경 없음',
+    'impact.empty.desc': 'CLAUDE.md, .mcp.json 등의 설정 변경이 발생하면 이전/이후 영향 분석과 함께 표시됩니다.',
+
+    // Session detail tabs
+    'sessions.detail.tab.list': '목록',
+    'sessions.detail.tab.waterfall': '워터폴',
+
+    // Session prompt hint
+    'sessions.prompt.hint.claude': 'OTEL_LOG_USER_PROMPTS=1 환경변수를 설정하세요.',
+    'sessions.prompt.hint.codex': '~/.codex/config.toml [otel] 섹션에 log_user_prompt = true를 설정하세요.',
+    'sessions.prompt.hint.gemini': '~/.gemini/settings.json에서 logPrompts: true를 설정하세요.',
+
+    // Tools details section tabs
+    'tools.details.tab.skills': '스킬',
+    'tools.details.tab.agents': '에이전트',
+    'tools.details.tab.mcp': 'MCP',
   },
   en: {
     // Nav
@@ -857,6 +917,66 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.projectFilter.allProjects': 'All Projects',
     'shared.navLayout.toggleSidebar': 'Toggle sidebar',
     'shared.dataTable.noData': 'No data',
+
+    // Settings — Agent Connection
+    'settings.agentConnection.title': 'Agent Connection',
+    'settings.agentConnection.description': 'Connect your AI coding agents to Argus for telemetry.',
+    'settings.agentConnection.endpoint': 'Endpoint',
+    'settings.agentConnection.endpointLocked': 'Disconnect all agents to change the endpoint.',
+    'settings.agentConnection.loading': 'Loading...',
+    'settings.agentConnection.connected': 'Connected',
+    'settings.agentConnection.disconnecting': 'Disconnecting...',
+    'settings.agentConnection.disconnect': 'Disconnect',
+    'settings.agentConnection.notConfigured': 'Not configured',
+    'settings.agentConnection.connecting': 'Connecting...',
+    'settings.agentConnection.connect': 'Connect',
+    'settings.agentConnection.connectAll': 'Connect All',
+    'settings.agentConnection.manualGuide': 'Manual Setup Guide',
+
+    // Settings — Project Connection (additional)
+    'settings.projectConnection.loading': 'Loading...',
+    'settings.projectConnection.connecting': 'Connecting...',
+    'settings.projectConnection.disconnect': 'Disconnect',
+    'settings.projectConnection.tracking.unsupported': 'Not supported',
+
+    // Config timeline
+    'config.timeline.loading': 'Loading...',
+    'config.timeline.beforeAfter': 'Before vs After (7 days)',
+    'config.timeline.before': 'Before:',
+    'config.timeline.after': 'After:',
+    'config.timeline.empty': 'No config change history found.',
+    'config.timeline.diffViewer': 'Diff Viewer',
+    'config.timeline.noDiff': 'No diff data available.',
+    'config.timeline.selectItem': 'Select an item from the timeline to view its diff.',
+
+    // Impact tab
+    'impact.avgCost': 'Avg Cost',
+    'impact.avgTokens': 'Avg Tokens',
+    'impact.category': 'Category:',
+    'impact.compare': 'Compare:',
+    'impact.loading': 'Loading...',
+    'impact.timeline': 'Impact Timeline',
+    'impact.before': 'Before:',
+    'impact.after': 'After:',
+    'impact.changeDetails': 'Change Impact Details',
+    'impact.viewDiff': 'View Diff',
+    'impact.noMetricData': 'No metric data available for comparison period',
+    'impact.empty.title': 'No config changes',
+    'impact.empty.desc': 'Config changes to CLAUDE.md, .mcp.json, etc. will appear here with before/after impact analysis.',
+
+    // Session detail tabs
+    'sessions.detail.tab.list': 'List',
+    'sessions.detail.tab.waterfall': 'Waterfall',
+
+    // Session prompt hint
+    'sessions.prompt.hint.claude': 'Set the OTEL_LOG_USER_PROMPTS=1 environment variable.',
+    'sessions.prompt.hint.codex': 'Set log_user_prompt = true in the ~/.codex/config.toml [otel] section.',
+    'sessions.prompt.hint.gemini': 'Set logPrompts: true in ~/.gemini/settings.json.',
+
+    // Tools details section tabs
+    'tools.details.tab.skills': 'Skills',
+    'tools.details.tab.agents': 'Agents',
+    'tools.details.tab.mcp': 'MCP',
   },
 }
 

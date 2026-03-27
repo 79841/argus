@@ -121,9 +121,9 @@ export default function ProjectDetailPage() {
         empty={!loading && (stats?.agent_breakdown ?? []).length === 0}
         emptyMessage={t('projects.detail.noData')}
       >
-        <DataTable
+        <DataTable<{ agent_type: string; cost: number; sessions: number }>
           columns={recentSessionsColumns}
-          data={(stats?.agent_breakdown ?? []) as unknown as Record<string, unknown>[]}
+          data={stats?.agent_breakdown ?? []}
         />
       </ChartCard>
       </div>

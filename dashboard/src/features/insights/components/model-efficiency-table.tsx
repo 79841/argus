@@ -44,9 +44,9 @@ export const ModelEfficiencyTable = ({ data, loading }: ModelEfficiencyTableProp
       ) : !data.length ? (
         <EmptyState title={t('insights.noModelData')} />
       ) : (
-        <DataTable
+        <DataTable<ModelCostEfficiency>
           columns={modelColumns}
-          data={data as unknown as Record<string, unknown>[]}
+          data={data}
         />
       )}
     </ChartCard>

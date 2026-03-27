@@ -33,14 +33,14 @@ export const SetupSection = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Agent Connection</CardTitle>
+          <CardTitle>{t('settings.agentConnection.title')}</CardTitle>
           <CardDescription>
-            Connect your AI coding agents to Argus for telemetry
+            {t('settings.agentConnection.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Endpoint</label>
+            <label className="text-sm font-medium">{t('settings.agentConnection.endpoint')}</label>
             <input
               type="text"
               value={endpoint}
@@ -56,13 +56,13 @@ export const SetupSection = () => {
             />
             {hasAnyConnected && (
               <p className="text-xs text-muted-foreground">
-                Disconnect all agents to change the endpoint.
+                {t('settings.agentConnection.endpointLocked')}
               </p>
             )}
           </div>
 
           {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings.agentConnection.loading')}</div>
           ) : (
             <div className="rounded-md border border-border divide-y divide-border">
               {agents.map((agent) => {
@@ -88,7 +88,7 @@ export const SetupSection = () => {
                         <>
                           <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
                             <Check className="size-3.5" />
-                            Connected
+                            {t('settings.agentConnection.connected')}
                           </span>
                           <Button
                             variant="ghost"
@@ -98,12 +98,12 @@ export const SetupSection = () => {
                             className="text-muted-foreground hover:text-foreground"
                           >
                             <Unplug className="size-3.5 mr-1" />
-                            {isConnecting ? 'Disconnecting...' : 'Disconnect'}
+                            {isConnecting ? t('settings.agentConnection.disconnecting') : t('settings.agentConnection.disconnect')}
                           </Button>
                         </>
                       ) : (
                         <>
-                          <span className="text-sm text-muted-foreground">Not configured</span>
+                          <span className="text-sm text-muted-foreground">{t('settings.agentConnection.notConfigured')}</span>
                           <Button
                             variant="outline"
                             size="sm"
@@ -111,7 +111,7 @@ export const SetupSection = () => {
                             onClick={() => handleConnect([agent.type])}
                           >
                             <Plug className="size-3.5 mr-1" />
-                            {isConnecting ? 'Connecting...' : 'Connect'}
+                            {isConnecting ? t('settings.agentConnection.connecting') : t('settings.agentConnection.connect')}
                           </Button>
                         </>
                       )}
@@ -130,7 +130,7 @@ export const SetupSection = () => {
                 onClick={() => handleConnect(unconfiguredAgents)}
               >
                 <Plug className="size-4 mr-2" />
-                {connecting === 'all' ? 'Connecting...' : 'Connect All'}
+                {connecting === 'all' ? t('settings.agentConnection.connecting') : t('settings.agentConnection.connectAll')}
               </Button>
             </div>
           )}
@@ -143,7 +143,7 @@ export const SetupSection = () => {
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-1"
         >
           {showManual ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-          Manual Setup Guide
+          {t('settings.agentConnection.manualGuide')}
         </button>
 
         {showManual && (

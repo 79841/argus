@@ -11,7 +11,7 @@ import { CHART_THEME, SERIES_COLORS } from '@/shared/lib/chart-theme'
 import { formatCostChart } from '@/shared/lib/format'
 import { useModelsData } from '../hooks/use-models-data'
 import type { AgentType } from '@/shared/lib/agents'
-import type { ModelsTabProps } from '@/features/usage/types/usage'
+import type { ModelsTabProps, ModelTableRow } from '@/features/usage/types/usage'
 
 const modelColumns = [
   { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
@@ -38,9 +38,9 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
   return (
     <div className="space-y-4">
       <ChartCard title="Model Usage">
-        <DataTable
+        <DataTable<ModelTableRow>
           columns={modelColumns}
-          data={models as unknown as Record<string, unknown>[]}
+          data={models}
           emptyMessage="No model data"
         />
       </ChartCard>
