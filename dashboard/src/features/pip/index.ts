@@ -1,4 +1,5 @@
 export { HeartbeatChart } from './components/heartbeat-chart'
+export { PipTitlebar } from './components/pip-titlebar'
 export { useHeartbeat } from './hooks/use-heartbeat'
 export { transformHeartbeat } from './lib/transform'
 export type { ChartDataPoint, HeartbeatRaw } from './lib/transform'

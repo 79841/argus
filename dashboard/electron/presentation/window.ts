@@ -5,9 +5,11 @@ import { DEV_URL } from '../infrastructure/server/next-server'
 const isMac = process.platform === 'darwin'
 
 let mainWindow: BrowserWindow | null = null
+let pipWindow: BrowserWindow | null = null
 let _isTrayActive = false
 
 export const getMainWindow = (): BrowserWindow | null => mainWindow
+export const getPipWindow = (): BrowserWindow | null => pipWindow
 
 export const setTrayActive = (active: boolean): void => {
   _isTrayActive = active
@@ -54,4 +56,49 @@ export const createWindow = (): void => {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+}
+
+export const createPipWindow = (): void => {
+  if (pipWindow) {
+    pipWindow.focus()
+    return
+  }
+
+  pipWindow = new BrowserWindow({
+    width: 420,
+    height: 280,
+    minWidth: 320,
+    minHeight: 200,
+    alwaysOnTop: true,
+    frame: false,
+    transparent: false,
+    resizable: true,
+    skipTaskbar: true,
+    webPreferences: {
+      preload: path.join(__dirname, '..', 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  })
+
+  pipWindow.loadURL(`${DEV_URL}/pip`)
+
+  pipWindow.on('closed', () => {
+    pipWindow = null
+  })
+}
+
+export const closePipWindow = (): void => {
+  if (pipWindow) {
+    pipWindow.close()
+    pipWindow = null
+  }
+}
+
+export const togglePipWindow = (): void => {
+  if (pipWindow) {
+    closePipWindow()
+  } else {
+    createPipWindow()
+  }
 }

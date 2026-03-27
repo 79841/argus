@@ -6,12 +6,18 @@ type WindowControl = {
   close: () => void
 }
 
+type PipControl = {
+  toggle: () => void
+  close: () => void
+}
+
 type ElectronAPI = {
   query: (name: string, params?: QueryParams) => Promise<unknown>
   mutate: (name: string, body?: unknown) => Promise<unknown>
   delete?: (name: string, params?: QueryParams) => Promise<unknown>
   selectFolder?: (title?: string) => Promise<string | null>
   windowControl?: WindowControl
+  pip?: PipControl
   platform?: string
   onFullScreenChange?: (callback: (isFullScreen: boolean) => void) => () => void
 }

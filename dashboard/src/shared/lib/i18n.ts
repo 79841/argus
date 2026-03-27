@@ -409,6 +409,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.calls': '호출',
     'tools.detail.date': '날짜',
 
+    // PIP (Picture-in-Picture) 타이틀바
+    'pip.titlebar.title': 'Argus PIP',
+
     // PIP (Picture-in-Picture) 심박 모니터
     'pip.heartbeat.title': '토큰 심박',
     'pip.heartbeat.noData': '활동 데이터 없음',
@@ -894,6 +897,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.detail.project': 'Project',
     'tools.detail.calls': 'Calls',
     'tools.detail.date': 'Date',
+
+    // PIP (Picture-in-Picture) titlebar
+    'pip.titlebar.title': 'Argus PIP',
 
     // PIP (Picture-in-Picture) heartbeat monitor
     'pip.heartbeat.title': 'Token Heartbeat',
