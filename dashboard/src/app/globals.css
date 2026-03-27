@@ -384,15 +384,18 @@
 
 @utility blob-animate {
   animation: blob-drift 20s ease-in-out infinite;
+  will-change: transform;
 }
 
 @utility blob-animate-reverse {
   animation: blob-drift 25s ease-in-out infinite reverse;
+  will-change: transform;
 }
 
 @utility blob-animate-slow {
   animation: blob-drift 30s ease-in-out infinite;
   animation-delay: -10s;
+  will-change: transform;
 }
 
 /* ─── Glassmorphism Utilities ───────────────────────────────────────────── */

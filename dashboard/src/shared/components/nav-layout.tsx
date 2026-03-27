@@ -97,7 +97,7 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)]">
       {/* Ambient glow blobs */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true" style={{ contain: 'layout paint' }}>
         <div
           className="absolute -top-[20%] -left-[15%] h-[60%] w-[60%] rounded-full opacity-40 blur-[120px] blob-animate"
           style={{ background: 'var(--blob-primary)' }}
