@@ -1,5 +1,5 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
-import { createWindow, getMainWindow, setTrayActive } from './window'
+import { createWindow, getMainWindow, setTrayActive, togglePipWindow } from './window'
 
 let tray: Tray | null = null
 
@@ -31,6 +31,10 @@ export const createTray = (): void => {
           createWindow()
         }
       },
+    },
+    {
+      label: 'PIP Mode',
+      click: () => togglePipWindow(),
     },
     { type: 'separator' },
     {
