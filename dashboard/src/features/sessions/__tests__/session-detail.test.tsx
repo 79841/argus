@@ -72,21 +72,21 @@ describe('SessionDetail', () => {
   it('List/Waterfall 탭이 존재한다', () => {
     const session = makeSession()
     render(<SessionDetail session={session} events={[makeEvent()]} />)
-    expect(screen.getByRole('tab', { name: 'List' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Waterfall' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'sessions.detail.tab.list' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'sessions.detail.tab.waterfall' })).toBeInTheDocument()
   })
 
   it('기본적으로 List 탭이 활성이다', () => {
     const session = makeSession()
     render(<SessionDetail session={session} events={[makeEvent()]} />)
-    expect(screen.getByRole('tab', { name: 'List' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'sessions.detail.tab.list' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('Waterfall 탭 클릭 시 waterfall 컴포넌트가 표시된다', () => {
     const session = makeSession()
     render(<SessionDetail session={session} events={[makeEvent()]} />)
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Waterfall' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'sessions.detail.tab.waterfall' }))
     expect(screen.getByTestId('trace-waterfall')).toBeInTheDocument()
   })
 

@@ -92,7 +92,7 @@ export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
   const seenIds = new Map<string, number>()
 
   return (
-    <nav className="overflow-y-auto py-2 px-3 bg-[var(--bg-sunken)]">
+    <nav className="glass-light overflow-y-auto py-2 px-3">
       {headings.map((heading, idx) => {
         const isActive = activeId === heading.id
         const indent = INDENT_MAP[heading.level] ?? 'ml-0'

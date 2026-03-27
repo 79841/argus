@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const project = params.get('project') || 'all'
 
     if (dates) {
-      const dateList = dates.split(',').filter(Boolean)
+      const dateList = dates.split(',').filter(Boolean).slice(0, 30)
       const data = getImpactCompareBatch(dateList, days, agentType, project)
       return NextResponse.json(data)
     }

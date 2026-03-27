@@ -7,10 +7,10 @@ import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import { useProjectRegistry } from '../hooks/use-project-registry'
 
-const TRACKING_STATUS: { agent: string; label: string; supported: boolean; note: string }[] = [
-  { agent: 'claude', label: 'Claude', supported: true, note: 'auto' },
-  { agent: 'codex', label: 'Codex', supported: true, note: 'auto' },
-  { agent: 'gemini', label: 'Gemini', supported: false, note: '미지원' },
+const TRACKING_STATUS: { agent: string; label: string; supported: boolean }[] = [
+  { agent: 'claude', label: 'Claude', supported: true },
+  { agent: 'codex', label: 'Codex', supported: true },
+  { agent: 'gemini', label: 'Gemini', supported: false },
 ]
 
 export const ProjectConnectionSection = () => {
@@ -90,14 +90,14 @@ export const ProjectConnectionSection = () => {
                   {t('settings.projectConnection.cancel')}
                 </Button>
                 <Button size="sm" onClick={handleAdd} disabled={adding || !pathInput.trim()}>
-                  {adding ? 'Connecting...' : t('settings.projectConnection.connect')}
+                  {adding ? t('settings.projectConnection.connecting') : t('settings.projectConnection.connect')}
                 </Button>
               </div>
             </div>
           )}
 
           {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings.projectConnection.loading')}</div>
           ) : projects.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               {t('settings.projectConnection.empty')}
@@ -118,7 +118,7 @@ export const ProjectConnectionSection = () => {
                       className="text-muted-foreground hover:text-destructive shrink-0"
                     >
                       <Trash2 className="size-3.5 mr-1" />
-                      Disconnect
+                      {t('settings.projectConnection.disconnect')}
                     </Button>
                   </div>
                   <div className="flex items-center gap-3">
@@ -136,9 +136,11 @@ export const ProjectConnectionSection = () => {
                         ) : (
                           <AlertTriangle className="size-3 text-yellow-500" />
                         )}
-                        <span className={cn('text-[10px]', ts.supported ? 'text-muted-foreground' : 'text-yellow-500')}>
-                          {ts.note}
-                        </span>
+                        {!ts.supported && (
+                          <span className="text-[10px] text-yellow-500">
+                            {t('settings.projectConnection.tracking.unsupported')}
+                          </span>
+                        )}
                       </span>
                     ))}
                   </div>

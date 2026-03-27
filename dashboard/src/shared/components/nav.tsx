@@ -61,7 +61,7 @@ export const Nav = () => {
   return (
     <aside
       className={cn(
-        'flex flex-shrink-0 flex-col transition-[width] duration-200',
+        'flex flex-shrink-0 flex-col transition-[width] duration-200 glass-nav',
         collapsed ? 'w-14' : 'w-48'
       )}
     >

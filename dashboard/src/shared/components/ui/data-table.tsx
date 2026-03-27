@@ -13,21 +13,21 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { useLocale } from '@/shared/lib/i18n'
 
-type Column = {
+type Column<T = Record<string, unknown>> = {
   key: string
   label: string
   align?: 'left' | 'right' | 'center'
-  format?: (value: unknown, row: Record<string, unknown>) => string | ReactNode
+  format?: (value: unknown, row: T) => string | ReactNode
   width?: string
 }
 
-type DataTableProps = {
-  columns: Column[]
-  data: Record<string, unknown>[]
+type DataTableProps<T = Record<string, unknown>> = {
+  columns: Column<T>[]
+  data: T[]
   emptyMessage?: string
   highlightOnHover?: boolean
   stickyHeader?: boolean
-  onRowClick?: (row: Record<string, unknown>) => void
+  onRowClick?: (row: T) => void
 }
 
 const alignClass = {
@@ -36,14 +36,14 @@ const alignClass = {
   center: 'text-center',
 }
 
-export const DataTable = ({
+export const DataTable = <T = Record<string, unknown>>({
   columns,
   data,
   emptyMessage,
   highlightOnHover = true,
   stickyHeader = false,
   onRowClick,
-}: DataTableProps) => {
+}: DataTableProps<T>) => {
   const { t } = useLocale()
   if (data.length === 0) {
     return <EmptyState title={emptyMessage ?? t('shared.dataTable.noData')} />
@@ -86,8 +86,8 @@ export const DataTable = ({
                 )}
               >
                 {col.format
-                  ? col.format(row[col.key], row)
-                  : (row[col.key] as string | number | null | undefined) ?? '—'}
+                  ? col.format((row as Record<string, unknown>)[col.key], row)
+                  : ((row as Record<string, unknown>)[col.key] as string | number | null | undefined) ?? '—'}
               </TableCell>
             ))}
           </TableRow>

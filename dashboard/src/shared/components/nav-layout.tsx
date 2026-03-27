@@ -95,11 +95,26 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[var(--bg-sunken)]">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)]">
+      {/* Ambient glow blobs */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute -top-[20%] -left-[15%] h-[60%] w-[60%] rounded-full opacity-40 blur-[120px] blob-animate"
+          style={{ background: 'var(--blob-primary)' }}
+        />
+        <div
+          className="absolute -right-[15%] -bottom-[20%] h-[50%] w-[50%] rounded-full opacity-30 blur-[100px] blob-animate-reverse"
+          style={{ background: 'var(--blob-gemini)' }}
+        />
+        <div
+          className="absolute top-[30%] left-[50%] h-[40%] w-[40%] -translate-x-1/2 rounded-full opacity-20 blur-[80px] blob-animate-slow"
+          style={{ background: 'var(--blob-codex)' }}
+        />
+      </div>
       <TopBar onToggleNav={toggleNav} />
       <div className="flex flex-1 min-h-0 gap-0">
         <Nav />
-        <main className="flex flex-1 flex-col overflow-hidden rounded-tl-xl bg-[var(--bg-base)]">
+        <main className="flex flex-1 flex-col overflow-hidden rounded-tl-2xl glass">
           {children}
         </main>
       </div>

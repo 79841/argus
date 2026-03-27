@@ -102,8 +102,8 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
               )}
             </div>
             <TabsList>
-              <TabsTrigger value="list">List</TabsTrigger>
-              <TabsTrigger value="waterfall">Waterfall</TabsTrigger>
+              <TabsTrigger value="list">{t('sessions.detail.tab.list')}</TabsTrigger>
+              <TabsTrigger value="waterfall">{t('sessions.detail.tab.waterfall')}</TabsTrigger>
             </TabsList>
           </div>
 

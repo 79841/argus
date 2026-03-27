@@ -8,6 +8,7 @@ import { formatCost, formatCostDetail, formatDate } from '@/shared/lib/format'
 import { FilterBar } from '@/shared/components/filter-bar'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { useProjectsData, CostComparisonChart, ProjectPreviewSidebar } from '@/features/projects'
+import type { ProjectComparisonRow } from '@/shared/lib/queries'
 
 export default function ProjectsPage() {
   const { t } = useLocale()
@@ -102,10 +103,10 @@ export default function ProjectsPage() {
         empty={!loading && projects.length === 0}
         emptyMessage={t('projects.chart.noData')}
       >
-        <DataTable
+        <DataTable<ProjectComparisonRow>
           columns={columns}
-          data={projects as unknown as Record<string, unknown>[]}
-          onRowClick={(row) => setSelectedProject(row.project_name as string)}
+          data={projects}
+          onRowClick={(row) => setSelectedProject(row.project_name)}
         />
       </ChartCard>
     </div>

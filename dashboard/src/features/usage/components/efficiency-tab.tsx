@@ -13,7 +13,7 @@ import { AGENT_TYPES } from '@/shared/lib/constants'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { useEfficiencyData } from '../hooks/use-efficiency-data'
 import type { AgentType } from '@/shared/lib/agents'
-import type { EfficiencyTabProps } from '@/features/usage/types/usage'
+import type { EfficiencyTabProps, EfficiencyAgentRow } from '@/features/usage/types/usage'
 
 const DOT_CONFIG = { r: 3 } as const
 
@@ -56,9 +56,9 @@ export const EfficiencyTab = ({ agentType, project, dateRange }: EfficiencyTabPr
       </ChartCard>
 
       <ChartCard title="Efficiency by Agent">
-        <DataTable
+        <DataTable<EfficiencyAgentRow>
           columns={efficiencyColumns}
-          data={agentRows as unknown as Record<string, unknown>[]}
+          data={agentRows}
           emptyMessage="No efficiency data"
         />
       </ChartCard>

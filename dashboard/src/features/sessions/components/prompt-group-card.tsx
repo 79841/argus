@@ -59,21 +59,17 @@ export type PromptGroupCardProps = {
   agentType?: string
 }
 
-const promptSettingHint = (agentType?: string): string => {
-  switch (agentType) {
-    case 'claude':
-      return 'OTEL_LOG_USER_PROMPTS=1 환경변수를 설정하세요.'
-    case 'codex':
-      return '~/.codex/config.toml [otel] 섹션에 log_user_prompt = true를 설정하세요.'
-    case 'gemini':
-      return '~/.gemini/settings.json에서 logPrompts: true를 설정하세요.'
-    default:
-      return ''
-  }
-}
-
 export const PromptGroupCard = ({ group, index, agentType }: PromptGroupCardProps) => {
   const { t } = useLocale()
+
+  const promptSettingHint = (type?: string): string => {
+    switch (type) {
+      case 'claude': return t('sessions.prompt.hint.claude')
+      case 'codex': return t('sessions.prompt.hint.codex')
+      case 'gemini': return t('sessions.prompt.hint.gemini')
+      default: return ''
+    }
+  }
   const [expanded, setExpanded] = useState(index === 0)
 
   return (

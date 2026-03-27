@@ -1,5 +1,6 @@
 import { app, ipcMain } from 'electron'
 import fs from 'fs'
+import path from 'path'
 import { registerIpcHandlers } from './infrastructure/ipc/ipc.handler'
 import { createWindow, getMainWindow } from './presentation/window'
 import { createTray, destroyTray } from './presentation/tray'
@@ -8,10 +9,21 @@ import { startNextServer, waitForServer, killNextProcess, DEV_URL } from './infr
 ipcMain.handle('capture-screenshot', async (_event, savePath: string) => {
   const win = getMainWindow()
   if (!win) throw new Error('No window')
+
+  const allowedDirs = [
+    app.getPath('userData'),
+    app.getPath('pictures'),
+    app.getPath('downloads'),
+    app.getPath('temp'),
+  ]
+  const resolved = path.resolve(savePath)
+  const isAllowed = allowedDirs.some((dir) => resolved.startsWith(path.resolve(dir) + path.sep) || resolved === path.resolve(dir))
+  if (!isAllowed) throw new Error('Save path is not in an allowed directory')
+
   const image = await win.webContents.capturePage()
   const buffer = image.toPNG()
-  fs.writeFileSync(savePath, buffer)
-  return savePath
+  fs.writeFileSync(resolved, buffer)
+  return resolved
 })
 
 ipcMain.handle('select-folder', async (_event, title?: string) => {

@@ -10,6 +10,7 @@ import { getAgentColor } from '@/shared/lib/agents'
 import { cn } from '@/shared/lib/utils'
 import { configService } from '@/shared/services'
 import { formatCostChart } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 
 type ConfigTimelineProps = {
   data: ConfigChange[]
@@ -36,6 +37,7 @@ const ChangeIndicator = ({ before, after, format }: { before: number; after: num
 }
 
 const ComparePanel = ({ date }: { date: string }) => {
+  const { t } = useLocale()
   const [data, setData] = useState<ImpactCompareResult | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -47,7 +49,7 @@ const ComparePanel = ({ date }: { date: string }) => {
       .finally(() => setLoading(false))
   }, [date])
 
-  if (loading) return <div className="py-4 text-center text-sm text-muted-foreground">Loading...</div>
+  if (loading) return <div className="py-4 text-center text-sm text-muted-foreground">{t('config.timeline.loading')}</div>
   if (!data) return null
 
   const metrics = [
@@ -58,7 +60,7 @@ const ComparePanel = ({ date }: { date: string }) => {
 
   return (
     <div className="mt-3 rounded-lg bg-muted/30 p-3">
-      <div className="mb-2 text-xs font-semibold text-muted-foreground">Before vs After (7 days)</div>
+      <div className="mb-2 text-xs font-semibold text-muted-foreground">{t('config.timeline.beforeAfter')}</div>
       <div className="grid grid-cols-3 gap-4">
         {metrics.map((m) => (
           <div key={m.label} className="min-w-0 space-y-1.5">
@@ -71,20 +73,21 @@ const ComparePanel = ({ date }: { date: string }) => {
         ))}
       </div>
       <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
-        <span>Before: {data.before.request_count} reqs</span>
-        <span>After: {data.after.request_count} reqs</span>
+        <span>{t('config.timeline.before')} {data.before.request_count} reqs</span>
+        <span>{t('config.timeline.after')} {data.after.request_count} reqs</span>
       </div>
     </div>
   )
 }
 
 export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
+  const { t } = useLocale()
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
-        <p>No config change history found.</p>
+        <p>{t('config.timeline.empty')}</p>
       </div>
     )
   }
@@ -100,7 +103,7 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
         {data.map((change, index) => {
           const agentHex = getAgentColor(change.agent_type)
           const isSelected = selectedIndex === index
-          const dateStr = new Date(change.date).toLocaleDateString('ko-KR', {
+          const dateStr = new Date(change.date).toLocaleDateString(undefined, {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -152,7 +155,7 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
       <Card className="max-h-[calc(100vh-200px)] flex flex-col">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">
-            {selected ? selected.file_path : 'Diff Viewer'}
+            {selected ? selected.file_path : t('config.timeline.diffViewer')}
           </CardTitle>
           {selected && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -177,12 +180,12 @@ export const ConfigTimeline = ({ data }: ConfigTimelineProps) => {
               </pre>
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                No diff data available.
+                {t('config.timeline.noDiff')}
               </div>
             )
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              Select an item from the timeline to view its diff.
+              {t('config.timeline.selectItem')}
             </div>
           )}
         </CardContent>

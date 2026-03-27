@@ -34,7 +34,7 @@ export const AgentSummaryCard = ({ agentSummaries }: AgentSummaryCardProps) => {
           return (
             <div
               key={agentId}
-              className="flex items-center justify-between rounded-lg bg-[var(--bg-raised)] px-3 py-2"
+              className="flex items-center justify-between rounded-lg bg-[var(--fill-active)] px-3 py-2"
             >
               <div className="flex items-center gap-2">
                 <AgentDot agent={agentId} size="md" />

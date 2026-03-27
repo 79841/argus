@@ -189,7 +189,7 @@ export const getToolSingleStat = (toolName: string, days: number): ToolSingleSta
       AND tool_name = ?
       AND date(timestamp) >= date('now', '-' || ? || ' days')
     GROUP BY tool_name
-  `).get(toolName, days) as ToolSingleStat | null
+  `).get(toolName, days) as ToolSingleStat | undefined ?? null
 }
 
 export const getToolDailyStats = (toolName: string, days: number): ToolDailyRow[] => {
