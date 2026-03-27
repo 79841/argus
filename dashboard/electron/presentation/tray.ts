@@ -1,4 +1,5 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
+import path from 'path'
 import { createWindow, getMainWindow, setTrayActive, togglePipWindow } from './window'
 
 let tray: Tray | null = null
@@ -10,10 +11,19 @@ export const destroyTray = (): void => {
   setTrayActive(false)
 }
 
+const loadTrayIcon = (): Electron.NativeImage => {
+  const isMac = process.platform === 'darwin'
+  const assetsDir = path.join(__dirname, '..', 'assets')
+  if (isMac) {
+    const icon = nativeImage.createFromPath(path.join(assetsDir, 'tray-iconTemplate.png'))
+    icon.setTemplateImage(true)
+    return icon
+  }
+  return nativeImage.createFromPath(path.join(assetsDir, 'tray-icon.png'))
+}
+
 export const createTray = (): void => {
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAEFJREFUOI1jYBgFgwkwMjAw/Gdg+M9IjGYmBgaG/0SazcjAwMBAjAuYiNSMHIBcwERNFzAxMDCgmE2sC0bBYAAAG7wFAVwvZIoAAAAASUVORK5CYII='
-  )
+  const icon = loadTrayIcon()
 
   tray = new Tray(icon)
   tray.setToolTip('Argus — AI Agent Monitor')

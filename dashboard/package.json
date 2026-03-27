@@ -17,7 +17,7 @@
     "test:e2e": "playwright test",
     "test:e2e:live": "playwright test e2e/integration/live-agents.spec.ts",
     "test:e2e:ui": "playwright test --ui",
-    "electron:build": "tsc -p electron/tsconfig.json",
+    "electron:build": "tsc -p electron/tsconfig.json && cp -r electron/assets dist-electron/electron/assets",
     "electron:dev": "npm run rebuild:sqlite && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
     "electron:dev:clean": "rimraf .next dist-electron && npm run rebuild:sqlite && npm run electron:build && concurrently -n next,electron \"next dev --port 9845\" \"wait-on http://localhost:9845/api/health && electron .\"",
     "electron:pack": "pnpm build && pnpm electron:build && electron-builder --dir",
