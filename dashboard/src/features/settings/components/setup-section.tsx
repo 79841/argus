@@ -161,7 +161,7 @@ export const SetupSection = () => {
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.claude.step1.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_LOGS_EXPORTER=otlp
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
@@ -172,7 +172,7 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.claude.step2.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_RESOURCE_ATTRIBUTES": "project.name=my-project"
   }
@@ -183,7 +183,7 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.claude.step3.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "env": {
     "OTEL_LOG_TOOL_DETAILS": "1"
   }
@@ -214,7 +214,7 @@ export OTEL_LOG_USER_PROMPTS=1`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.codex.step1.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`[otel]
 log_user_prompt = true
 
 [otel.exporter.otlp-http]
@@ -257,7 +257,7 @@ protocol = "json"`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.gemini.step1.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`{
   "telemetry": {
     "enabled": true,
     "target": "local",
@@ -266,7 +266,7 @@ protocol = "json"`}</code></pre>
   }
 }`}</code></pre>
                   <p className="text-sm text-muted-foreground mt-2">{t('settings.setup.gemini.step1.note')}</p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`export GEMINI_TELEMETRY_ENABLED=true
 export GEMINI_TELEMETRY_TARGET=local
 export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
 export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
@@ -276,7 +276,7 @@ export GEMINI_TELEMETRY_OTLP_PROTOCOL=http`}</code></pre>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t('settings.setup.gemini.step2.desc')}
                   </p>
-                  <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
+                  <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`echo 'export OTEL_RESOURCE_ATTRIBUTES="project.name=my-project"' > .envrc
 direnv allow`}</code></pre>
                 </div>
                 <div>
@@ -293,7 +293,7 @@ direnv allow`}</code></pre>
                 <CardTitle>{t('settings.setup.dashboard.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <pre className="bg-muted rounded-lg p-4 text-sm overflow-x-auto"><code>{`cd dashboard
+                <pre className="bg-muted/30 rounded-lg p-4 text-sm overflow-x-auto"><code>{`cd dashboard
 pnpm install
 pnpm dev`}</code></pre>
                 <p className="text-sm text-muted-foreground">

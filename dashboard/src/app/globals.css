@@ -51,10 +51,10 @@
 
 :root {
   /* Design system tokens */
-  --bg-base: oklch(0.985 0 0);
+  --bg-base: oklch(0.965 0.006 270);
   --bg-raised: oklch(1 0 0);
-  --bg-overlay: oklch(0.97 0 0);
-  --bg-sunken: oklch(0.935 0 0);
+  --bg-overlay: oklch(0.95 0.004 270);
+  --bg-sunken: oklch(0.92 0.008 270);
 
   --border-default: oklch(0 0 0 / 8%);
   --border-subtle: oklch(0 0 0 / 5%);
@@ -62,8 +62,8 @@
 
   --text-primary: oklch(0.145 0 0);
   --text-secondary: oklch(0.40 0 0);
-  --text-tertiary: oklch(0.556 0 0);
-  --text-disabled: oklch(0.708 0 0);
+  --text-tertiary: oklch(0.45 0 0);
+  --text-disabled: oklch(0.65 0 0);
 
   --fill-hover: oklch(0 0 0 / 4%);
   --fill-active: oklch(0 0 0 / 8%);
@@ -83,12 +83,12 @@
   --agent-gemini-subtle: oklch(0.62 0.17 255 / 5%);
 
   /* Glassmorphism tokens — Light */
-  --glass-bg: oklch(1 0 0 / 70%);
-  --glass-bg-heavy: oklch(1 0 0 / 85%);
-  --glass-bg-light: oklch(1 0 0 / 50%);
+  --glass-bg: oklch(1 0 0 / 75%);
+  --glass-bg-heavy: oklch(1 0 0 / 88%);
+  --glass-bg-light: oklch(1 0 0 / 55%);
   --glass-border: oklch(0 0 0 / 6%);
-  --glass-shadow: 0 4px 24px oklch(0 0 0 / 6%), 0 1px 4px oklch(0 0 0 / 4%);
-  --glass-shadow-lg: 0 8px 40px oklch(0 0 0 / 8%), 0 2px 8px oklch(0 0 0 / 4%);
+  --glass-shadow: 0 4px 24px oklch(0 0 0 / 10%), 0 1px 2px oklch(0 0 0 / 6%);
+  --glass-shadow-lg: 0 8px 40px oklch(0 0 0 / 14%), 0 2px 4px oklch(0 0 0 / 8%);
   --glass-blur: 20px;
   --glass-blur-heavy: 40px;
 
@@ -152,8 +152,8 @@
 
   --text-primary: oklch(0.93 0 0);
   --text-secondary: oklch(0.65 0 0);
-  --text-tertiary: oklch(0.50 0 0);
-  --text-disabled: oklch(0.35 0 0);
+  --text-tertiary: oklch(0.58 0 0);
+  --text-disabled: oklch(0.40 0 0);
 
   --fill-hover: oklch(1 0 0 / 6%);
   --fill-active: oklch(1 0 0 / 10%);
@@ -368,6 +368,7 @@
   background: var(--glass-bg-light);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
 }
 
 @utility glass-nav {

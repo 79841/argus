@@ -42,7 +42,7 @@ export const BottomBar = () => {
               {status ? (
                 <span>{formatRelativeTime(status.last_received)}</span>
               ) : (
-                <span className="text-muted-foreground/50">{t('shared.bottomBar.noData')}</span>
+                <span className="text-muted-foreground/70">{t('shared.bottomBar.noData')}</span>
               )}
             </div>
           )

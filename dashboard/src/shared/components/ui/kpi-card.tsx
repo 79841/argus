@@ -19,7 +19,7 @@ const DeltaIndicator = ({ delta, inverted }: { delta: number; inverted: boolean 
 
   return (
     <span
-      className="text-[10px] font-medium tabular-nums"
+      className="text-[11px] font-medium tabular-nums"
       style={{ color: isGood ? 'var(--status-success)' : 'var(--status-error)' }}
     >
       {arrow} {absValue}%
@@ -53,7 +53,7 @@ export const KpiCard = ({
   return (
     <Card className={cn('gap-2', className)}>
       <CardHeader className="pb-1 pt-4 px-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
       </CardHeader>
