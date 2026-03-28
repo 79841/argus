@@ -356,16 +356,17 @@
   body {
     @apply bg-background/90 text-foreground;
   }
-  html[data-electron],
-  html[data-electron] body {
-    background: transparent;
-  }
-  html[data-electron] .electron-transparent {
-    background: transparent;
-  }
   html {
     @apply font-sans;
   }
+}
+
+/* ─── Electron Transparency (must be outside @layer to override utilities) ── */
+
+html[data-electron],
+html[data-electron] body,
+html[data-electron] .electron-transparent {
+  background: transparent !important;
 }
 
 /* ─── Glassmorphism Utilities ───────────────────────────────────────────── */
