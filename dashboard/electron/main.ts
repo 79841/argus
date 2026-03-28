@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, Notification } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { registerIpcHandlers } from './infrastructure/ipc/ipc.handler'
@@ -39,6 +39,10 @@ ipcMain.handle('select-folder', async (_event, title?: string) => {
 
 ipcMain.on('pip-toggle', () => togglePipWindow())
 ipcMain.on('pip-close', () => closePipWindow())
+
+ipcMain.on('show-notification', (_event, title: string, body: string) => {
+  new Notification({ title, body }).show()
+})
 
 ipcMain.on('window-minimize', () => getMainWindow()?.minimize())
 ipcMain.on('window-maximize', () => {

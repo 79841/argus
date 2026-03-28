@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+document.documentElement.dataset.electron = ''
+
 contextBridge.exposeInMainWorld('electronAPI', {
   query: (name: string, params?: Record<string, unknown>) =>
     ipcRenderer.invoke('db:query', name, params),
@@ -18,6 +20,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     toggle: () => ipcRenderer.send('pip-toggle'),
     close: () => ipcRenderer.send('pip-close'),
   },
+  showNotification: (title: string, body: string) =>
+    ipcRenderer.send('show-notification', title, body),
   platform: process.platform,
   onFullScreenChange: (callback: (isFullScreen: boolean) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, isFullScreen: boolean) => callback(isFullScreen)

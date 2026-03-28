@@ -18,6 +18,7 @@ type ElectronAPI = {
   selectFolder?: (title?: string) => Promise<string | null>
   windowControl?: WindowControl
   pip?: PipControl
+  showNotification?: (title: string, body: string) => void
   platform?: string
   onFullScreenChange?: (callback: (isFullScreen: boolean) => void) => () => void
 }
