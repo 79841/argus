@@ -38,7 +38,7 @@ export const ChartCard = ({
             className="flex flex-col items-center justify-center gap-2 text-disabled"
             style={{ height: `${height}px` }}
           >
-            <BarChart3 className="size-10 opacity-50" />
+            <BarChart3 className="size-10 opacity-40" />
             <span className="text-[11px] font-medium text-muted-foreground">
               {emptyMessage}
             </span>

@@ -10,10 +10,10 @@ type AgentFilterProps = {
 }
 
 const TAB_COLORS: Record<AgentType, string> = {
-  all: 'data-[state=active]:bg-violet-500/80 data-[state=active]:text-white',
-  codex: 'data-[state=active]:bg-emerald-500/80 data-[state=active]:text-white',
-  claude: 'data-[state=active]:bg-orange-500/80 data-[state=active]:text-white',
-  gemini: 'data-[state=active]:bg-blue-500/80 data-[state=active]:text-white',
+  all: 'data-[state=active]:bg-violet-500 data-[state=active]:text-white',
+  codex: 'data-[state=active]:bg-emerald-500 data-[state=active]:text-white',
+  claude: 'data-[state=active]:bg-orange-500 data-[state=active]:text-white',
+  gemini: 'data-[state=active]:bg-blue-500 data-[state=active]:text-white',
 }
 
 export const AgentFilter = ({ value, onChange }: AgentFilterProps) => {

@@ -171,8 +171,8 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   }
 
   return (
-    <div className="my-2 rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between bg-muted/30 px-3 py-1 border-b border-[var(--border-subtle)]">
+    <div className="my-2 rounded overflow-hidden">
+      <div className="flex items-center justify-between bg-muted px-3 py-1 border-b border-[var(--border-subtle)]">
         {language ? (
           <span className="text-xs text-muted-foreground font-mono">{language}</span>
         ) : (
@@ -190,7 +190,7 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
           )}
         </button>
       </div>
-      <pre className="bg-muted/30 text-xs font-mono p-3 whitespace-pre-wrap break-words leading-relaxed overflow-x-auto">
+      <pre className="bg-muted text-xs font-mono p-3 whitespace-pre-wrap break-words leading-relaxed overflow-x-auto dark:bg-[#0d1117]">
         {highlightedHtml ? (
           <code
             className="hljs"

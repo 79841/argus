@@ -51,10 +51,10 @@
 
 :root {
   /* Design system tokens */
-  --bg-base: oklch(0.965 0.006 270);
+  --bg-base: oklch(0.985 0 0);
   --bg-raised: oklch(1 0 0);
-  --bg-overlay: oklch(0.95 0.004 270);
-  --bg-sunken: oklch(0.92 0.008 270);
+  --bg-overlay: oklch(0.97 0 0);
+  --bg-sunken: oklch(0.935 0 0);
 
   --border-default: oklch(0 0 0 / 8%);
   --border-subtle: oklch(0 0 0 / 5%);
@@ -62,8 +62,8 @@
 
   --text-primary: oklch(0.145 0 0);
   --text-secondary: oklch(0.40 0 0);
-  --text-tertiary: oklch(0.45 0 0);
-  --text-disabled: oklch(0.65 0 0);
+  --text-tertiary: oklch(0.556 0 0);
+  --text-disabled: oklch(0.708 0 0);
 
   --fill-hover: oklch(0 0 0 / 4%);
   --fill-active: oklch(0 0 0 / 8%);
@@ -83,14 +83,21 @@
   --agent-gemini-subtle: oklch(0.62 0.17 255 / 5%);
 
   /* Glassmorphism tokens — Light */
-  --glass-bg: oklch(1 0 0 / 75%);
-  --glass-bg-heavy: oklch(1 0 0 / 88%);
-  --glass-bg-light: oklch(1 0 0 / 55%);
+  --glass-bg: oklch(1 0 0 / 70%);
+  --glass-bg-heavy: oklch(1 0 0 / 85%);
+  --glass-bg-light: oklch(1 0 0 / 50%);
   --glass-border: oklch(0 0 0 / 6%);
-  --glass-shadow: 0 4px 24px oklch(0 0 0 / 10%), 0 1px 2px oklch(0 0 0 / 6%);
-  --glass-shadow-lg: 0 8px 40px oklch(0 0 0 / 14%), 0 2px 4px oklch(0 0 0 / 8%);
+  --glass-shadow: 0 4px 24px oklch(0 0 0 / 6%), 0 1px 4px oklch(0 0 0 / 4%);
+  --glass-shadow-lg: 0 8px 40px oklch(0 0 0 / 8%), 0 2px 8px oklch(0 0 0 / 4%);
   --glass-blur: 20px;
   --glass-blur-heavy: 40px;
+
+  /* Background blobs — Light (pastel, soft glow) */
+  --blob-claude: oklch(0.92 0.08 45);
+  --blob-codex: oklch(0.92 0.08 165);
+  --blob-gemini: oklch(0.92 0.08 255);
+  --blob-all: oklch(0.92 0.06 295);
+  --blob-primary: var(--blob-all);
 
   /* Status colors */
   --status-success: oklch(0.65 0.18 150);
@@ -152,8 +159,8 @@
 
   --text-primary: oklch(0.93 0 0);
   --text-secondary: oklch(0.65 0 0);
-  --text-tertiary: oklch(0.58 0 0);
-  --text-disabled: oklch(0.40 0 0);
+  --text-tertiary: oklch(0.50 0 0);
+  --text-disabled: oklch(0.35 0 0);
 
   --fill-hover: oklch(1 0 0 / 6%);
   --fill-active: oklch(1 0 0 / 10%);
@@ -173,14 +180,21 @@
   --agent-gemini-subtle: oklch(0.70 0.17 255 / 6%);
 
   /* Glassmorphism tokens — Dark */
-  --glass-bg: oklch(0.14 0.01 270 / 55%);
-  --glass-bg-heavy: oklch(0.16 0.01 270 / 70%);
-  --glass-bg-light: oklch(0.12 0.01 270 / 40%);
-  --glass-border: oklch(1 0 0 / 12%);
-  --glass-shadow: 0 8px 32px oklch(0 0 0 / 30%), 0 2px 8px oklch(0 0 0 / 20%);
-  --glass-shadow-lg: 0 16px 64px oklch(0 0 0 / 40%), 0 4px 16px oklch(0 0 0 / 25%);
+  --glass-bg: oklch(0.16 0.01 270 / 65%);
+  --glass-bg-heavy: oklch(0.18 0.01 270 / 80%);
+  --glass-bg-light: oklch(0.14 0.01 270 / 50%);
+  --glass-border: oklch(1 0 0 / 10%);
+  --glass-shadow: 0 8px 32px oklch(0 0 0 / 25%), 0 2px 8px oklch(0 0 0 / 15%);
+  --glass-shadow-lg: 0 16px 64px oklch(0 0 0 / 35%), 0 4px 16px oklch(0 0 0 / 20%);
   --glass-blur: 24px;
   --glass-blur-heavy: 48px;
+
+  /* Background blobs — Dark (deep, saturated glow) */
+  --blob-claude: oklch(0.35 0.12 45);
+  --blob-codex: oklch(0.35 0.12 165);
+  --blob-gemini: oklch(0.35 0.12 255);
+  --blob-all: oklch(0.30 0.10 295);
+  --blob-primary: var(--blob-all);
 
   /* Status colors (lightness +0.08~0.12 for dark) */
   --status-success: oklch(0.75 0.18 150);
@@ -225,7 +239,6 @@
   --sidebar-ring: var(--text-tertiary);
 }
 
-
 /* ─── Agent Theme Overrides ──────────────────────────────────────────────── */
 /* 에이전트 테마 선택 시 primary를 에이전트 색상으로 오버라이드 */
 
@@ -235,6 +248,7 @@
   --primary: var(--agent-claude);
   --sidebar-primary: var(--agent-claude);
   --ring: var(--agent-claude);
+  --blob-primary: var(--blob-claude);
 }
 [data-agent-theme="codex"] {
   --agent-primary: var(--agent-codex);
@@ -242,6 +256,7 @@
   --primary: var(--agent-codex);
   --sidebar-primary: var(--agent-codex);
   --ring: var(--agent-codex);
+  --blob-primary: var(--blob-codex);
 }
 [data-agent-theme="gemini"] {
   --agent-primary: var(--agent-gemini);
@@ -249,6 +264,7 @@
   --primary: var(--agent-gemini);
   --sidebar-primary: var(--agent-gemini);
   --ring: var(--agent-gemini);
+  --blob-primary: var(--blob-gemini);
 }
 
 /* ─── highlight.js Dark Mode Override ───────────────────────────────────── */
@@ -340,13 +356,44 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background/90 text-foreground;
+    @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
   }
 }
 
+/* ─── Blob Animation ────────────────────────────────────────────────────── */
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(10px, -10px) scale(1.02); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob-animate,
+  .blob-animate-reverse,
+  .blob-animate-slow {
+    animation: none !important;
+  }
+}
+
+/* ─── Blob Variant Classes ──────────────────────────────────────────────── */
+
+@utility blob-animate {
+  animation: blob-drift 20s ease-in-out infinite;
+}
+
+@utility blob-animate-reverse {
+  animation: blob-drift 25s ease-in-out infinite reverse;
+}
+
+@utility blob-animate-slow {
+  animation: blob-drift 30s ease-in-out infinite;
+  animation-delay: -10s;
+}
 
 /* ─── Glassmorphism Utilities ───────────────────────────────────────────── */
 
@@ -354,6 +401,7 @@
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
 
@@ -361,6 +409,7 @@
   background: var(--glass-bg-heavy);
   backdrop-filter: blur(var(--glass-blur-heavy));
   -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow-lg);
 }
 
@@ -368,7 +417,6 @@
   background: var(--glass-bg-light);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--glass-shadow);
 }
 
 @utility glass-nav {

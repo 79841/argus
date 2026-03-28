@@ -22,16 +22,9 @@ export const createWindow = (): void => {
     minWidth: 900,
     minHeight: 600,
     title: 'Argus',
-    transparent: true,
-    backgroundColor: '#00000000',
     ...(isMac
-      ? {
-          titleBarStyle: 'hiddenInset' as const,
-          trafficLightPosition: { x: 14, y: 18 },
-          vibrancy: 'under-window' as const,
-          visualEffectState: 'active' as const,
-        }
-      : { frame: false, backgroundMaterial: 'acrylic' as const }),
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 18 } }
+      : { frame: false }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

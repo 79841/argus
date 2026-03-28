@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type CSSProperties } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sun, Moon, Monitor, Globe, RotateCcw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
@@ -88,10 +88,10 @@ export const GeneralSection = () => {
                 key={opt.value}
                 onClick={() => setTheme(opt.value)}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-white/[0.08] bg-white/[0.04]',
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
                   theme === opt.value
-                    ? 'ring-2 ring-primary/40 bg-primary/10 text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 <opt.icon className="size-4" />
@@ -114,12 +114,12 @@ export const GeneralSection = () => {
                 key={at.value}
                 onClick={() => handleAgentThemeChange(at.value)}
                 className={cn(
-                  'flex flex-col items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] p-4 text-sm font-medium transition-colors',
+                  'flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition-colors',
                   agentTheme === at.value
-                    ? 'ring-2 ring-primary/40 bg-primary/10 text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'border-2 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
-                style={agentTheme === at.value ? { '--tw-ring-color': `var(--agent-${at.value})` } as CSSProperties : undefined}
+                style={agentTheme === at.value ? { borderColor: `var(--agent-${at.value})` } : undefined}
               >
                 <span
                   className="size-8 rounded-full"
@@ -147,10 +147,10 @@ export const GeneralSection = () => {
                 key={opt.value}
                 onClick={() => setLocale(opt.value)}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-white/[0.08] bg-white/[0.04]',
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
                   locale === opt.value
-                    ? 'ring-2 ring-primary/40 bg-primary/10 text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 <Globe className="size-4" />

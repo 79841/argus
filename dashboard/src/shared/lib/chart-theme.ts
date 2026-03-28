@@ -17,10 +17,8 @@ export const CHART_THEME = {
 
   tooltip: {
     containerStyle: {
-      backgroundColor: 'var(--glass-bg-heavy)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      border: '1px solid var(--glass-border)',
+      backgroundColor: 'var(--bg-raised)',
+      border: '1px solid var(--border-default)',
       borderRadius: '8px',
       boxShadow: '0 4px 12px oklch(0 0 0 / 10%)',
       padding: '8px 12px',

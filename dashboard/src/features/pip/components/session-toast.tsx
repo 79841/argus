@@ -36,7 +36,7 @@ export const SessionToast = ({ summary, onClose }: SessionToastProps) => {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg glass-heavy border-l-4 ${borderColor} px-4 py-3 shadow-lg animate-in slide-in-from-right-4 fade-in-0 duration-200 min-w-[280px] max-w-[360px]`}
+      className={`flex items-start gap-3 rounded-lg bg-gray-900 border-l-4 ${borderColor} px-4 py-3 shadow-lg animate-in slide-in-from-right-4 fade-in-0 duration-200 min-w-[280px] max-w-[360px]`}
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">{titleText}</p>

@@ -57,7 +57,7 @@ export const DataTable = <T = Record<string, unknown>>({
             <TableHead
               key={col.key}
               className={cn(
-                'text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
+                'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground',
                 alignClass[col.align ?? 'left']
               )}
               style={col.width ? { width: col.width } : undefined}

@@ -35,7 +35,7 @@ export const HeartbeatChart = ({ minutes = 5 }: Props) => {
   )
 
   return (
-    <div className="relative w-full h-full flex flex-col glass rounded-lg p-4">
+    <div className="relative w-full h-full flex flex-col bg-gray-950 rounded-lg p-4">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <span className="text-gray-500 text-sm animate-pulse">
