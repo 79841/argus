@@ -1,6 +1,20 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webFrame } from 'electron'
 
-document.documentElement.dataset.electron = ''
+webFrame.insertCSS(`
+  html, body, .electron-transparent {
+    background: transparent !important;
+  }
+  :root {
+    --glass-bg: oklch(1 0 0 / 50%);
+    --glass-bg-heavy: oklch(1 0 0 / 65%);
+    --glass-bg-light: oklch(1 0 0 / 30%);
+  }
+  :root.dark {
+    --glass-bg: oklch(0.14 0.01 270 / 35%);
+    --glass-bg-heavy: oklch(0.16 0.01 270 / 50%);
+    --glass-bg-light: oklch(0.12 0.01 270 / 20%);
+  }
+`)
 
 contextBridge.exposeInMainWorld('electronAPI', {
   query: (name: string, params?: Record<string, unknown>) =>
