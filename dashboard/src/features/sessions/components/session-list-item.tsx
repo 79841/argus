@@ -33,8 +33,8 @@ export const SessionListItem = ({ session: s, selected, cacheRate, onSelect }: S
 
   return (
     <div
-      className={`group relative mx-2 rounded-lg transition-colors hover:bg-muted/50 ${
-        selected ? 'bg-muted ring-1 ring-inset ring-muted-foreground/20' : ''
+      className={`group relative mx-2 rounded-lg transition-colors hover:bg-white/[0.06] dark:hover:bg-white/[0.06] ${
+        selected ? 'bg-white/[0.10] dark:bg-white/[0.08] ring-1 ring-inset ring-white/[0.12]' : ''
       }`}
     >
       <button

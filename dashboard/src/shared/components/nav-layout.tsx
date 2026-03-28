@@ -45,7 +45,7 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       {platform === 'windows' && (
-        <span className="pl-3 text-xs font-bold tracking-tight text-muted-foreground/30 select-none">Argus</span>
+        <span className="pl-3 text-xs font-bold tracking-tight text-muted-foreground/30 select-none" aria-hidden="true">Argus</span>
       )}
 
       <div className="flex w-14 shrink-0 items-center justify-center">
@@ -63,7 +63,7 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
       <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3 px-2" />
 
       {platform !== 'windows' && (
-        <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3">Argus</span>
+        <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3" aria-hidden="true">Argus</span>
       )}
 
       <WindowControls />
