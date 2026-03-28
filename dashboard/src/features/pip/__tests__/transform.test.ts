@@ -32,9 +32,9 @@ describe('transformHeartbeat', () => {
 
   const isoAt = (minutesAgo: number) => {
     const d = new Date(FIXED_NOW.getTime() - minutesAgo * 60 * 1000)
-    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const hh = String(d.getHours()).padStart(2, '0')
-    const mm = String(d.getMinutes()).padStart(2, '0')
+    const date = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+    const hh = String(d.getUTCHours()).padStart(2, '0')
+    const mm = String(d.getUTCMinutes()).padStart(2, '0')
     return `${date}T${hh}:${mm}`
   }
 

@@ -12,8 +12,10 @@ export type ChartDataPoint = {
 }
 
 const formatMinute = (iso: string): string => {
-  const parts = iso.split('T')
-  return parts[1] ?? iso.slice(-5)
+  const d = new Date(iso + ':00Z')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
 }
 
 const generateMinuteRange = (minutes: number): string[] => {
