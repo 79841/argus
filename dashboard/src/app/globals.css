@@ -356,7 +356,11 @@
   body {
     @apply bg-background/90 text-foreground;
   }
-  [data-electron] body {
+  html[data-electron],
+  html[data-electron] body {
+    background: transparent;
+  }
+  html[data-electron] .electron-transparent {
     background: transparent;
   }
   html {

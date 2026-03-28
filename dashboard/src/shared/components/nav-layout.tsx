@@ -95,7 +95,7 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)] [[data-electron]_&]:bg-transparent">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)] electron-transparent">
       <TopBar onToggleNav={toggleNav} />
       <div className="flex flex-1 min-h-0 gap-0">
         <Nav />
