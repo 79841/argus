@@ -1,6 +1,6 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webFrame } from 'electron'
 
-document.documentElement.dataset.electron = ''
+webFrame.executeJavaScript(`document.documentElement.dataset.electron = ''`)
 
 contextBridge.exposeInMainWorld('electronAPI', {
   query: (name: string, params?: Record<string, unknown>) =>
