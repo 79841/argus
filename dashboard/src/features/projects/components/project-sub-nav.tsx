@@ -29,7 +29,7 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
 
   return (
     <div className="relative">
-    <nav className="flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
+    <nav className="flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] [-webkit-mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
       {tabs.map((tab) => {
         const isActive =
           tab.href === base
