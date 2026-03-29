@@ -2,7 +2,7 @@ import { app, ipcMain, Notification } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { registerIpcHandlers } from './infrastructure/ipc/ipc.handler'
-import { createWindow, getMainWindow, togglePipWindow, closePipWindow } from './presentation/window'
+import { createWindow, getMainWindow } from './presentation/window'
 import { createTray, destroyTray } from './presentation/tray'
 import { startNextServer, waitForServer, killNextProcess, DEV_URL } from './infrastructure/server/next-server'
 
@@ -36,9 +36,6 @@ ipcMain.handle('select-folder', async (_event, title?: string) => {
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
 })
-
-ipcMain.on('pip-toggle', () => togglePipWindow())
-ipcMain.on('pip-close', () => closePipWindow())
 
 ipcMain.on('show-notification', (_event, title: string, body: string) => {
   new Notification({ title, body }).show()

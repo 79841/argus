@@ -14,10 +14,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
   },
-  pip: {
-    toggle: () => ipcRenderer.send('pip-toggle'),
-    close: () => ipcRenderer.send('pip-close'),
-  },
   platform: process.platform,
   onFullScreenChange: (callback: (isFullScreen: boolean) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, isFullScreen: boolean) => callback(isFullScreen)
