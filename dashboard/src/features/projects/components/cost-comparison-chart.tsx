@@ -43,7 +43,8 @@ export const CostComparisonChart = ({ data }: CostComparisonChartProps) => {
         <YAxis
           type="category"
           dataKey="name"
-          width={120}
+          width={130}
+          tickFormatter={(v: string) => v.length > 18 ? `${v.slice(0, 16)}…` : v}
           {...CHART_THEME.axis}
         />
         <Tooltip
