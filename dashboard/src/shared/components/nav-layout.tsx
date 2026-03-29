@@ -75,7 +75,7 @@ const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
         )}
       </div>
 
-      <div ref={setTarget} className="flex flex-1 flex-nowrap items-center gap-3 overflow-hidden px-2" />
+      <div ref={setTarget} className="flex flex-1 min-w-0 items-center gap-3 overflow-hidden px-2" />
 
       {platform !== 'windows' && (
         <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3">Argus</span>
