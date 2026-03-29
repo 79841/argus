@@ -122,7 +122,7 @@ export default function ProjectsPage() {
           <div className="w-[65%] overflow-y-auto px-4 py-4">
             {mainContent}
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-muted/30">
             <ProjectPreviewSidebar projectName={selectedProject} />
           </div>
         </div>
@@ -139,6 +139,9 @@ export default function ProjectsPage() {
             onClick={() => setSelectedProject(null)}
           />
           <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-xl bg-background shadow-lg">
+            <div className="flex justify-center py-2">
+              <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
+            </div>
             <div className="flex items-center justify-between px-4 py-3 shadow-sm">
               <button
                 onClick={() => setSelectedProject(null)}

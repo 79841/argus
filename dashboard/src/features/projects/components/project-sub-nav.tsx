@@ -28,7 +28,8 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
   ]
 
   return (
-    <nav className="flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+    <div className="relative">
+    <nav className="flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
       {tabs.map((tab) => {
         const isActive =
           tab.href === base
@@ -51,5 +52,6 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
         )
       })}
     </nav>
+    </div>
   )
 }
