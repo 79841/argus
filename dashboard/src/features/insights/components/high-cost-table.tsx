@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useLocale } from '@/shared/lib/i18n'
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { DataTable } from '@/shared/components/ui/data-table'
@@ -13,8 +14,8 @@ import type { AgentType } from '@/shared/lib/agents'
 
 const CAUSE_COLORS: Record<string, string> = {
   expensive_model: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
-  many_tool_calls: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
-  many_requests: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
+  many_tool_calls: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
+  many_requests: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   no_cache: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
 }
 
@@ -32,6 +33,7 @@ type HighCostTableProps = {
 
 export const HighCostTable = ({ data, loading }: HighCostTableProps) => {
   const { t } = useLocale()
+  const router = useRouter()
 
   const sessionColumns = [
     {
@@ -42,11 +44,22 @@ export const HighCostTable = ({ data, loading }: HighCostTableProps) => {
     {
       key: 'model',
       label: t('insights.col.model'),
-      format: (v: unknown) => (
-        <span className="font-mono text-xs">
-          {String(v).split(',').map(m => shortenModel(m.trim())).join(', ')}
-        </span>
-      ),
+      format: (v: unknown) => {
+        const models = String(v).split(',').map(m => shortenModel(m.trim()))
+        const first = models[0]
+        const rest = models.length - 1
+        return (
+          <span
+            className="font-mono text-xs"
+            title={models.join(', ')}
+          >
+            {first}
+            {rest > 0 && (
+              <span className="ml-1 text-muted-foreground">+{rest}</span>
+            )}
+          </span>
+        )
+      },
     },
     {
       key: 'total_cost',
@@ -98,6 +111,7 @@ export const HighCostTable = ({ data, loading }: HighCostTableProps) => {
         <DataTable<HighCostSession>
           columns={sessionColumns}
           data={data}
+          onRowClick={(row) => router.push(`/sessions/${row.session_id}`)}
         />
       )}
     </ChartCard>

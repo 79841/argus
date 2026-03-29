@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { RefObject } from 'react'
 import type { Heading } from '@/features/rules/components/markdown-viewer'
+import { useLocale } from '@/shared/lib/i18n'
 
 type TocSidebarProps = {
   headings: Heading[]
@@ -17,6 +18,7 @@ const INDENT_MAP: Record<number, string> = {
 }
 
 export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
+  const { t } = useLocale()
   const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
   const headingIdsRef = useRef<string[]>([])
@@ -92,7 +94,10 @@ export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
   const seenIds = new Map<string, number>()
 
   return (
-    <nav className="glass-light overflow-y-auto py-2 px-3">
+    <nav className="overflow-y-auto rounded-md bg-muted/20 py-2 px-3">
+      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {t('rules.tableOfContents')}
+      </p>
       {headings.map((heading, idx) => {
         const isActive = activeId === heading.id
         const indent = INDENT_MAP[heading.level] ?? 'ml-0'

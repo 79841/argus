@@ -66,7 +66,7 @@ export default function InsightsPage() {
       </FilterBar>
 
       <div className="flex-1 overflow-auto px-4 py-4">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
 
           <SuggestionsSection suggestions={suggestions} suggestionsLoading={suggestionsLoading} />
 

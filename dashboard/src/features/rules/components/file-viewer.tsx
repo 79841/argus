@@ -1,9 +1,9 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import { FileText, Save, Eye, Pencil, Loader2, Search } from 'lucide-react'
+import { FileText, Save, Eye, Pencil, Loader2, Search, BookOpen } from 'lucide-react'
 import { useLocale } from '@/shared/lib/i18n'
 import { MarkdownViewer } from '@/features/rules/components/markdown-viewer'
 import type { Heading } from '@/features/rules/components/markdown-viewer'
@@ -51,6 +51,7 @@ export const FileViewer = ({
 }: FileViewerProps) => {
   const { t } = useLocale()
   const contentRef = useRef<HTMLDivElement>(null)
+  const [tocOpen, setTocOpen] = useState(false)
 
   const showToc =
     viewMode === 'preview' && isMarkdown(selectedFile?.path ?? '') && headings.length >= 3
@@ -89,6 +90,18 @@ export const FileViewer = ({
               onClick={() => onSearchOpenChange(!searchOpen)}
             >
               <Search className="size-3" />
+            </Button>
+          )}
+          {showToc && (
+            <Button
+              size="sm"
+              variant={tocOpen ? 'default' : 'ghost'}
+              className="h-7 px-2 text-xs lg:hidden"
+              onClick={() => setTocOpen((v) => !v)}
+              title={t('rules.tableOfContents')}
+            >
+              <BookOpen className="size-3 mr-1" />
+              {t('rules.tocToggle')}
             </Button>
           )}
           <Button
@@ -170,9 +183,16 @@ export const FileViewer = ({
         </div>
 
         {showToc && (
-          <div className="w-48 shrink-0 overflow-y-auto">
-            <TocSidebar headings={headings} containerRef={contentRef} />
-          </div>
+          <>
+            <div className="hidden lg:block w-48 shrink-0 overflow-y-auto">
+              <TocSidebar headings={headings} containerRef={contentRef} />
+            </div>
+            {tocOpen && (
+              <div className="lg:hidden absolute top-0 right-0 z-10 w-56 h-full overflow-y-auto shadow-lg bg-background/95 backdrop-blur-sm p-2">
+                <TocSidebar headings={headings} containerRef={contentRef} />
+              </div>
+            )}
+          </>
         )}
       </div>
     </>
