@@ -431,6 +431,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.datePicker.customRange': '직접 설정',
     'shared.datePicker.apply': '적용',
     'shared.bottomBar.noData': '데이터 없음',
+    'shared.bottomBar.total': '합계',
+    'shared.bottomBar.tokens': '토큰',
     'shared.projectFilter.allProjects': '전체 프로젝트',
     'shared.navLayout.toggleSidebar': '사이드바 토글',
     'shared.navLayout.openMenu': '메뉴 열기',
@@ -500,7 +502,13 @@ const translations: Record<Locale, Record<string, string>> = {
     // Master-detail mobile navigation
     'sessions.backToList': '← 목록',
     'rules.backToList': '← 파일 목록',
+    'rules.tableOfContents': '목차',
+    'rules.tocToggle': '목차',
     'projects.backToList': '← 프로젝트 목록',
+
+    // Session ID copy
+    'sessions.id.copy': '세션 ID 복사',
+    'sessions.id.copied': '복사됨!',
   },
   en: {
     // Nav
@@ -927,6 +935,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.datePicker.customRange': 'Custom Range',
     'shared.datePicker.apply': 'Apply',
     'shared.bottomBar.noData': 'No data',
+    'shared.bottomBar.total': 'Total',
+    'shared.bottomBar.tokens': 'tokens',
     'shared.projectFilter.allProjects': 'All Projects',
     'shared.navLayout.toggleSidebar': 'Toggle sidebar',
     'shared.navLayout.openMenu': 'Open menu',
@@ -996,7 +1006,13 @@ const translations: Record<Locale, Record<string, string>> = {
     // Master-detail mobile navigation
     'sessions.backToList': '← List',
     'rules.backToList': '← File List',
+    'rules.tableOfContents': 'Table of Contents',
+    'rules.tocToggle': 'TOC',
     'projects.backToList': '← Projects',
+
+    // Session ID copy
+    'sessions.id.copy': 'Copy session ID',
+    'sessions.id.copied': 'Copied!',
   },
 }
 

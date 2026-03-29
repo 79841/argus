@@ -64,7 +64,7 @@ describe('BottomBar', () => {
 
     render(<BottomBar />)
     await waitFor(() => {
-      expect(screen.getByText(/Total:/)).toBeInTheDocument()
+      expect(screen.getByText(/합계:|Total:/)).toBeInTheDocument()
     })
   })
 
