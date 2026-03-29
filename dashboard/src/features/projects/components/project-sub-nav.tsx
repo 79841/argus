@@ -28,7 +28,7 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
   ]
 
   return (
-    <nav className="flex border-b px-4">
+    <nav className="flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => {
         const isActive =
           tab.href === base
@@ -40,7 +40,7 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
             key={tab.href}
             href={tab.href}
             className={cn(
-              'px-4 py-2 text-sm transition-colors',
+              'px-4 py-2 text-sm transition-colors whitespace-nowrap',
               isActive
                 ? 'border-b-2 border-primary font-medium text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

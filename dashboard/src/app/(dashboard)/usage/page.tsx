@@ -28,13 +28,15 @@ export default function UsagePage() {
 
       <div className="flex-1 overflow-auto px-4 py-4">
         <Tabs defaultValue="cost" className="h-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="cost">Cost</TabsTrigger>
-            <TabsTrigger value="tokens">Tokens</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
-            <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
-            <TabsTrigger value="impact">Impact</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto mb-4 [&::-webkit-scrollbar]:hidden">
+            <TabsList>
+              <TabsTrigger value="cost" className="flex-shrink-0">Cost</TabsTrigger>
+              <TabsTrigger value="tokens" className="flex-shrink-0">Tokens</TabsTrigger>
+              <TabsTrigger value="models" className="flex-shrink-0">Models</TabsTrigger>
+              <TabsTrigger value="efficiency" className="flex-shrink-0">Efficiency</TabsTrigger>
+              <TabsTrigger value="impact" className="flex-shrink-0">Impact</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="cost">
             <CostTab agentType={agentType} project={project} dateRange={dateRange} />
