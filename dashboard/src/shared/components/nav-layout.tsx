@@ -42,7 +42,7 @@ const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
   return (
     <div
       className={cn(
-        'flex min-h-[52px] h-auto flex-shrink-0 items-center',
+        'flex h-[52px] flex-shrink-0 items-center',
         isMacInset ? 'pl-20' : ''
       )}
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
@@ -75,7 +75,7 @@ const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
         )}
       </div>
 
-      <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3 px-2" />
+      <div ref={setTarget} className="flex flex-1 flex-nowrap items-center gap-3 overflow-hidden px-2" />
 
       {platform !== 'windows' && (
         <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3">Argus</span>
@@ -133,13 +133,13 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
 
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed top-[52px] bottom-0 inset-x-0 z-40 bg-black/50"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 bg-[var(--bg-sunken)]',
+          'fixed top-[52px] bottom-0 left-0 z-50 bg-[var(--bg-sunken)]',
           'transform transition-transform duration-200',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
