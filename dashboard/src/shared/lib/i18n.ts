@@ -433,6 +433,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.bottomBar.noData': '데이터 없음',
     'shared.projectFilter.allProjects': '전체 프로젝트',
     'shared.navLayout.toggleSidebar': '사이드바 토글',
+    'shared.navLayout.openMenu': '메뉴 열기',
+    'shared.navLayout.closeMenu': '메뉴 닫기',
     'shared.dataTable.noData': '데이터 없음',
 
     // Settings — Agent Connection
@@ -494,6 +496,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.details.tab.skills': '스킬',
     'tools.details.tab.agents': '에이전트',
     'tools.details.tab.mcp': 'MCP',
+
+    // Master-detail mobile navigation
+    'sessions.backToList': '← 목록',
+    'rules.backToList': '← 파일 목록',
+    'projects.backToList': '← 프로젝트 목록',
   },
   en: {
     // Nav
@@ -922,6 +929,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shared.bottomBar.noData': 'No data',
     'shared.projectFilter.allProjects': 'All Projects',
     'shared.navLayout.toggleSidebar': 'Toggle sidebar',
+    'shared.navLayout.openMenu': 'Open menu',
+    'shared.navLayout.closeMenu': 'Close menu',
     'shared.dataTable.noData': 'No data',
 
     // Settings — Agent Connection
@@ -983,6 +992,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.details.tab.skills': 'Skills',
     'tools.details.tab.agents': 'Agents',
     'tools.details.tab.mcp': 'MCP',
+
+    // Master-detail mobile navigation
+    'sessions.backToList': '← List',
+    'rules.backToList': '← File List',
+    'projects.backToList': '← Projects',
   },
 }
 

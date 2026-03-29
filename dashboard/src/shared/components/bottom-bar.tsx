@@ -28,7 +28,7 @@ export const BottomBar = () => {
   const { t } = useLocale()
 
   return (
-    <footer className="flex h-8 shrink-0 items-center glass-light px-4 text-xs text-muted-foreground">
+    <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground">
       <div className="flex items-center gap-4">
         {agentTypes.map((type) => {
           const status = agents.find((a) => a.agent_type === type)
@@ -38,11 +38,11 @@ export const BottomBar = () => {
               <span
                 className={`inline-block h-2 w-2 rounded-full ${getStatusDot(status?.last_received ?? null)}`}
               />
-              <span style={{ color: `var(--agent-${type})` }}>{config.name}</span>
+              <span className="hidden md:inline" style={{ color: `var(--agent-${type})` }}>{config.name}</span>
               {status ? (
-                <span>{formatRelativeTime(status.last_received)}</span>
+                <span className="hidden md:inline">{formatRelativeTime(status.last_received)}</span>
               ) : (
-                <span className="text-muted-foreground/50">{t('shared.bottomBar.noData')}</span>
+                <span className="hidden md:inline text-muted-foreground/50">{t('shared.bottomBar.noData')}</span>
               )}
             </div>
           )
@@ -50,7 +50,7 @@ export const BottomBar = () => {
       </div>
 
       {activeSessions.length > 0 && (
-        <div className="ml-4 flex items-center gap-1.5">
+        <div className="hidden md:flex ml-4 items-center gap-1.5">
           <div className="h-3 w-px bg-border" />
           <AgentDot agent={activeSessions[0].agent_type as AgentType} size="sm" pulse />
           {activeSessions.slice(0, 3).map((s) => {
