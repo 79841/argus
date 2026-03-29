@@ -378,17 +378,16 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 1. Linear 이슈 확인/생성
 2. /feature-start <이름>       → feature 브랜치 생성
 3. cd dashboard && pnpm dev    → 대시보드 시작
-4. POST /api/seed              → 테스트 데이터 시드
-5. /plan                       → 구현 계획 수립
-6. /tdd                        → 테스트 코드 작성 (Red)
-7. /develop                    → 구현 (Green)
-8. /test                       → 테스트 실행
-9. /simplify                   → 코드 정리 (품질·재사용성·효율성)
-10. /feature-finish            → develop에 머지
-11. Linear 이슈 상태 업데이트   → Done
+4. /plan                       → 구현 계획 수립
+5. /tdd                        → 테스트 코드 작성 (Red)
+6. /develop                    → 구현 (Green)
+7. /test                       → 테스트 실행
+8. /simplify                   → 코드 정리 (품질·재사용성·효율성)
+9. /feature-finish             → develop에 머지
+10. Linear 이슈 상태 업데이트   → Done
 ```
 
-단계 5~9는 상황에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
+단계 4~8은 상황에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
 
 ## 마일스톤
 

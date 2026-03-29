@@ -47,7 +47,11 @@ export async function POST(request: NextRequest) {
       for (const resourceLog of data.resourceLogs ?? []) {
         const resAttrs = resourceLog.resource?.attributes
         const serviceName = getAttr(resAttrs, 'service.name')
-        const agentType = detectAgentType(serviceName)
+        const firstAttrs = resourceLog.scopeLogs?.[0]?.logRecords?.[0]?.attributes
+        const agentType = detectAgentType(
+          serviceName,
+          firstAttrs ? getAttr(firstAttrs, 'event.name') : undefined
+        )
         const projectName = getAttr(resAttrs, 'project.name')
 
         for (const scopeLog of resourceLog.scopeLogs ?? []) {

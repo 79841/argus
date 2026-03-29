@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import Database from 'better-sqlite3'
 import {
-  getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
+  getVal, getAttr, getNumAttr, detectAgentType, detectAgentFromEvent, normalizeEventName,
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
   getStatusCode, extractProjectFromArgs, getToolCategory,
@@ -85,22 +85,52 @@ describe('getNumAttr', () => {
 // --- detectAgentType ---
 
 describe('detectAgentType', () => {
-  it('detects codex', () => {
+  it('detects known service names exactly', () => {
+    expect(detectAgentType('claude-code')).toBe('claude')
     expect(detectAgentType('codex-cli')).toBe('codex')
     expect(detectAgentType('codex_cli_rs')).toBe('codex')
-  })
-  it('detects claude', () => {
-    expect(detectAgentType('claude-code')).toBe('claude')
-  })
-  it('detects gemini', () => {
+    expect(detectAgentType('codex-app-server')).toBe('codex')
+    expect(detectAgentType('codex_exec')).toBe('codex')
     expect(detectAgentType('gemini-cli')).toBe('gemini')
   })
-  it('defaults to claude for unknown', () => {
-    expect(detectAgentType('unknown-service')).toBe('claude')
-  })
-  it('is case insensitive', () => {
-    expect(detectAgentType('Codex')).toBe('codex')
+  it('is case insensitive for exact matches', () => {
+    expect(detectAgentType('Claude-Code')).toBe('claude')
+    expect(detectAgentType('CODEX-CLI')).toBe('codex')
     expect(detectAgentType('GEMINI-CLI')).toBe('gemini')
+  })
+  it('uses event name prefix as fallback for unknown service names', () => {
+    expect(detectAgentType('unknown', 'claude_code.api_request')).toBe('claude')
+    expect(detectAgentType('unknown', 'codex.sse_event')).toBe('codex')
+    expect(detectAgentType('unknown', 'gemini_cli.api_response')).toBe('gemini')
+  })
+  it('falls back to partial matching for new service name variants', () => {
+    expect(detectAgentType('claude-code-v2')).toBe('claude')
+    expect(detectAgentType('codex-new')).toBe('codex')
+    expect(detectAgentType('gemini-cli-beta')).toBe('gemini')
+  })
+  it('prefers claude over codex in partial matching order', () => {
+    // claude를 codex보다 먼저 체크하여 오분류 방지
+    expect(detectAgentType('claude-codex-hybrid')).toBe('claude')
+  })
+  it('returns unknown for completely unrecognized service', () => {
+    expect(detectAgentType('unknown-service')).toBe('unknown')
+  })
+  it('exact match takes precedence over event name fallback', () => {
+    expect(detectAgentType('codex-cli', 'claude_code.api_request')).toBe('codex')
+  })
+})
+
+// --- detectAgentFromEvent ---
+
+describe('detectAgentFromEvent', () => {
+  it('detects agent from event prefix', () => {
+    expect(detectAgentFromEvent('claude_code.api_request')).toBe('claude')
+    expect(detectAgentFromEvent('codex.sse_event')).toBe('codex')
+    expect(detectAgentFromEvent('gemini_cli.api_response')).toBe('gemini')
+  })
+  it('returns undefined for unknown event prefix', () => {
+    expect(detectAgentFromEvent('custom_event')).toBeUndefined()
+    expect(detectAgentFromEvent('gen_ai.something')).toBeUndefined()
   })
 })
 
