@@ -45,7 +45,7 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
         />
       </ChartCard>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <ChartCard title="Cost by Model" height={200} empty={pieData.length === 0}>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>

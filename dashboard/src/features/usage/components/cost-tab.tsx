@@ -24,7 +24,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard label="Total Cost" value={formatCost(totalCost)} delta={delta} deltaInverted />
         <KpiCard label="Daily Average" value={formatCost(avgCost)} sub="per day" />
         <KpiCard label="Requests" value={(overview?.total_requests ?? 0).toLocaleString()} sub="API requests" />
@@ -45,7 +45,7 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
         </ResponsiveContainer>
       </ChartCard>
 
-      <div className={cn('grid gap-4', project !== 'all' ? 'grid-cols-1' : 'grid-cols-2')}>
+      <div className={cn('grid gap-4', project !== 'all' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}>
         <ChartCard title="Cost by Agent" height={160}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>

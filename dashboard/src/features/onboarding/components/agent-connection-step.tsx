@@ -113,7 +113,7 @@ export const AgentConnectionStep = ({
 
         <div>
           <label className="text-sm font-medium">{t('onboarding.agent.select')}</label>
-          <div className="mt-2 grid grid-cols-3 gap-3">
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {AGENTS.map((agent) => {
               const isSelected = selectedAgents.includes(agent.type)
               const isConnected = connectedTypes.includes(agent.type)

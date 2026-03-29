@@ -22,7 +22,7 @@ export const TokensTab = ({ agentType, project, dateRange }: TokensTabProps) => 
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard label="Total Tokens" value={formatTokens(totalTokens)} sub="input + output + cache" />
         <KpiCard label="Input / Output Ratio" value={`${inputRatio}%`} sub="input proportion" />
         <KpiCard label="Cache Savings" value={formatTokens(totalCache)} sub="tokens served from cache" />

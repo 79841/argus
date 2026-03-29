@@ -49,13 +49,13 @@ export default function DashboardPage() {
         <FilterBar><span className="text-sm font-semibold">Dashboard</span></FilterBar>
         <div className="flex-1 overflow-auto px-4 py-4">
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
               ))}
             </div>
             <div className="h-48 animate-pulse rounded-xl bg-muted" />
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="h-80 animate-pulse rounded-xl bg-muted" />
               ))}
@@ -72,7 +72,7 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-auto px-4 py-4">
         <div className="flex flex-col gap-4">
           {/* KPI 카드 4개 */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <KpiCard
               label={t('dashboard.kpi.todayCost')}
               value={formatCost(stats?.total_cost ?? 0)}
@@ -100,7 +100,7 @@ export default function DashboardPage() {
           <UsageHeatmap data={daily} agentType="all" />
 
           {/* 에이전트 분포 + 에이전트 요약 + 최근 세션 */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <AgentDonutChart data={agentDistribution} />
             <AgentSummaryCard agentSummaries={agentSummaries} />
             <RecentSessionsCard

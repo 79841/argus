@@ -54,7 +54,7 @@ export default function ProjectDetailPage() {
     <div className="px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 6개 */}
-      <div className="grid grid-cols-3 gap-4 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
         <KpiCard
           label={t('projects.detail.kpi.totalCost')}
           value={loading ? '—' : formatCost(stats?.total_cost ?? 0)}
