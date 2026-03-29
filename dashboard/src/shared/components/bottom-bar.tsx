@@ -29,7 +29,7 @@ export const BottomBar = () => {
   const { t } = useLocale()
 
   return (
-    <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground">
+    <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
       <div className="flex items-center gap-3">
         {agentTypes.map((type) => {
           const status = agents.find((a) => a.agent_type === type)
