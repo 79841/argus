@@ -14,7 +14,7 @@ export const FilterBar = ({ children }: FilterBarProps) => {
   if (!target) return null
 
   return createPortal(
-    <div className="flex flex-wrap items-center gap-3 [&_button]:[-webkit-app-region:no-drag] [&_input]:[-webkit-app-region:no-drag] [&_select]:[-webkit-app-region:no-drag] [&_a]:[-webkit-app-region:no-drag] [&_[role=combobox]]:[-webkit-app-region:no-drag]">
+    <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_button]:[-webkit-app-region:no-drag] [&_input]:[-webkit-app-region:no-drag] [&_select]:[-webkit-app-region:no-drag] [&_a]:[-webkit-app-region:no-drag] [&_[role=combobox]]:[-webkit-app-region:no-drag]">
       {children}
     </div>,
     target

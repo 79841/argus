@@ -57,13 +57,13 @@ const MetricCell = ({ before, after, metric }: { before: number; after: number; 
   const isGood = metric.inverted ? !isPositive : isPositive
 
   return (
-    <div className="space-y-1">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{metric.label}</div>
-      <div className="font-mono text-xs text-muted-foreground">{metric.format(before)}</div>
-      <div className="flex items-center gap-1.5">
-        <span className="font-mono text-sm font-medium">{metric.format(after)}</span>
+    <div className="min-w-0 space-y-1 overflow-hidden">
+      <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">{metric.label}</div>
+      <div className="truncate font-mono text-xs text-muted-foreground">{metric.format(before)}</div>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="truncate font-mono text-sm font-medium">{metric.format(after)}</span>
         {!isNeutral && (
-          <span className={cn('text-[10px] font-semibold', isGood ? 'text-green-600' : 'text-red-500')}>
+          <span className={cn('flex-shrink-0 text-[10px] font-semibold', isGood ? 'text-green-600' : 'text-red-500')}>
             {isPositive ? '+' : ''}{diff.toFixed(1)}%
           </span>
         )}

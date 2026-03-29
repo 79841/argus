@@ -48,7 +48,7 @@ export default function SessionsPage() {
         <AgentFilter value={agentType} onChange={setAgentType} />
         <ProjectFilter value={project} onChange={setProject} />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <div className="flex flex-1 items-center gap-2 min-w-[180px]">
+        <div className="flex min-w-[120px] flex-shrink items-center gap-2">
           <input
             type="text"
             value={search}

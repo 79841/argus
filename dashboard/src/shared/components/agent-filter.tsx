@@ -19,7 +19,7 @@ const TAB_COLORS: Record<AgentType, string> = {
 export const AgentFilter = ({ value, onChange }: AgentFilterProps) => {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as AgentType)}>
-      <TabsList>
+      <TabsList className="flex-nowrap">
         {AGENT_LIST.map((agent) => (
           <TabsTrigger
             key={agent.id}
