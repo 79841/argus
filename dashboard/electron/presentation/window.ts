@@ -19,9 +19,10 @@ export const createWindow = (): void => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    minWidth: 360,
+    minHeight: 480,
     title: 'Argus',
+    icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     ...(isMac
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 18 } }
       : { frame: false }),
