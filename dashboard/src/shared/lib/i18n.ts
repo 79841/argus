@@ -494,6 +494,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.details.tab.skills': '스킬',
     'tools.details.tab.agents': '에이전트',
     'tools.details.tab.mcp': 'MCP',
+
+    // Master-detail mobile navigation
+    'sessions.backToList': '← 목록',
+    'rules.backToList': '← 파일 목록',
+    'projects.backToList': '← 프로젝트 목록',
   },
   en: {
     // Nav
@@ -983,6 +988,11 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.details.tab.skills': 'Skills',
     'tools.details.tab.agents': 'Agents',
     'tools.details.tab.mcp': 'MCP',
+
+    // Master-detail mobile navigation
+    'sessions.backToList': '← List',
+    'rules.backToList': '← File List',
+    'projects.backToList': '← Projects',
   },
 }
 

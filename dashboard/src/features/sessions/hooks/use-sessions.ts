@@ -27,6 +27,7 @@ type UseSessionsReturn = {
   setDateRange: (v: DateRange) => void
   setSearch: (v: string) => void
   setSortBy: (v: SortOption) => void
+  setSelectedId: (id: string | null) => void
   handleSelect: (sessionId: string) => void
 }
 
@@ -118,6 +119,7 @@ export const useSessions = (options?: UseSessionsOptions): UseSessionsReturn => 
     setDateRange,
     setSearch,
     setSortBy,
+    setSelectedId,
     handleSelect,
   }
 }

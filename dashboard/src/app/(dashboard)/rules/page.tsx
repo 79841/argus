@@ -7,9 +7,11 @@ import { AgentFilter } from '@/shared/components/agent-filter'
 import type { AgentType } from '@/shared/lib/agents'
 import type { Heading } from '@/features/rules/components/markdown-viewer'
 import { useConfigFiles, FileTree, FileViewer } from '@/features/rules'
+import { useIsMobile } from '@/shared/hooks/use-media-query'
 
 export default function RulesPage() {
   const { t } = useLocale()
+  const isMobile = useIsMobile()
   const [agentType, setAgentType] = useState<AgentType>('all')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [headings, setHeadings] = useState<Heading[]>([])
@@ -28,6 +30,7 @@ export default function RulesPage() {
     userAgents,
     setEditContent,
     setViewMode,
+    clearSelectedFile,
     loadFile,
     handleSave,
   } = useConfigFiles({ agentType })
@@ -54,6 +57,9 @@ export default function RulesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedFile, viewMode, contentLoading])
 
+  const showTree = isMobile ? !selectedFile : true
+  const showViewer = isMobile ? !!selectedFile : true
+
   return (
     <div className="flex h-full flex-col">
       <FilterBar>
@@ -62,36 +68,48 @@ export default function RulesPage() {
         <AgentFilter value={agentType} onChange={setAgentType} />
       </FilterBar>
       <div className="flex flex-1 min-h-0">
-        <div className="w-[35%] flex flex-col overflow-auto">
-          <FileTree
-            loading={loading}
-            projectGroups={projectGroups}
-            userAgents={userAgents}
-            selectedFile={selectedFile}
-            collapsedGroups={collapsedGroups}
-            onToggleGroup={toggleGroup}
-            onLoadFile={loadFile}
-          />
-        </div>
+        {showTree && (
+          <div className="w-full md:w-[35%] flex flex-col overflow-auto">
+            <FileTree
+              loading={loading}
+              projectGroups={projectGroups}
+              userAgents={userAgents}
+              selectedFile={selectedFile}
+              collapsedGroups={collapsedGroups}
+              onToggleGroup={toggleGroup}
+              onLoadFile={loadFile}
+            />
+          </div>
+        )}
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <FileViewer
-            selectedFile={selectedFile}
-            fileContent={fileContent}
-            editContent={editContent}
-            viewMode={viewMode}
-            contentLoading={contentLoading}
-            saving={saving}
-            saveSuccess={saveSuccess}
-            headings={headings}
-            searchOpen={searchOpen}
-            onEditContentChange={setEditContent}
-            onViewModeChange={setViewMode}
-            onSave={handleSave}
-            onSearchOpenChange={setSearchOpen}
-            onHeadingsChange={setHeadings}
-          />
-        </div>
+        {showViewer && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {isMobile && selectedFile && (
+              <button
+                onClick={clearSelectedFile}
+                className="md:hidden flex items-center px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {t('rules.backToList')}
+              </button>
+            )}
+            <FileViewer
+              selectedFile={selectedFile}
+              fileContent={fileContent}
+              editContent={editContent}
+              viewMode={viewMode}
+              contentLoading={contentLoading}
+              saving={saving}
+              saveSuccess={saveSuccess}
+              headings={headings}
+              searchOpen={searchOpen}
+              onEditContentChange={setEditContent}
+              onViewModeChange={setViewMode}
+              onSave={handleSave}
+              onSearchOpenChange={setSearchOpen}
+              onHeadingsChange={setHeadings}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

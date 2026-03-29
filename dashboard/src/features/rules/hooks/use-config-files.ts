@@ -34,6 +34,7 @@ type UseConfigFilesReturn = {
   userAgents: Array<{ agent: Agent; files: FileEntry[] }>
   setEditContent: (content: string) => void
   setViewMode: (mode: 'preview' | 'edit') => void
+  clearSelectedFile: () => void
   loadFile: (file: FileEntry) => Promise<void>
   handleSave: () => Promise<void>
 }
@@ -164,6 +165,11 @@ export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}
     userAgents,
     setEditContent,
     setViewMode,
+    clearSelectedFile: () => {
+      setSelectedFile(null)
+      setFileContent('')
+      setEditContent('')
+    },
     loadFile,
     handleSave,
   }
