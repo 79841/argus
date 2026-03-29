@@ -87,7 +87,7 @@ export default function RulesPage() {
             {isMobile && selectedFile && (
               <button
                 onClick={clearSelectedFile}
-                className="md:hidden flex items-center px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+                className="flex items-center px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 {t('rules.backToList')}
               </button>

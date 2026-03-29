@@ -132,7 +132,6 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {/* Mobile: bottom sheet overlay */}
       {isMobile && selectedProject && (
         <>
           <div
@@ -140,7 +139,7 @@ export default function ProjectsPage() {
             onClick={() => setSelectedProject(null)}
           />
           <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-xl bg-background shadow-lg">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
+            <div className="flex items-center justify-between px-4 py-3 shadow-sm">
               <button
                 onClick={() => setSelectedProject(null)}
                 className="text-xs text-muted-foreground hover:text-foreground"

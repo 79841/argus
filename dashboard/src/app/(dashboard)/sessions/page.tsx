@@ -69,9 +69,7 @@ export default function SessionsPage() {
         </Select>
       </FilterBar>
 
-      {/* Main Content */}
       <div className="flex min-h-0 flex-1">
-        {/* Session List */}
         {showList && (
           <div className="flex w-full md:w-[35%] flex-col">
             <div className="flex items-center justify-between px-4 py-2">
@@ -105,13 +103,12 @@ export default function SessionsPage() {
           </div>
         )}
 
-        {/* Session Detail */}
         {showDetail && (
           <div className="flex w-full md:flex-1 flex-col overflow-y-auto scrollbar-hide">
             {isMobile && selectedId && (
               <button
                 onClick={() => setSelectedId(null)}
-                className="md:hidden flex items-center px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+                className="flex items-center px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 {t('sessions.backToList')}
               </button>

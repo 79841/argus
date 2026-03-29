@@ -14,16 +14,16 @@ import { useLocale } from '@/shared/lib/i18n'
 import { useIsMobile } from '@/shared/hooks/use-media-query'
 
 type TopBarProps = {
+  isMobile: boolean
   onToggleNav: () => void
   onOpenMobileMenu: () => void
 }
 
-const TopBar = ({ onToggleNav, onOpenMobileMenu }: TopBarProps) => {
+const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
   const { setTarget } = useTopBarPortal()
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [platform, setPlatform] = useState<'mac' | 'windows' | 'web'>('web')
   const { t } = useLocale()
-  const isMobile = useIsMobile()
 
   useEffect(() => {
     const api = window.electronAPI
@@ -103,8 +103,8 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    if (!isMobile && mobileMenuOpen) setMobileMenuOpen(false)
-  }, [isMobile, mobileMenuOpen])
+    if (!isMobile) setMobileMenuOpen(false)
+  }, [isMobile])
 
   const toggleNav = () => {
     const next = !collapsed
@@ -117,7 +117,7 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)]">
-      <TopBar onToggleNav={toggleNav} onOpenMobileMenu={() => setMobileMenuOpen(true)} />
+      <TopBar isMobile={isMobile} onToggleNav={toggleNav} onOpenMobileMenu={() => setMobileMenuOpen(true)} />
       <div className="flex flex-1 min-h-0 gap-0">
         <div className="hidden md:flex">
           <Nav />

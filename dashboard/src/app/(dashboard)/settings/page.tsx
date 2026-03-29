@@ -36,7 +36,6 @@ export default function SettingsPage() {
     <div className="flex h-full flex-col">
       <FilterBar><span className="text-sm font-semibold">{t('settings.title')}</span></FilterBar>
 
-      {/* Mobile: horizontal scroll tab bar */}
       <div className="flex overflow-x-auto gap-2 px-4 pb-2 pt-2 md:hidden">
         {categories.map((cat) => (
           <button
@@ -56,7 +55,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop: vertical sidebar nav */}
         <nav className="hidden md:flex w-48 shrink-0 border-r border-[var(--border-subtle)] overflow-y-auto py-4 px-2 flex-col">
           <ul className="space-y-0.5">
             {categories.map((cat) => (
