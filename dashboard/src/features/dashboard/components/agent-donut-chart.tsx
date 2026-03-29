@@ -132,10 +132,10 @@ export const AgentDonutChart = ({ data }: AgentDonutChartProps) => {
         <button
           key={tab.key}
           onClick={() => setMetric(tab.key)}
-          className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+          className={`rounded px-2 py-0.5 text-[11px] transition-colors ${
             metric === tab.key
-              ? 'bg-muted text-foreground font-semibold'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'font-semibold bg-muted text-foreground'
+              : 'font-medium text-muted-foreground hover:text-foreground'
           }`}
         >
           {tab.label}

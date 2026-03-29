@@ -8,6 +8,7 @@ import { useLocale } from '@/shared/lib/i18n'
 type TocSidebarProps = {
   headings: Heading[]
   containerRef: RefObject<HTMLElement | null>
+  onHeadingClick?: () => void
 }
 
 const INDENT_MAP: Record<number, string> = {
@@ -17,7 +18,7 @@ const INDENT_MAP: Record<number, string> = {
   4: 'ml-9',
 }
 
-export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
+export const TocSidebar = ({ headings, containerRef, onHeadingClick }: TocSidebarProps) => {
   const { t } = useLocale()
   const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -109,7 +110,7 @@ export const TocSidebar = ({ headings, containerRef }: TocSidebarProps) => {
         return (
           <button
             key={uniqueKey}
-            onClick={() => handleClick(heading.id)}
+            onClick={() => { handleClick(heading.id); onHeadingClick?.() }}
             className={[
               'block w-full text-left text-xs py-1 leading-snug transition-colors',
               'hover:text-foreground',

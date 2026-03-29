@@ -20,8 +20,7 @@ const formatModel = (model: string): string => {
   if (!model) return ''
   const parts = model.split('/')
   const raw = parts[parts.length - 1]
-  // agent prefix 제거: claude-*, codex-*, gemini-* 등
-  const stripped = raw.replace(/^(claude|codex|gemini|gpt|o\d)-/i, '')
+  const stripped = raw.replace(/^(claude|codex|gemini)-/i, '')
   return stripped.length > 16 ? `${stripped.slice(0, 14)}…` : stripped
 }
 

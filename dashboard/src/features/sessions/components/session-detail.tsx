@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { ArrowUpDown, Copy, Check } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -33,10 +33,14 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
     [rawGroups, sortOrder],
   )
 
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
   const handleCopyId = () => {
     navigator.clipboard.writeText(session.session_id).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setCopied(false), 2000)
     })
   }
 

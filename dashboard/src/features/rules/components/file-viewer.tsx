@@ -189,7 +189,7 @@ export const FileViewer = ({
             </div>
             {tocOpen && (
               <div className="lg:hidden absolute top-0 right-0 z-10 w-56 h-full overflow-y-auto shadow-lg bg-background/95 backdrop-blur-sm p-2">
-                <TocSidebar headings={headings} containerRef={contentRef} />
+                <TocSidebar headings={headings} containerRef={contentRef} onHeadingClick={() => setTocOpen(false)} />
               </div>
             )}
           </>

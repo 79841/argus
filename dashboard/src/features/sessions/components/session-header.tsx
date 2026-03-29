@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
@@ -17,11 +17,14 @@ export type SessionHeaderProps = {
 export const SessionHeader = ({ summary, sessionId }: SessionHeaderProps) => {
   const { t } = useLocale()
   const [copied, setCopied] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(sessionId).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setCopied(false), 2000)
     })
   }
 
