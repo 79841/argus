@@ -35,7 +35,7 @@ const AGENT_LABELS: Record<string, string> = {
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const WEEKS_TO_SHOW = 53
+const WEEKS_TO_SHOW = 13
 
 const getSessionColor = (value: number, max: number, agentHex: string): string => {
   if (value === 0) return 'var(--color-muted)'
@@ -185,7 +185,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
   }, [data])
 
   const agentHex = getAgentColor(agentType)
-  const cellSize = 10
+  const cellSize = 13
   const cellGap = 2
 
   const getCellStyle = (cell: DayData | null): React.CSSProperties => {

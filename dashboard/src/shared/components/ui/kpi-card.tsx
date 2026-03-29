@@ -38,12 +38,12 @@ export const KpiCard = ({
 }: KpiCardProps) => {
   if (loading) {
     return (
-      <Card className={cn('gap-2', className)}>
-        <CardHeader className="pb-1 pt-4 px-4">
+      <Card className={cn('gap-1', className)}>
+        <CardHeader className="pb-1 pt-3 px-3">
           <div className="h-3 w-16 animate-pulse rounded bg-muted" />
         </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="h-7 w-24 animate-pulse rounded bg-muted" />
+        <CardContent className="px-3 pb-3">
+          <div className="h-6 w-24 animate-pulse rounded bg-muted" />
           <div className="mt-1 h-3 w-20 animate-pulse rounded bg-muted" />
         </CardContent>
       </Card>
@@ -51,14 +51,14 @@ export const KpiCard = ({
   }
 
   return (
-    <Card className={cn('gap-2', className)}>
-      <CardHeader className="pb-1 pt-4 px-4">
+    <Card className={cn('gap-1', className)}>
+      <CardHeader className="pb-1 pt-3 px-3">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <p className="text-2xl font-bold tabular-nums leading-8">{value}</p>
+      <CardContent className="px-3 pb-3">
+        <p className="text-xl font-bold tabular-nums leading-7">{value}</p>
         <div className="mt-0.5 flex items-center gap-1.5">
           {delta != null && (
             <DeltaIndicator delta={delta} inverted={deltaInverted} />
