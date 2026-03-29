@@ -8,6 +8,27 @@ import { useLocale } from '@/shared/lib/i18n'
 import { formatCost, formatTokens, formatDuration, shortenModel, parseModels } from '@/shared/lib/format'
 import { formatRelativeTime } from '@/shared/lib/format'
 
+type ModelBadgesProps = { model: string }
+
+const ModelBadges = ({ model }: ModelBadgesProps) => {
+  const models = parseModels(model)
+  const first = models[0]
+  const extra = models.length - 1
+  const allModels = models.map(shortenModel).join(', ')
+  return (
+    <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+      <Badge variant="secondary" className="text-xs font-medium" title={allModels}>
+        {shortenModel(first)}
+      </Badge>
+      {extra > 0 && (
+        <Badge variant="secondary" className="text-xs font-medium" title={allModels}>
+          +{extra}
+        </Badge>
+      )}
+    </div>
+  )
+}
+
 type SessionListItemSession = {
   session_id: string
   agent_type: string
@@ -45,13 +66,7 @@ export const SessionListItem = ({ session: s, selected, cacheRate, onSelect }: S
         {/* Row 1: agent dot + models + cost */}
         <div className="flex items-center gap-2">
           <AgentDot agent={s.agent_type as AgentType} size="md" />
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-            {parseModels(s.model ?? '').map((m) => (
-              <Badge key={m} variant="secondary" className="text-xs font-medium">
-                {shortenModel(m)}
-              </Badge>
-            ))}
-          </div>
+          <ModelBadges model={s.model ?? ''} />
           <span className="mr-6 ml-auto shrink-0 text-sm font-semibold tabular-nums">
             {formatCost(s.cost)}
           </span>

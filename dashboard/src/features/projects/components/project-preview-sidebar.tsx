@@ -54,10 +54,14 @@ const SidebarContent = ({ projectName }: SidebarContentProps) => {
 
   return (
     <>
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-1">
         <span className="text-lg font-semibold leading-tight">{projectName}</span>
-        <span className="text-xs text-muted-foreground">
-          {t('projects.preview.period')}: {loading ? '…' : activityPeriod}
+        <span className="text-sm text-foreground/70">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t('projects.preview.period')}
+          </span>
+          {' '}
+          {loading ? '…' : activityPeriod}
         </span>
       </div>
 
@@ -92,7 +96,7 @@ const SidebarContent = ({ projectName }: SidebarContentProps) => {
 
       <ChartCard
         title={t('projects.detail.chart.dailyCost')}
-        height={180}
+        height={220}
         loading={loading}
         empty={!loading && areaData.length === 0}
         emptyMessage={t('projects.detail.noData')}

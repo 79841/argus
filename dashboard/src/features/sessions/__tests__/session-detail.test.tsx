@@ -63,10 +63,10 @@ describe('SessionDetail', () => {
     expect(screen.getByTestId('agent-badge')).toBeInTheDocument()
   })
 
-  it('세션 ID 앞 16자를 표시한다', () => {
+  it('세션 ID 앞 8자 + 복사 버튼을 표시한다', () => {
     const session = makeSession({ session_id: 'sess-abc-123-456-789' })
     render(<SessionDetail session={session} events={[makeEvent()]} />)
-    expect(screen.getByText('sess-abc-123-456')).toBeInTheDocument()
+    expect(screen.getByTitle('sessions.id.copy')).toBeInTheDocument()
   })
 
   it('List/Waterfall 탭이 존재한다', () => {
