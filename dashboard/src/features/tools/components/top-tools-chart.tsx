@@ -64,9 +64,9 @@ export const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
                   <div style={CHART_THEME.tooltip.containerStyle}>
                     <p className="font-medium text-sm">{d.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatNumber(d.count)} calls ({d.success} ok, {d.fail} fail)
+                      {formatNumber(d.count)} {t('tools.chart.callsUnit')} ({d.success} {t('tools.chart.okUnit')}, {d.fail} {t('tools.chart.failUnit')})
                     </p>
-                    <p className="text-sm text-muted-foreground">avg {d.avgMs}ms</p>
+                    <p className="text-sm text-muted-foreground">{t('tools.chart.avgPrefix')}{d.avgMs}ms</p>
                   </div>
                 )
               }}

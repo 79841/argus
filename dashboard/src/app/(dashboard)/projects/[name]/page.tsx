@@ -10,6 +10,8 @@ import type { AgentType } from '@/shared/lib/agents'
 import { formatCost, formatCostDetail, formatTokens, formatDate, formatPercent } from '@/shared/lib/format'
 import { useProjectDetail, useProjectHeatmap, AgentDistChart, DailyCostChart } from '@/features/projects'
 import { UsageHeatmap } from '@/features/dashboard/components/usage-heatmap'
+import { UnusedToolsCard } from '@/shared/components/unused-tools-card'
+import { useUnusedTools } from '@/shared/hooks/use-unused-tools'
 
 export default function ProjectDetailPage() {
   const params = useParams()
@@ -18,6 +20,7 @@ export default function ProjectDetailPage() {
 
   const { loading, stats, daily } = useProjectDetail(projectName)
   const { data: heatmapData } = useProjectHeatmap(projectName)
+  const unusedTools = useUnusedTools({ project: projectName })
 
   const pieData = (stats?.agent_breakdown ?? []).map((b) => ({
     name: b.agent_type,
@@ -54,7 +57,7 @@ export default function ProjectDetailPage() {
     <div className="px-4 py-4">
       <div className="flex flex-col gap-4">
       {/* KPI 카드 6개 */}
-      <div className="grid grid-cols-3 gap-4 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
         <KpiCard
           label={t('projects.detail.kpi.totalCost')}
           value={loading ? '—' : formatCost(stats?.total_cost ?? 0)}
@@ -126,6 +129,15 @@ export default function ProjectDetailPage() {
           data={stats?.agent_breakdown ?? []}
         />
       </ChartCard>
+
+      {/* 미활용 도구 안내 */}
+      {!unusedTools.loading && (
+        <UnusedToolsCard
+          agents={unusedTools.agents}
+          skills={unusedTools.skills}
+          mcpServers={unusedTools.mcpServers}
+        />
+      )}
       </div>
     </div>
   )

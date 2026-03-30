@@ -26,9 +26,11 @@ Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints 
    - [GET /api/models](#get-apimodels)
    - [GET /api/efficiency](#get-apiefficiency)
    - [GET /api/tools](#get-apitools)
+   - [GET /api/tools/:name](#get-apitoolsname)
    - [GET /api/tools/registered](#get-apitoolsregistered)
    - [GET /api/projects](#get-apiprojects)
    - [GET /api/projects/:name](#get-apiprojectsname)
+   - [GET /api/projects/registry](#get-apiprojectsregistry)
    - [GET /api/insights](#get-apiinsights)
    - [GET /api/suggestions](#get-apisuggestions)
 3. [Configuration](#3-configuration)
@@ -36,12 +38,17 @@ Argus exposes a set of HTTP API endpoints via Next.js API Routes. All endpoints 
    - [POST /api/config](#post-apiconfig)
    - [GET /api/config-history](#get-apiconfig-history)
    - [GET /api/config-history/compare](#get-apiconfig-historycompare)
-   - [GET /api/settings/limits](#get-apisettingslimits)
-   - [POST /api/settings/limits](#post-apisettingslimits)
+   - [GET /api/config-history/daily-metrics](#get-apiconfig-historydaily-metrics)
    - [POST /api/pricing-sync](#post-apipricing-sync)
-4. [System](#4-system)
+4. [Setup Management](#4-setup-management)
+   - [POST /api/setup/connect](#post-apisetupconnect)
+   - [POST /api/setup/disconnect](#post-apisetupdisconnect)
+   - [GET /api/setup/status](#get-apisetupstatus)
+   - [GET /api/onboarding/status](#get-apionboardingstatus)
+5. [System](#5-system)
    - [GET /api/health](#get-apihealth)
    - [POST /api/seed](#post-apiseed)
+   - [GET /api/heartbeat](#get-apiheartbeat)
    - [GET /api/ingest-status](#get-apiingest-status)
    - [GET /api/daily-costs](#get-apidaily-costs)
    - [GET /api/screenshot](#get-apiscreenshot)
@@ -584,6 +591,49 @@ Tool categories:
 
 ---
 
+### GET /api/tools/:name
+
+Returns aggregate statistics, daily trend, and related sessions for a single tool.
+
+**Path Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Tool name (URL-encoded) |
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| days | number | `7` | Number of days to look back |
+
+**Response**
+
+```json
+{
+  "tool": {
+    "tool_name": "Read",
+    "invocation_count": 250,
+    "success_count": 245,
+    "fail_count": 5,
+    "avg_duration_ms": 120.5
+  },
+  "daily": [
+    { "date": "2026-03-15", "count": 40 }
+  ],
+  "sessions": [
+    {
+      "session_id": "abc-123",
+      "agent_type": "claude",
+      "tool_count": 15,
+      "started_at": "2026-03-17T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
 ### GET /api/tools/registered
 
 Scans the project filesystem and returns registered tools (agents, skills, MCP servers, hooks) from Claude Code configuration files.
@@ -715,6 +765,66 @@ Returns detailed statistics and daily cost trend for a specific project.
     }
   ]
 }
+```
+
+---
+
+### GET /api/projects/registry
+
+Manages the list of registered project paths.
+
+**Response**
+
+```json
+{
+  "projects": [
+    {
+      "project_name": "argus",
+      "project_path": "/Users/me/code/argus",
+      "created_at": "2026-03-01T08:00:00.000Z"
+    }
+  ]
+}
+```
+
+### POST /api/projects/registry
+
+Registers a project path (upsert).
+
+**Request Body**
+
+```json
+{
+  "name": "argus",
+  "path": "/Users/me/code/argus"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| name | string | Project name (max 200 chars) |
+| path | string | Absolute project directory path (max 500 chars, must exist) |
+
+**Response**
+
+```json
+{ "success": true, "name": "argus", "path": "/Users/me/code/argus" }
+```
+
+### DELETE /api/projects/registry
+
+Removes a registered project.
+
+**Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Project name to remove |
+
+**Response**
+
+```json
+{ "success": true }
 ```
 
 ---
@@ -1001,53 +1111,37 @@ Compares performance metrics before and after a configuration change date.
 
 ---
 
-### GET /api/settings/limits
+### GET /api/config-history/daily-metrics
 
-Returns per-agent cost limits.
+Returns daily aggregated metrics for a date range. Used by the Usage Impact tab to compare metrics before and after configuration changes.
 
-**Response**
+**Parameters**
 
-```json
-{
-  "limits": [
-    {
-      "agent_type": "claude",
-      "daily_cost_limit": 50.00,
-      "monthly_cost_limit": 1000.00
-    }
-  ]
-}
-```
-
----
-
-### POST /api/settings/limits
-
-Upserts per-agent cost limits (insert or update on conflict).
-
-**Request Body**
-
-```json
-{
-  "limits": [
-    {
-      "agent_type": "claude",
-      "daily_cost_limit": 50.00,
-      "monthly_cost_limit": 1000.00
-    },
-    {
-      "agent_type": "codex",
-      "daily_cost_limit": 30.00,
-      "monthly_cost_limit": 500.00
-    }
-  ]
-}
-```
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| from | string | **(required)** | Start date (`YYYY-MM-DD`) |
+| to | string | **(required)** | End date (`YYYY-MM-DD`) |
+| agent_type | string | `"all"` | Agent filter |
+| project | string | `"all"` | Project filter |
 
 **Response**
 
 ```json
-{ "ok": true }
+[
+  {
+    "date": "2026-03-15",
+    "cost": 5.42,
+    "requests": 45,
+    "cache_hit_rate": 0.285,
+    "tool_fail_rate": 0.03
+  }
+]
+```
+
+**Error (400)**
+
+```json
+{ "error": "from and to parameters are required (format: YYYY-MM-DD)" }
 ```
 
 ---
@@ -1072,7 +1166,101 @@ None.
 
 ---
 
-## 4. System
+## 4. Setup Management
+
+### POST /api/setup/connect
+
+Automatically configures AI agent telemetry settings to connect to Argus.
+
+**Request Body**
+
+```json
+{
+  "agents": ["claude", "codex", "gemini"],
+  "endpoint": "http://localhost:9845"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| agents | string[] | **(required)** | Agents to connect (`claude`, `codex`, `gemini`) |
+| endpoint | string | `"http://localhost:9845"` | OTLP receiver endpoint URL |
+
+**Response**
+
+```json
+{ "results": { "claude": { "success": true }, "codex": { "success": true } } }
+```
+
+---
+
+### POST /api/setup/disconnect
+
+Removes AI agent telemetry settings to disconnect from Argus.
+
+**Request Body**
+
+```json
+{
+  "agents": ["claude"]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| agents | string[] | Agents to disconnect (`claude`, `codex`, `gemini`) |
+
+**Response**
+
+```json
+{ "results": { "claude": { "success": true } } }
+```
+
+---
+
+### GET /api/setup/status
+
+Returns the current configuration status for all agents.
+
+**Parameters**
+
+None.
+
+**Response**
+
+```json
+{
+  "agents": {
+    "claude": { "configured": true, "endpoint": "http://localhost:9845" },
+    "codex": { "configured": false },
+    "gemini": { "configured": false }
+  }
+}
+```
+
+---
+
+### GET /api/onboarding/status
+
+Checks whether the application has any data. Used by the onboarding UI to determine the initial state.
+
+**Parameters**
+
+None.
+
+**Response**
+
+```json
+{ "hasData": true }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| hasData | boolean | `true` if at least one record exists in `agent_logs` |
+
+---
+
+## 5. System
 
 ### GET /api/health
 
@@ -1110,6 +1298,37 @@ None.
 | Field | Type | Description |
 |-------|------|-------------|
 | seeded | number | Number of agent_log records created |
+
+---
+
+### GET /api/heartbeat
+
+Returns real-time agent activity data for the specified time window. Used by the Picture-in-Picture (PiP) floating window to show a live token heartbeat chart.
+
+**Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| agent_type | string | `"all"` | Agent filter |
+| minutes | number | `5` | Time window in minutes (1-60) |
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "timestamp": "2026-03-17T14:28:00.000Z",
+      "agent_type": "claude",
+      "input_tokens": 5000,
+      "output_tokens": 1200,
+      "cost_usd": 0.05
+    }
+  ],
+  "minutes": 5,
+  "agent_type": "all"
+}
+```
 
 ---
 

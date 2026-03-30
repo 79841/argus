@@ -35,6 +35,7 @@ git diff develop --name-only
 
 #### Warning (권장 수정)
 - CLAUDE.md 코딩 컨벤션 위반 (`export default` 사용, 인라인 스타일 등)
+- **i18n 위반: UI 텍스트 한글 하드코딩** — `useLocale().t()` 사용 필수, `src/shared/lib/i18n.ts`에 `ko`/`en` 키 등록 필요
 - 에러 핸들링 누락 (시스템 경계에서)
 - 성능 이슈 (불필요한 재렌더링, N+1 쿼리)
 

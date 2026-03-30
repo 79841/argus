@@ -169,6 +169,23 @@ export const StatsCard = ({ title, value, description }: StatsCardProps) => {
 | Gemini | blue | #3b82f6 |
 | All | violet | #8b5cf6 |
 
+## i18n (다국어)
+
+- **UI 텍스트에 한글을 직접 하드코딩하지 않는다** — 반드시 `src/shared/lib/i18n.ts`의 번역 키를 사용한다
+- `useLocale()` 훅의 `t('key')` 함수로 번역 문자열을 가져온다
+- 새 텍스트 추가 시 `ko`와 `en` 양쪽 모두에 키를 등록한다
+- 날짜/숫자 포맷에 locale을 하드코딩하지 않는다 (`'ko-KR'` 대신 `undefined` 사용)
+
+```typescript
+// ✅ 올바른 예시
+import { useLocale } from '@/shared/lib/i18n'
+const { t } = useLocale()
+<CardTitle>{t('overview.totalSessions')}</CardTitle>
+
+// ❌ 잘못된 예시
+<CardTitle>총 세션 수</CardTitle>
+```
+
 ## 주의사항
 
 - Server Component 기본, `'use client'`는 인터랙션 필요 시에만 추가한다

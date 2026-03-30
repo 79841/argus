@@ -376,7 +376,6 @@ The `ipc-handlers.ts` maps query names to the same functions used by API routes:
 | `insights` | `getHighCostSessions` + `getModelCostEfficiency` + `getBudgetStatus` |
 | `suggestions` | `getSuggestionMetrics` + `generateSuggestions` |
 | `config-history` | `getConfigHistory` (Git-based) |
-| `settings/limits` | Direct DB query on `app_meta` |
 
 ## 5. Data Client Abstraction
 
@@ -425,9 +424,8 @@ argus/
 │   │   │   │   ├── sessions/          # Session list + [id] detail
 │   │   │   │   ├── usage/             # Usage analytics (M3)
 │   │   │   │   ├── tools/             # Tool tracking
-│   │   │   │   ├── insights/          # Insights
-│   │   │   │   ├── projects/          # Project list + [name] detail
-│   │   │   │   ├── rules/             # Config change tracking (M4)
+│   │   │   │   ├── user/              # User config file viewer
+│   │   │   │   ├── projects/          # Project list + [name] detail (sub-tabs: overview, sessions, usage, tools, rules)
 │   │   │   │   └── settings/          # Settings
 │   │   │   ├── onboarding/            # Onboarding flow
 │   │   │   └── v1/                    # OTLP standard endpoints

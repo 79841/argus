@@ -82,34 +82,34 @@ describe('GET /api/overview', () => {
 
   it('?agent_type=claude → getOverviewStats에 "claude" 전달', async () => {
     await GET(mkRequest({ agent_type: 'claude' }))
-    expect(getOverviewStats).toHaveBeenCalledWith('claude', 'all', undefined, undefined)
+    expect(getOverviewStats).toHaveBeenCalledWith('claude', 'all', undefined, undefined, expect.any(String))
     expect(getAllTimeStats).toHaveBeenCalledWith('claude', 'all')
-    expect(getOverviewDelta).toHaveBeenCalledWith('claude', 'all')
+    expect(getOverviewDelta).toHaveBeenCalledWith('claude', 'all', expect.any(String))
   })
 
   it('?agent_type=codex → getOverviewStats에 "codex" 전달', async () => {
     await GET(mkRequest({ agent_type: 'codex' }))
-    expect(getOverviewStats).toHaveBeenCalledWith('codex', 'all', undefined, undefined)
+    expect(getOverviewStats).toHaveBeenCalledWith('codex', 'all', undefined, undefined, expect.any(String))
   })
 
   it('?agent_type=invalid → parseAgentType에 의해 "all"로 폴백', async () => {
     await GET(mkRequest({ agent_type: 'invalid' }))
-    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, undefined)
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, undefined, expect.any(String))
   })
 
   it('?project=argus → getOverviewStats에 "argus" 전달', async () => {
     await GET(mkRequest({ project: 'argus' }))
-    expect(getOverviewStats).toHaveBeenCalledWith('all', 'argus', undefined, undefined)
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'argus', undefined, undefined, expect.any(String))
   })
 
   it('?from=2024-01-01&to=2024-01-31 → 날짜 파라미터 전달', async () => {
     await GET(mkRequest({ from: '2024-01-01', to: '2024-01-31' }))
-    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', '2024-01-01', '2024-01-31')
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', '2024-01-01', '2024-01-31', expect.any(String))
   })
 
   it('agent_type 없으면 "all"을 기본값으로 사용한다', async () => {
     await GET(mkRequest())
-    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, undefined)
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, undefined, expect.any(String))
   })
 
   it('쿼리 함수 에러 시 500을 반환한다', async () => {
@@ -118,5 +118,20 @@ describe('GET /api/overview', () => {
     expect(res.status).toBe(500)
     const json = await res.json()
     expect(json.error).toBeDefined()
+  })
+
+  it('from 포맷이 잘못되면 undefined로 폴백한다', async () => {
+    await GET(mkRequest({ from: '2024/01/01', to: '2024-01-31' }))
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, '2024-01-31', expect.any(String))
+  })
+
+  it('to 포맷이 잘못되면 undefined로 폴백한다', async () => {
+    await GET(mkRequest({ from: '2024-01-01', to: 'invalid-date' }))
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', '2024-01-01', undefined, expect.any(String))
+  })
+
+  it('project가 200자 초과이면 all로 폴백한다', async () => {
+    await GET(mkRequest({ project: 'p'.repeat(201) }))
+    expect(getOverviewStats).toHaveBeenCalledWith('all', 'all', undefined, undefined, expect.any(String))
   })
 })

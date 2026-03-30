@@ -8,8 +8,7 @@ import {
   MessageSquare,
   BarChart3,
   Wrench,
-  FileText,
-  Lightbulb,
+  UserRound,
   FolderKanban,
   Settings,
 } from 'lucide-react'
@@ -31,9 +30,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/sessions', labelKey: 'nav.sessions', icon: MessageSquare },
   { href: '/usage', labelKey: 'nav.usage', icon: BarChart3 },
   { href: '/tools', labelKey: 'nav.tools', icon: Wrench },
+  { href: '/user', labelKey: 'nav.user', icon: UserRound },
   { href: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
-  { href: '/rules', labelKey: 'nav.rules', icon: FileText },
-  { href: '/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ]
 
 const SETTINGS_ITEM: NavItem = {
@@ -42,7 +40,12 @@ const SETTINGS_ITEM: NavItem = {
   icon: Settings,
 }
 
-export const Nav = () => {
+type NavProps = {
+  isOverlay?: boolean
+  onClose?: () => void
+}
+
+export const Nav = ({ isOverlay = false, onClose }: NavProps) => {
   const pathname = usePathname()
   const { t } = useLocale()
   const [collapsed, setCollapsed] = useState(true)
@@ -58,17 +61,18 @@ export const Nav = () => {
     return () => window.removeEventListener('argus-nav-toggle', handler)
   }, [])
 
+  const effectiveCollapsed = isOverlay ? false : collapsed
+
   return (
     <aside
       className={cn(
-        'flex flex-shrink-0 flex-col transition-[width] duration-200 glass-nav',
-        collapsed ? 'w-14' : 'w-48'
+        'flex flex-shrink-0 flex-col transition-[width] duration-200',
+        effectiveCollapsed ? 'w-14' : 'w-48'
       )}
     >
-      {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-2 py-2 overflow-y-auto">
         {NAV_ITEMS.map((item) =>
-          collapsed ? (
+          effectiveCollapsed ? (
             <Tooltip key={item.href}>
               <TooltipTrigger
                 render={
@@ -91,6 +95,7 @@ export const Nav = () => {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
                 pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
@@ -105,9 +110,8 @@ export const Nav = () => {
         )}
       </nav>
 
-      {/* Settings */}
       <div className="mt-auto px-2 py-2">
-        {collapsed ? (
+        {effectiveCollapsed ? (
           <Tooltip>
             <TooltipTrigger
               render={
@@ -129,6 +133,7 @@ export const Nav = () => {
         ) : (
           <Link
             href={SETTINGS_ITEM.href}
+            onClick={onClose}
             className={cn(
               'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
               pathname === SETTINGS_ITEM.href

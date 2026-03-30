@@ -66,11 +66,11 @@ export default function InsightsPage() {
       </FilterBar>
 
       <div className="flex-1 overflow-auto px-4 py-4">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
 
           <SuggestionsSection suggestions={suggestions} suggestionsLoading={suggestionsLoading} />
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <KpiCard
               label={t('insights.kpi.top10Total')}
               value={formatCost(totalHighCost)}

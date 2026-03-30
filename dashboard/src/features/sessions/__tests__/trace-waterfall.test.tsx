@@ -59,8 +59,8 @@ describe('TraceWaterfall', () => {
   it('이벤트가 있을 때 헤더 컬럼을 렌더링한다', () => {
     const events = [makeEvent()]
     render(<TraceWaterfall events={events} />)
-    expect(screen.getByText('Name')).toBeInTheDocument()
-    expect(screen.getByText('Timeline')).toBeInTheDocument()
+    expect(screen.getByText('이름')).toBeInTheDocument()
+    expect(screen.getByText('타임라인')).toBeInTheDocument()
     expect(screen.getByText('Duration')).toBeInTheDocument()
     expect(screen.getByText('Cost')).toBeInTheDocument()
   })

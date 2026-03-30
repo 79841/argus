@@ -55,12 +55,46 @@ export const getNumAttr = (attrs: KeyValue[] | undefined, key: string): number =
   return val ? Number(val) : 0
 }
 
-export const detectAgentType = (serviceName: string): string => {
+export type DetectedAgent = 'claude' | 'codex' | 'gemini' | 'unknown'
+
+const SERVICE_NAME_MAP = new Map<string, DetectedAgent>([
+  ['claude-code', 'claude'],
+  ['codex-cli', 'codex'],
+  ['codex_cli_rs', 'codex'],
+  ['codex-app-server', 'codex'],
+  ['codex_exec', 'codex'],
+  ['gemini-cli', 'gemini'],
+])
+
+const EVENT_PREFIX_MAP: [string, DetectedAgent][] = [
+  ['claude_code.', 'claude'],
+  ['codex.', 'codex'],
+  ['gemini_cli.', 'gemini'],
+]
+
+export const detectAgentFromEvent = (eventName: string): DetectedAgent | undefined => {
+  for (const [prefix, agent] of EVENT_PREFIX_MAP) {
+    if (eventName.startsWith(prefix)) return agent
+  }
+  return undefined
+}
+
+export const detectAgentType = (serviceName: string, eventName?: string): DetectedAgent => {
   const lower = serviceName.toLowerCase()
-  if (lower.includes('codex')) return 'codex'
+
+  const exact = SERVICE_NAME_MAP.get(lower)
+  if (exact) return exact
+
+  if (eventName) {
+    const fromEvent = detectAgentFromEvent(eventName)
+    if (fromEvent) return fromEvent
+  }
+
   if (lower.includes('claude')) return 'claude'
+  if (lower.includes('codex')) return 'codex'
   if (lower.includes('gemini')) return 'gemini'
-  return 'claude'
+
+  return 'unknown'
 }
 
 const GEMINI_SKIP_EVENTS = new Set([

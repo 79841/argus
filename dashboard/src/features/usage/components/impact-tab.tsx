@@ -23,10 +23,10 @@ import type { ImpactMetrics } from '@/shared/lib/queries'
 const CATEGORY_OPTIONS: CategoryType[] = ['all', 'rules', 'tools']
 const COMPARE_OPTIONS = [7, 14] as const
 
-const CATEGORY_LABELS: Record<CategoryType, string> = {
-  all: 'All',
-  rules: 'Rules',
-  tools: 'Tools',
+const CATEGORY_I18N_KEYS: Record<CategoryType, string> = {
+  all: 'impact.category.all',
+  rules: 'impact.category.rules',
+  tools: 'impact.category.tools',
 }
 
 const CATEGORY_COLORS: Record<'rules' | 'tools', string> = {
@@ -36,34 +36,35 @@ const CATEGORY_COLORS: Record<'rules' | 'tools', string> = {
 
 type MetricDef = {
   key: keyof ImpactMetrics
-  label: string
+  labelKey: string
   format: (v: number) => string
   inverted: boolean
 }
 
 const METRICS: MetricDef[] = [
-  { key: 'avg_cost', label: 'Avg Cost', format: formatCostChart, inverted: true },
-  { key: 'avg_tokens', label: 'Avg Tokens', format: formatTokens, inverted: true },
-  { key: 'cache_rate', label: 'Cache Rate', format: (v) => `${v.toFixed(1)}%`, inverted: false },
-  { key: 'tool_success_rate', label: 'Tool Success', format: (v) => `${v.toFixed(1)}%`, inverted: false },
-  { key: 'avg_duration_ms', label: 'Avg Duration', format: formatDuration, inverted: true },
-  { key: 'reqs_per_session', label: 'Reqs/Session', format: (v) => v.toFixed(1), inverted: true },
+  { key: 'avg_cost', labelKey: 'usage.impact.avgCost', format: formatCostChart, inverted: true },
+  { key: 'avg_tokens', labelKey: 'usage.impact.avgTokens', format: formatTokens, inverted: true },
+  { key: 'cache_rate', labelKey: 'usage.impact.cacheRate', format: (v) => `${v.toFixed(1)}%`, inverted: false },
+  { key: 'tool_success_rate', labelKey: 'usage.impact.toolSuccess', format: (v) => `${v.toFixed(1)}%`, inverted: false },
+  { key: 'avg_duration_ms', labelKey: 'usage.impact.avgDuration', format: formatDuration, inverted: true },
+  { key: 'reqs_per_session', labelKey: 'usage.impact.reqsPerSession', format: (v) => v.toFixed(1), inverted: true },
 ]
 
 const MetricCell = ({ before, after, metric }: { before: number; after: number; metric: MetricDef }) => {
+  const { t } = useLocale()
   const diff = before === 0 ? (after === 0 ? 0 : 100) : ((after - before) / before) * 100
   const isNeutral = Math.abs(diff) < 0.1
   const isPositive = diff > 0
   const isGood = metric.inverted ? !isPositive : isPositive
 
   return (
-    <div className="space-y-1">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{metric.label}</div>
-      <div className="font-mono text-xs text-muted-foreground">{metric.format(before)}</div>
-      <div className="flex items-center gap-1.5">
-        <span className="font-mono text-sm font-medium">{metric.format(after)}</span>
+    <div className="min-w-0 space-y-1 overflow-hidden">
+      <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">{t(metric.labelKey)}</div>
+      <div className="truncate font-mono text-xs text-muted-foreground">{metric.format(before)}</div>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="truncate font-mono text-sm font-medium">{metric.format(after)}</span>
         {!isNeutral && (
-          <span className={cn('text-[10px] font-semibold', isGood ? 'text-green-600' : 'text-red-500')}>
+          <span className={cn('flex-shrink-0 text-[10px] font-semibold', isGood ? 'text-green-600' : 'text-red-500')}>
             {isPositive ? '+' : ''}{diff.toFixed(1)}%
           </span>
         )}
@@ -113,8 +114,8 @@ const ChangeCard = ({ change, compareDays }: { change: EnrichedChange; compareDa
               ))}
             </div>
             <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-              <span>Before: {change.impact.before.request_count} reqs ({compareDays}d)</span>
-              <span>After: {change.impact.after.request_count} reqs ({compareDays}d)</span>
+              <span>{t('impact.before')} {change.impact.before.request_count} reqs ({compareDays}d)</span>
+              <span>{t('impact.after')} {change.impact.after.request_count} reqs ({compareDays}d)</span>
             </div>
           </>
         ) : (
@@ -171,7 +172,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground">{t('impact.category')}</span>
           <div className="flex gap-1">
@@ -187,7 +188,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
                     : 'border hover:bg-accent hover:text-accent-foreground'
                 )}
               >
-                {CATEGORY_LABELS[c]}
+                {t(CATEGORY_I18N_KEYS[c])}
               </button>
             ))}
           </div>
@@ -244,7 +245,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
                   contentStyle={CHART_THEME.tooltip.containerStyle}
                   labelStyle={CHART_THEME.tooltip.labelStyle}
                   itemStyle={CHART_THEME.tooltip.itemStyle}
-                  formatter={(v: unknown) => [formatCostChart(Number(v)), 'Avg Cost']}
+                  formatter={(v: unknown) => [formatCostChart(Number(v)), t('usage.impact.avgCost')]}
                 />
                 <Line
                   type="monotone"
@@ -253,7 +254,7 @@ export const ImpactTab = ({ agentType, project, dateRange }: ImpactTabProps) => 
                   strokeWidth={2}
                   dot={{ r: 2 }}
                   connectNulls
-                  name="Avg Cost/req"
+                  name={t('usage.impact.avgCost')}
                 />
                 {changeMarkers.map((marker, i) => (
                   <ReferenceLine

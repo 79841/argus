@@ -1,6 +1,5 @@
 export type Scope = 'project' | 'user'
 export type Agent = 'claude' | 'codex' | 'gemini'
-export type ViewMode = 'preview' | 'edit'
 
 export type FileEntry = {
   path: string

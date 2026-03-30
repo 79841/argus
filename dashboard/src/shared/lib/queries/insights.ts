@@ -47,10 +47,16 @@ const tagCauses = (row: RawHighCostRow): string[] => {
 export const getHighCostSessions = (days: number = 7, limit: number = 10, dbOverride?: Database.Database): HighCostSession[] => {
   const db = dbOverride ?? getDb()
   const rows = db.prepare(`
+    WITH session_models AS (
+      SELECT session_id, GROUP_CONCAT(DISTINCT model) as model
+      FROM agent_logs
+      WHERE event_name = 'api_request' AND model != ''
+      GROUP BY session_id
+    )
     SELECT
       a.session_id,
       a.agent_type,
-      (SELECT GROUP_CONCAT(DISTINCT m.model) FROM agent_logs m WHERE m.session_id = a.session_id AND m.event_name = 'api_request' AND m.model != '') as model,
+      sm.model,
       COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN a.cost_usd ELSE 0 END), 0) as total_cost,
       COALESCE(sum(CASE WHEN a.event_name = 'api_request' THEN 1 ELSE 0 END), 0) as request_count,
       COALESCE(sum(CASE WHEN a.event_name = 'tool_result' THEN 1 ELSE 0 END), 0) as tool_call_count,
@@ -61,6 +67,7 @@ export const getHighCostSessions = (days: number = 7, limit: number = 10, dbOver
       a.project_name,
       min(a.timestamp) as started_at
     FROM agent_logs a
+    LEFT JOIN session_models sm ON sm.session_id = a.session_id
     WHERE a.session_id != ''
       AND a.timestamp >= datetime('now', '-' || ? || ' days')
     GROUP BY a.session_id, a.agent_type

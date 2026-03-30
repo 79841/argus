@@ -35,8 +35,27 @@ export default function SettingsPage() {
   return (
     <div className="flex h-full flex-col">
       <FilterBar><span className="text-sm font-semibold">{t('settings.title')}</span></FilterBar>
+
+      <div className="flex overflow-x-auto gap-2 px-4 pb-2 pt-2 md:hidden">
+        {categories.map((cat) => (
+          <button
+            key={cat.key}
+            onClick={() => setActive(cat.key)}
+            className={cn(
+              'flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-md text-sm shrink-0 transition-colors',
+              active === cat.key
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            )}
+          >
+            <cat.icon className="size-3.5" />
+            {t(cat.labelKey)}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-1 min-h-0">
-        <nav className="w-48 shrink-0 border-r border-[var(--border-subtle)] overflow-y-auto py-4 px-2">
+        <nav className="hidden md:flex w-48 shrink-0 border-r border-[var(--border-subtle)] overflow-y-auto py-4 px-2 flex-col">
           <ul className="space-y-0.5">
             {categories.map((cat) => (
               <li key={cat.key}>

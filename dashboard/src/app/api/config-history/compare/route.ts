@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getImpactCompare, getImpactCompareBatch } from '@/shared/lib/queries'
-import { errorResponse, serverError } from '@/shared/lib/api-utils'
+import { errorResponse, serverError, parseDays, parseAgentType, parseProject, parseDateParam } from '@/shared/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams
-    const date = params.get('date')
-    const dates = params.get('dates')
-    const days = parseInt(params.get('days') || '7', 10)
+    const date = parseDateParam(params.get('date'))
+    const datesRaw = params.get('dates')
+    const days = parseDays(params.get('days'), 7)
 
-    const agentType = params.get('agent_type') || 'all'
-    const project = params.get('project') || 'all'
+    const agentType = parseAgentType(params.get('agent_type'))
+    const project = parseProject(params.get('project'))
 
-    if (dates) {
-      const dateList = dates.split(',').filter(Boolean).slice(0, 30)
+    if (datesRaw) {
+      const dateList = datesRaw.split(',').filter(Boolean).slice(0, 30)
       const data = getImpactCompareBatch(dateList, days, agentType, project)
       return NextResponse.json(data)
     }

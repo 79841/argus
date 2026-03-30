@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/shared/lib/utils'
@@ -18,6 +19,21 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
   const pathname = usePathname()
   const { t } = useLocale()
   const base = `/projects/${encodeURIComponent(projectName)}`
+  const navRef = useRef<HTMLElement>(null)
+  const [canScroll, setCanScroll] = useState(false)
+
+  const checkOverflow = useCallback(() => {
+    const el = navRef.current
+    if (!el) return
+    setCanScroll(el.scrollWidth > el.clientWidth + 1)
+  }, [])
+
+  useEffect(() => {
+    checkOverflow()
+    const ro = new ResizeObserver(checkOverflow)
+    if (navRef.current) ro.observe(navRef.current)
+    return () => ro.disconnect()
+  }, [checkOverflow])
 
   const tabs: Tab[] = [
     { labelKey: 'projects.tab.overview', href: base },
@@ -28,7 +44,13 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
   ]
 
   return (
-    <nav className="flex border-b px-4">
+    <nav
+      ref={navRef}
+      className={cn(
+        'flex border-b px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden',
+        canScroll && '[mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] [-webkit-mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]'
+      )}
+    >
       {tabs.map((tab) => {
         const isActive =
           tab.href === base
@@ -40,7 +62,7 @@ export const ProjectSubNav = ({ projectName }: ProjectSubNavProps) => {
             key={tab.href}
             href={tab.href}
             className={cn(
-              'px-4 py-2 text-sm transition-colors',
+              'px-4 py-2 text-sm transition-colors whitespace-nowrap',
               isActive
                 ? 'border-b-2 border-primary font-medium text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

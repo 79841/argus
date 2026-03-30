@@ -25,13 +25,18 @@ export const waitForServer = (url: string, timeout = 30000): Promise<void> => {
   const start = Date.now()
   return new Promise((resolve, reject) => {
     const check = () => {
-      fetch(url)
+      fetch(url, { signal: AbortSignal.timeout(3000) })
         .then((res) => {
           if (res.ok) resolve()
           else if (Date.now() - start > timeout) reject(new Error('Server timeout'))
           else setTimeout(check, 500)
         })
-        .catch(() => {
+        .catch((err: unknown) => {
+          if (err instanceof Error && err.name === 'AbortError') {
+            if (Date.now() - start > timeout) reject(new Error('Server timeout'))
+            else setTimeout(check, 500)
+            return
+          }
           if (Date.now() - start > timeout) reject(new Error('Server timeout'))
           else setTimeout(check, 500)
         })
@@ -44,12 +49,13 @@ export const startNextServer = async (): Promise<void> => {
   const inUse = await isPortInUse(PORT)
   if (inUse) return
 
-  const cwd = isDev ? process.cwd() : path.join(process.resourcesPath, 'app')
-  const nextBin = path.join(cwd, 'node_modules', 'next', 'dist', 'bin', 'next')
+  const cwd = isDev
+    ? process.cwd()
+    : path.join(process.resourcesPath, 'app.asar.unpacked', 'dist-standalone')
   const cmd = isDev ? 'npm' : process.execPath
   const args = isDev
     ? ['run', 'dev', '--', '--port', String(PORT)]
-    : [nextBin, 'start', '--port', String(PORT)]
+    : [path.join(cwd, 'server.js'), '--port', String(PORT)]
 
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),

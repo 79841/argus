@@ -9,9 +9,11 @@ import { FilterBar } from '@/shared/components/filter-bar'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { useProjectsData, CostComparisonChart, ProjectPreviewSidebar } from '@/features/projects'
 import type { ProjectComparisonRow } from '@/shared/lib/queries'
+import { useIsMobile } from '@/shared/hooks/use-media-query'
 
 export default function ProjectsPage() {
   const { t } = useLocale()
+  const isMobile = useIsMobile()
   const { projects, loading, totalCost, mostActive } = useProjectsData()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
 
@@ -68,7 +70,7 @@ export default function ProjectsPage() {
 
   const mainContent = (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard
           label={t('projects.kpi.totalProjects')}
           value={loading ? '—' : projects.length.toLocaleString()}
@@ -115,12 +117,12 @@ export default function ProjectsPage() {
   return (
     <div className="flex h-full flex-col">
       <FilterBar><span className="text-sm font-semibold">{t('projects.title')}</span></FilterBar>
-      {selectedProject ? (
+      {selectedProject && !isMobile ? (
         <div className="flex flex-1 min-h-0">
           <div className="w-[65%] overflow-y-auto px-4 py-4">
             {mainContent}
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-muted/30">
             <ProjectPreviewSidebar projectName={selectedProject} />
           </div>
         </div>
@@ -128,6 +130,29 @@ export default function ProjectsPage() {
         <div className="flex-1 overflow-y-auto px-4 py-4">
           {mainContent}
         </div>
+      )}
+
+      {isMobile && selectedProject && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
+            onClick={() => setSelectedProject(null)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-xl bg-background shadow-lg">
+            <div className="flex justify-center py-2">
+              <div className="h-1 w-8 rounded-full bg-muted-foreground/30" />
+            </div>
+            <div className="flex items-center justify-between px-4 py-3 shadow-sm">
+              <button
+                onClick={() => setSelectedProject(null)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                {t('projects.backToList')}
+              </button>
+            </div>
+            <ProjectPreviewSidebar projectName={selectedProject} />
+          </div>
+        </>
       )}
     </div>
   )

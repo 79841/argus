@@ -13,10 +13,11 @@ import { cn } from '@/shared/lib/utils'
 import { STORAGE_KEYS, POLLING } from '@/shared/lib/constants'
 import type { Theme, AgentTheme } from '@/features/settings/types/settings'
 
-const AGENT_THEMES: { value: AgentTheme; label: string }[] = [
-  { value: 'claude', label: 'Claude' },
-  { value: 'codex', label: 'Codex' },
-  { value: 'gemini', label: 'Gemini' },
+const AGENT_THEMES: { value: AgentTheme; labelKey: string }[] = [
+  { value: 'default', labelKey: 'settings.agentTheme.default' },
+  { value: 'claude', labelKey: 'settings.agentTheme.claude' },
+  { value: 'codex', labelKey: 'settings.agentTheme.codex' },
+  { value: 'gemini', labelKey: 'settings.agentTheme.gemini' },
 ]
 
 const REFRESH_OPTIONS = POLLING.REFRESH_OPTIONS.map((opt) => ({
@@ -29,19 +30,18 @@ export const GeneralSection = () => {
   const { theme, setTheme } = useTheme()
   const { locale, setLocale, t } = useLocale()
   const [refreshInterval, setRefreshInterval] = useState('0')
-  const [agentTheme, setAgentTheme] = useState<AgentTheme>('claude')
+  const [agentTheme, setAgentTheme] = useState<AgentTheme>('default')
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REFRESH_INTERVAL)
       if (stored) setRefreshInterval(stored)
       const storedAgent = localStorage.getItem(STORAGE_KEYS.AGENT_THEME)
-      if (storedAgent && storedAgent !== 'default') {
+      if (storedAgent) {
         setAgentTheme(storedAgent as AgentTheme)
-      } else if (storedAgent === 'default') {
-        setAgentTheme('claude')
-        localStorage.setItem(STORAGE_KEYS.AGENT_THEME, 'claude')
-        document.documentElement.setAttribute('data-agent-theme', 'claude')
+        if (storedAgent === 'default') {
+          document.documentElement.removeAttribute('data-agent-theme')
+        }
       }
     } catch {
       // ignore
@@ -62,7 +62,11 @@ export const GeneralSection = () => {
     setAgentTheme(value)
     try {
       localStorage.setItem(STORAGE_KEYS.AGENT_THEME, value)
-      document.documentElement.setAttribute('data-agent-theme', value)
+      if (value === 'default') {
+        document.documentElement.removeAttribute('data-agent-theme')
+      } else {
+        document.documentElement.setAttribute('data-agent-theme', value)
+      }
     } catch {
       // ignore
     }
@@ -108,26 +112,29 @@ export const GeneralSection = () => {
           <CardDescription>{t('settings.agentTheme.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {AGENT_THEMES.map((at) => (
-              <button
-                key={at.value}
-                onClick={() => handleAgentThemeChange(at.value)}
-                className={cn(
-                  'flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition-colors',
-                  agentTheme === at.value
-                    ? 'border-2 text-foreground'
-                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-                style={agentTheme === at.value ? { borderColor: `var(--agent-${at.value})` } : undefined}
-              >
-                <span
-                  className="size-8 rounded-full"
-                  style={{ backgroundColor: `var(--agent-${at.value})` }}
-                />
-                {at.label}
-              </button>
-            ))}
+          <div className="grid grid-cols-4 gap-3">
+            {AGENT_THEMES.map((at) => {
+              const colorVar = `var(--agent-${at.value})`
+              return (
+                <button
+                  key={at.value}
+                  onClick={() => handleAgentThemeChange(at.value)}
+                  className={cn(
+                    'flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition-colors',
+                    agentTheme === at.value
+                      ? 'border-2 text-foreground'
+                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                  style={agentTheme === at.value ? { borderColor: colorVar } : undefined}
+                >
+                  <span
+                    className="size-8 rounded-full"
+                    style={{ backgroundColor: colorVar }}
+                  />
+                  {t(at.labelKey)}
+                </button>
+              )
+            })}
           </div>
         </CardContent>
       </Card>
@@ -140,8 +147,8 @@ export const GeneralSection = () => {
         <CardContent>
           <div className="flex gap-2">
             {([
-              { value: 'ko' as Locale, label: '한국어' },
-              { value: 'en' as Locale, label: 'English' },
+              { value: 'ko' as Locale, labelKey: 'settings.language.ko' },
+              { value: 'en' as Locale, labelKey: 'settings.language.en' },
             ]).map((opt) => (
               <button
                 key={opt.value}
@@ -154,7 +161,7 @@ export const GeneralSection = () => {
                 )}
               >
                 <Globe className="size-4" />
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>

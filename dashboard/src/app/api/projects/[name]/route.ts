@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProjectDetailStats, getProjectDailyCosts } from '@/shared/lib/queries'
-import { serverError } from '@/shared/lib/api-utils'
+import { serverError, errorResponse, parseSlug } from '@/shared/lib/api-utils'
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const { name } = await params
-    const projectName = decodeURIComponent(name)
+    const { name: rawName } = await params
+    const projectName = parseSlug(decodeURIComponent(rawName ?? ''))
+    if (!projectName) {
+      return errorResponse('Project name is required')
+    }
 
     const [stats, daily] = await Promise.all([
       getProjectDetailStats(projectName),
-      getProjectDailyCosts(30),
+      getProjectDailyCosts(30, undefined, projectName),
     ])
 
-    const projectDaily = daily.filter((d) => d.project_name === projectName)
-
-    return NextResponse.json({ stats, daily: projectDaily })
+    return NextResponse.json({ stats, daily })
   } catch (error) {
     return serverError('/api/projects/[name]', error)
   }

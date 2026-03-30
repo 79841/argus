@@ -16,13 +16,11 @@
 - **Real-Time Dashboard** — Visualize costs, token usage, sessions, and tool analytics
 - **Project-Level Analysis** — Break down usage by project with cost insights and AI-powered suggestions
 - **Electron Desktop App** — Tray-resident app for Mac and Windows with background OTLP ingestion
-- **Docker Compose One-Click** — Single command deployment *(coming soon)*
+- **One-Click Install** — Download and run the Electron desktop app
 
 ## Screenshots
 
 ![Dashboard Overview](docs/screenshots/overview.png)
-
-> Screenshots will be added soon. Run `pnpm dev` to see the dashboard in action.
 
 ## Installation
 
@@ -32,6 +30,7 @@ Download the latest installer for your platform from [Releases](https://github.c
 |----------|------|------|
 | **macOS** (Apple Silicon) | `Argus-x.x.x-arm64.dmg` | Open DMG → drag to Applications |
 | **Windows** | `Argus Setup x.x.x.exe` | Run installer (NSIS) |
+| **Linux** | `Argus-x.x.x.AppImage` | `chmod +x` then run |
 
 After installing, launch Argus. It runs as a tray-resident app and automatically starts an OTLP receiver on `http://localhost:9845`.
 
@@ -71,9 +70,10 @@ export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 ### Gemini CLI
 
 ```bash
-export GEMINI_CLI_OTEL_ENABLED=true
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:9845
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+export GEMINI_TELEMETRY_ENABLED=true
+export GEMINI_TELEMETRY_TARGET=local
+export GEMINI_TELEMETRY_OTLP_ENDPOINT=http://localhost:9845
+export GEMINI_TELEMETRY_OTLP_PROTOCOL=http
 ```
 
 > For detailed setup instructions, see the [Setup Guide](docs/setup-guide.md).

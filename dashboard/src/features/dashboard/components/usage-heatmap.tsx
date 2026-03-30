@@ -19,23 +19,15 @@ type DayData = {
   sessions: number
   cost: number
   cacheHitRate: number
-  agents: Set<string>
+  agentSessions: Record<string, number>
 }
 
-const AGENT_COLORS: Record<string, string> = {
-  claude: AGENTS.claude.hex,
-  codex: AGENTS.codex.hex,
-  gemini: AGENTS.gemini.hex,
-}
+const AGENT_KEYS = ['claude', 'codex', 'gemini'] as const
 
-const AGENT_LABELS: Record<string, string> = {
-  claude: 'Claude Code',
-  codex: 'Codex',
-  gemini: 'Gemini CLI',
-}
+const getAgentHex = (agent: string): string => AGENTS[agent as keyof typeof AGENTS]?.hex ?? '#8b5cf6'
+const getAgentName = (agent: string): string => AGENTS[agent as keyof typeof AGENTS]?.name ?? agent
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const WEEKS_TO_SHOW = 53
+const WEEKS_TO_SHOW = 52
 
 const getSessionColor = (value: number, max: number, agentHex: string): string => {
   if (value === 0) return 'var(--color-muted)'
@@ -51,7 +43,7 @@ const getCostColor = (value: number, max: number): string => {
     const t = ratio * 2
     const r = Math.round(187 + (234 - 187) * t)
     const g = Math.round(247 + (179 - 247) * t)
-    const b = Math.round(208 + (8 - 208) * t)
+    const b = 8
     return `rgb(${r},${g},${b})`
   }
   const t = (ratio - 0.5) * 2
@@ -77,16 +69,16 @@ const getEfficiencyColor = (rate: number): string => {
   return `rgb(${r},${g},${b})`
 }
 
-const getAgentCellStyle = (agents: Set<string>): React.CSSProperties => {
-  if (agents.size === 0) return { backgroundColor: 'var(--color-muted)' }
-
-  const sorted = ['claude', 'codex', 'gemini'].filter((a) => agents.has(a))
-  if (sorted.length === 1) {
-    return { backgroundColor: AGENT_COLORS[sorted[0]] }
+const getDominantAgentHex = (agentSessions: Record<string, number>): string => {
+  let maxAgent = ''
+  let maxCount = 0
+  for (const [agent, count] of Object.entries(agentSessions)) {
+    if (count > maxCount) {
+      maxCount = count
+      maxAgent = agent
+    }
   }
-
-  const colors = sorted.map((a) => AGENT_COLORS[a])
-  return { background: `linear-gradient(135deg, ${colors.join(', ')})` }
+  return maxAgent ? getAgentHex(maxAgent) : '#8b5cf6'
 }
 
 const formatCostShort = (v: number): string => {
@@ -100,7 +92,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
   const [mode, setMode] = useState<HeatmapMode>('agents')
   const { t } = useLocale()
 
-  const { grid, months, maxSessions, maxCost } = useMemo(() => {
+  const { grid, maxSessions, maxCost } = useMemo(() => {
     const today = new Date()
     const dayMap = new Map<string, DayData>()
 
@@ -111,7 +103,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
         existing.sessions += d.sessions
         existing.cost += d.cost
         if (d.agent_type && d.sessions > 0) {
-          existing.agents.add(d.agent_type)
+          existing.agentSessions[d.agent_type] = (existing.agentSessions[d.agent_type] ?? 0) + d.sessions
         }
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
         if (totalInput > 0) {
@@ -124,16 +116,16 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
         }
       } else {
         const totalInput = (d.input_tokens ?? 0) + (d.cache_read_tokens ?? 0)
-        const agents = new Set<string>()
+        const agentSessions: Record<string, number> = {}
         if (d.agent_type && d.sessions > 0) {
-          agents.add(d.agent_type)
+          agentSessions[d.agent_type] = d.sessions
         }
         dayMap.set(key, {
           date: key,
           sessions: d.sessions,
           cost: d.cost,
           cacheHitRate: totalInput > 0 ? (d.cache_read_tokens ?? 0) / totalInput : -1,
-          agents,
+          agentSessions,
         })
       }
     }
@@ -144,9 +136,11 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
     const startDow = startDate.getDay()
     startDate.setDate(startDate.getDate() - startDow)
 
+    const emptyDay = (key: string): DayData => ({
+      date: key, sessions: 0, cost: 0, cacheHitRate: -1, agentSessions: {},
+    })
+
     const cells: (DayData | null)[][] = []
-    const monthLabels: { label: string; weekIdx: number }[] = []
-    let lastMonth = -1
 
     const cursor = new Date(startDate)
     for (let w = 0; w < WEEKS_TO_SHOW + 1; w++) {
@@ -156,14 +150,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
           week.push(null)
         } else {
           const key = cursor.toISOString().slice(0, 10)
-          week.push(dayMap.get(key) ?? { date: key, sessions: 0, cost: 0, cacheHitRate: -1, agents: new Set() })
-        }
-        if (d === 0 && cursor.getMonth() !== lastMonth && cursor <= today) {
-          lastMonth = cursor.getMonth()
-          monthLabels.push({
-            label: cursor.toLocaleString('en', { month: 'short' }),
-            weekIdx: w,
-          })
+          week.push(dayMap.get(key) ?? emptyDay(key))
         }
         cursor.setDate(cursor.getDate() + 1)
       }
@@ -181,18 +168,21 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
       }
     }
 
-    return { grid: cells, months: monthLabels, maxSessions: mxS, maxCost: mxC }
+    return { grid: cells, maxSessions: mxS, maxCost: mxC }
   }, [data])
 
   const agentHex = getAgentColor(agentType)
-  const cellSize = 10
+  const cellSize = 13
   const cellGap = 2
 
   const getCellStyle = (cell: DayData | null): React.CSSProperties => {
     if (!cell) return { backgroundColor: 'transparent' }
     if (mode === 'agents') {
       if (cell.sessions === 0) return { backgroundColor: 'var(--color-muted)' }
-      return getAgentCellStyle(cell.agents)
+      const hex = getDominantAgentHex(cell.agentSessions)
+      const intensity = Math.min(cell.sessions / Math.max(maxSessions, 1), 1)
+      const alpha = 0.2 + intensity * 0.8
+      return { backgroundColor: `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)` }
     }
     const color = mode === 'sessions'
       ? getSessionColor(cell.sessions, maxSessions, agentHex)
@@ -204,7 +194,7 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
 
   const getTooltipText = (cell: DayData | null): string => {
     if (!cell) return ''
-    const dateStr = new Date(cell.date + 'T00:00:00').toLocaleDateString('en', {
+    const dateStr = new Date(cell.date + 'T00:00:00').toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -213,9 +203,10 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
     if (cell.cacheHitRate >= 0) {
       parts.push(`Cache: ${(cell.cacheHitRate * 100).toFixed(0)}%`)
     }
-    if (cell.agents.size > 0) {
-      const agentNames = [...cell.agents]
-        .map((a) => AGENT_LABELS[a] ?? a)
+    const activeAgents = AGENT_KEYS.filter((a) => cell.agentSessions[a] > 0)
+    if (activeAgents.length > 0) {
+      const agentNames = activeAgents
+        .map((a) => `${getAgentName(a)} (${cell.agentSessions[a]})`)
         .join(', ')
       parts.push(agentNames)
     }
@@ -242,62 +233,33 @@ export const UsageHeatmap = ({ data, agentType }: UsageHeatmapProps) => {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <div className="flex gap-0.5">
-            <div className="flex flex-col justify-end pr-1" style={{ gap: cellGap }}>
-              {DAYS_OF_WEEK.filter((_, i) => i % 2 === 1).map((d) => (
-                <div
-                  key={d}
-                  className="text-[10px] text-muted-foreground leading-none"
-                  style={{ height: cellSize + cellGap, display: 'flex', alignItems: 'center' }}
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="flex mb-0.5" style={{ gap: cellGap }}>
-                {grid.map((_, wIdx) => {
-                  const ml = months.find((m) => m.weekIdx === wIdx)
-                  return (
-                    <div
-                      key={wIdx}
-                      className="text-[10px] text-muted-foreground leading-none"
-                      style={{ width: cellSize, textAlign: 'left' }}
-                    >
-                      {ml?.label ?? ''}
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="flex" style={{ gap: cellGap }}>
-                {grid.map((week, wIdx) => (
-                  <div key={wIdx} className="flex flex-col" style={{ gap: cellGap }}>
-                    {week.map((cell, dIdx) => (
-                      <div
-                        key={dIdx}
-                        className="rounded-[2px]"
-                        style={{
-                          width: cellSize,
-                          height: cellSize,
-                          ...getCellStyle(cell),
-                        }}
-                        title={getTooltipText(cell)}
-                      />
-                    ))}
-                  </div>
+          <div className="flex" style={{ gap: cellGap }}>
+            {grid.map((week, wIdx) => (
+              <div key={wIdx} className="flex flex-col" style={{ gap: cellGap }}>
+                {week.map((cell, dIdx) => (
+                  <div
+                    key={dIdx}
+                    className="rounded-[2px]"
+                    style={{
+                      width: cellSize,
+                      height: cellSize,
+                      ...getCellStyle(cell),
+                    }}
+                    title={getTooltipText(cell)}
+                  />
                 ))}
               </div>
-            </div>
+            ))}
           </div>
           {mode === 'agents' && (
             <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
-              {(['claude', 'codex', 'gemini'] as const).map((agent) => (
+              {AGENT_KEYS.map((agent) => (
                 <div key={agent} className="flex items-center gap-1">
                   <div
                     className="size-2.5 rounded-[2px]"
-                    style={{ backgroundColor: AGENT_COLORS[agent] }}
+                    style={{ backgroundColor: getAgentHex(agent) }}
                   />
-                  {AGENT_LABELS[agent]}
+                  {getAgentName(agent)}
                 </div>
               ))}
             </div>

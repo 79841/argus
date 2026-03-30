@@ -9,15 +9,17 @@ import { FilterBar } from '@/shared/components/filter-bar'
 import { todayISO, daysAgoISO } from '@/shared/lib/format'
 import type { AgentType } from '@/shared/lib/agents'
 import type { DateRange } from '@/shared/components/top-bar-context'
+import { useLocale } from '@/shared/lib/i18n'
 import { CostTab, TokensTab, ModelsTab, EfficiencyTab, ImpactTab } from '@/features/usage'
 
 export default function UsagePage() {
+  const { t } = useLocale()
   const [agentType, setAgentType] = useState<AgentType>('all')
   const [project, setProject] = useState('all')
   const [dateRange, setDateRange] = useState<DateRange>({ from: daysAgoISO(30), to: todayISO() })
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col overflow-hidden">
       <FilterBar>
         <AgentFilter value={agentType} onChange={setAgentType} />
         <ProjectFilter value={project} onChange={setProject} />
@@ -26,16 +28,18 @@ export default function UsagePage() {
         </div>
       </FilterBar>
 
-      <div className="flex-1 overflow-auto px-4 py-4">
-        <Tabs defaultValue="cost" className="h-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="cost">Cost</TabsTrigger>
-            <TabsTrigger value="tokens">Tokens</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
-            <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
-            <TabsTrigger value="impact">Impact</TabsTrigger>
+      <Tabs defaultValue="cost" className="flex flex-1 min-h-0 flex-col">
+        <div className="flex-shrink-0 overflow-x-auto px-4 pt-4 pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="flex-nowrap">
+            <TabsTrigger value="cost" className="flex-shrink-0">{t('usage.tab.cost')}</TabsTrigger>
+            <TabsTrigger value="tokens" className="flex-shrink-0">{t('usage.tab.tokens')}</TabsTrigger>
+            <TabsTrigger value="models" className="flex-shrink-0">{t('usage.tab.models')}</TabsTrigger>
+            <TabsTrigger value="efficiency" className="flex-shrink-0">{t('usage.tab.efficiency')}</TabsTrigger>
+            <TabsTrigger value="impact" className="flex-shrink-0">{t('usage.tab.impact')}</TabsTrigger>
           </TabsList>
+        </div>
 
+        <div className="flex-1 overflow-auto px-4 py-4">
           <TabsContent value="cost">
             <CostTab agentType={agentType} project={project} dateRange={dateRange} />
           </TabsContent>
@@ -51,8 +55,8 @@ export default function UsagePage() {
           <TabsContent value="impact">
             <ImpactTab agentType={agentType} project={project} dateRange={dateRange} />
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </div>
   )
 }

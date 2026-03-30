@@ -112,6 +112,27 @@ describe('isPathSafe — 경로 길이 제한', () => {
   })
 })
 
+describe('CRLF 정규화', () => {
+  it('\\r\\n을 \\n으로 변환한다', () => {
+    const crlf = 'line1\r\nline2\r\nline3'
+    const normalized = crlf.replace(/\r\n/g, '\n')
+    expect(normalized).toBe('line1\nline2\nline3')
+    expect(normalized).not.toContain('\r')
+  })
+
+  it('이미 \\n만 있는 내용은 변환 후 동일하다', () => {
+    const lf = 'line1\nline2\nline3'
+    const normalized = lf.replace(/\r\n/g, '\n')
+    expect(normalized).toBe(lf)
+  })
+
+  it('혼합된 줄 끝도 \\r\\n 부분만 정규화한다', () => {
+    const mixed = 'line1\nline2\r\nline3'
+    const normalized = mixed.replace(/\r\n/g, '\n')
+    expect(normalized).toBe('line1\nline2\nline3')
+  })
+})
+
 describe('isPathSafe — 대소문자 비교 일관성 (normalizePath 적용)', () => {
   it('같은 경로를 정규화하면 동일한 결과를 반환한다', () => {
     const home = getUserHome()

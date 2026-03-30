@@ -33,6 +33,7 @@ export const DailyCostChart = ({ data }: DailyCostChartProps) => {
         </defs>
         <XAxis
           dataKey="label"
+          interval="preserveStartEnd"
           {...CHART_THEME.axis}
         />
         <YAxis

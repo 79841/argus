@@ -8,7 +8,7 @@ import { Button } from '@/shared/components/ui/button'
 import { EmptyState } from '@/shared/components/ui/empty-state'
 import { useLocale } from '@/shared/lib/i18n'
 import { FilterBar } from '@/shared/components/filter-bar'
-import { formatCost, formatTokens, formatDuration } from '@/shared/lib/format'
+import { formatCost, formatTokens, formatDurationLong } from '@/shared/lib/format'
 import { useSessionDetail, PromptGroupCard, PromptCostChart, SessionHeader } from '@/features/sessions'
 
 export default function SessionDetailPage() {
@@ -89,7 +89,7 @@ export default function SessionDetailPage() {
             />
             <KpiCard
               label={t('sessions.detail.duration')}
-              value={formatDuration(summary.duration_ms)}
+              value={formatDurationLong(summary.duration_ms)}
             />
             <KpiCard
               label={t('sessions.detail.reqTools')}

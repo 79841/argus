@@ -3,6 +3,7 @@ import fs from 'fs'
 import os from 'os'
 import { getDb } from '../../../src/shared/lib/db'
 import { str } from '../../infrastructure/helpers'
+import { normalizePath, scanDirFiles, scanDynamicFiles } from '../../../src/shared/lib/config-scanner'
 import { PROJECT_STATIC_FILES, USER_STATIC_FILES } from './config.constants'
 import type { QueryParams, RegistryRow, ProjectFileEntry, UserFileEntry } from './config.types'
 
@@ -17,54 +18,26 @@ export const resolvePath = (filePath: string): string => {
   return path.join(getProjectRoot(), filePath)
 }
 
-const normalizePath = (p: string): string =>
-  process.platform === 'win32' ? p.toLowerCase() : p
-
 export const isPathSafe = (filePath: string): boolean => {
   if (filePath.startsWith('~/')) {
-    const resolved = normalizePath(path.resolve(resolvePath(filePath)))
-    const home = normalizePath(getUserHome())
-    return resolved.startsWith(home) && !filePath.includes('..')
-  }
-  const resolved = normalizePath(path.resolve(getProjectRoot(), filePath))
-  const root = normalizePath(getProjectRoot())
-  return resolved.startsWith(root) && !filePath.includes('..')
-}
-
-export const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> => {
-  const dynamic: Array<{ agent: string; path: string }> = []
-
-  const agentsDir = path.join(root, '.claude', 'agents')
-  if (fs.existsSync(agentsDir)) {
     try {
-      const entries = fs.readdirSync(agentsDir)
-      for (const entry of entries) {
-        if (entry.endsWith('.md')) {
-          dynamic.push({ agent: 'claude', path: `.claude/agents/${entry}` })
-        }
-      }
+      const resolved = normalizePath(fs.realpathSync(resolvePath(filePath)))
+      const home = normalizePath(getUserHome())
+      return resolved.startsWith(home) && !filePath.includes('..')
     } catch {
-      // ignore
+      return false
     }
   }
-
-  const skillsDir = path.join(root, '.claude', 'skills')
-  if (fs.existsSync(skillsDir)) {
-    try {
-      const skillNames = fs.readdirSync(skillsDir)
-      for (const skillName of skillNames) {
-        const skillFile = path.join(skillsDir, skillName, 'SKILL.md')
-        if (fs.existsSync(skillFile)) {
-          dynamic.push({ agent: 'claude', path: `.claude/skills/${skillName}/SKILL.md` })
-        }
-      }
-    } catch {
-      // ignore
-    }
+  try {
+    const resolved = normalizePath(fs.realpathSync(path.resolve(getProjectRoot(), filePath)))
+    const root = normalizePath(getProjectRoot())
+    return resolved.startsWith(root) && !filePath.includes('..')
+  } catch {
+    return false
   }
-
-  return dynamic
 }
+
+export { scanDirFiles, scanDynamicFiles }
 
 export const getRegisteredProjects = (): RegistryRow[] => {
   try {
@@ -108,7 +81,7 @@ export const handleConfigGet = (filePath: string | null, params?: QueryParams): 
       getProjectFiles(project_path, project_name)
     )
 
-    const userFiles: UserFileEntry[] = USER_STATIC_FILES
+    const staticUserFiles: UserFileEntry[] = USER_STATIC_FILES
       .filter((f) => fs.existsSync(resolvePath(f.path)))
       .map((f) => ({
         path: f.path,
@@ -117,7 +90,21 @@ export const handleConfigGet = (filePath: string | null, params?: QueryParams): 
         exists: true,
       }))
 
-    return { files: [...projectFiles, ...userFiles] }
+    const staticUserPaths = new Set(staticUserFiles.map((f) => f.path))
+    const home = getUserHome()
+    const dynamicUserFiles: UserFileEntry[] = [
+      ...scanDirFiles(path.join(home, '.claude', 'rules'), '.md', 'claude', '~/.claude/rules'),
+      ...scanDirFiles(path.join(home, '.codex', 'rules'), '.rules', 'codex', '~/.codex/rules'),
+    ]
+      .filter((f) => !staticUserPaths.has(f.path) && fs.existsSync(resolvePath(f.path)))
+      .map((f) => ({
+        path: f.path,
+        agent: f.agent,
+        scope: 'user' as const,
+        exists: true,
+      }))
+
+    return { files: [...projectFiles, ...staticUserFiles, ...dynamicUserFiles] }
   }
 
   const projectRoot = params?.projectRoot ? str(params.projectRoot) : null

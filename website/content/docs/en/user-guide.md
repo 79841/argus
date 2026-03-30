@@ -16,10 +16,9 @@ Argus is a personal monitoring dashboard for AI coding agents (Claude Code, Code
 - [2. Sessions (/sessions)](#2-sessions-sessions)
 - [3. Usage (/usage)](#3-usage-usage)
 - [4. Tools (/tools)](#4-tools-tools)
-- [5. Projects (/projects)](#5-projects-projects)
-- [6. Insights (/insights)](#6-insights-insights)
-- [7. Rules (/rules)](#7-rules-rules)
-- [8. Settings (/settings)](#8-settings-settings)
+- [5. User (/user)](#5-user-user)
+- [6. Projects (/projects)](#6-projects-projects)
+- [7. Settings (/settings)](#7-settings-settings)
 
 ---
 
@@ -305,7 +304,42 @@ Analyzes tool usage patterns across your AI coding agents.
 
 ---
 
-## 5. Projects (/projects)
+## 5. User (/user)
+
+Browse global agent configuration files in your home directory. View and edit user-level settings files such as `~/.claude/settings.json`, `~/.codex/config.toml`, and `~/.gemini/settings.json`.
+
+### Filters
+
+- **Agent Filter** -- Show only configuration files for a specific agent.
+
+### File Tree (Left Panel, 35%)
+
+A hierarchical file browser organized by agent:
+
+1. **Agent** -- Claude, Codex, or Gemini.
+2. **Files** -- Individual configuration files with contextual icons:
+   - `.mcp.json` -- MCP plugin icon
+   - `.json` / `.toml` -- Settings gear icon
+   - Other markdown files -- Document icon
+
+### File Viewer (Right Panel, 65%)
+
+When a file is selected, you can switch between Preview and Edit modes:
+
+- **Markdown files** -- Rendered with headings, code blocks, tables, and lists.
+- **JSON files** -- Syntax-highlighted.
+- **TOML files** -- Highlighted section headers and key-value pairs.
+- **Edit mode** -- Edit file content directly and save to disk.
+- **Search** -- Press `Cmd+F` to search within the file content.
+
+### Tips
+
+- Use the User page to review global MCP settings and agent defaults directly from the dashboard.
+- Project-level configuration files are available under Projects > [Project Name] > Rules tab.
+
+---
+
+## 6. Projects (/projects)
 
 Compare costs and activity across different projects (repositories/workspaces).
 
@@ -336,131 +370,48 @@ A clickable table listing all projects. Columns:
 
 Click any row to navigate to a project detail page.
 
+### Project Detail (/projects/[name])
+
+When you select a project, you navigate to a detail page with sub-navigation tabs:
+
+#### Overview Tab
+
+| Element | Description |
+|---------|-------------|
+| **KPI Cards (6)** | Total cost, sessions, requests, input tokens, output tokens, cache hit rate |
+| **Usage Heatmap** | Daily activity heatmap for the project |
+| **Agent Cost Distribution** | Pie chart showing cost ratio per agent |
+| **Daily Cost Trend** | Area chart showing daily cost |
+| **Agent Breakdown** | Table showing cost and session count per agent |
+
+#### Sessions Tab
+
+Project-scoped session list. Provides the same features as the global Sessions page, but filtered to the selected project.
+
+#### Usage Tab
+
+Project-scoped usage analytics. Provides the same 5 tabs (Cost, Tokens, Models, Efficiency, Impact) as the global Usage page.
+
+#### Tools Tab
+
+Project-scoped tool analytics. Provides the same 3 tabs (Overview, Details, Trends) as the global Tools page.
+
+#### Rules Tab
+
+Browse agent configuration files for the project:
+
+- **File Tree (Left Panel, 35%)** -- Configuration files in the project directory organized by agent (e.g., `CLAUDE.md`, `.mcp.json`, `.claude/agents/`, `codex.md`, `GEMINI.md`).
+- **File Viewer (Right Panel, 65%)** -- Supports Markdown rendering, JSON/TOML syntax highlighting, edit mode, and `Cmd+F` search.
+
 ### Tips
 
 - Compare projects to identify which codebases consume the most AI resources.
 - The "Top Model" column helps identify whether each project is using the most cost-effective model.
+- Use the project detail sub-tabs to analyze sessions, usage, tools, and configuration per project.
 
 ---
 
-## 6. Insights (/insights)
-
-AI-powered suggestions and cost analysis to help optimize your agent usage.
-
-### Filters
-
-- **Date Range** -- Quick-select buttons: 7d, 14d, 30d, 90d.
-
-### Suggestions
-
-An intelligent suggestion engine that analyzes your usage patterns and provides actionable recommendations. Each suggestion card includes:
-
-- **Severity** -- Critical (red), Warning (orange), or Info (blue) with corresponding icon.
-- **Category badge** -- The area the suggestion relates to.
-- **Current metric** -- Your current value for the metric in question.
-- **Target** -- The recommended target value.
-- **Action** -- Specific steps to take.
-
-When no issues are detected, a green "All good" message is displayed.
-
-### KPI Cards (3)
-
-| Card | Description |
-|------|-------------|
-| **Top 10 Total** | Combined cost of the top 10 most expensive sessions. |
-| **Avg Session Cost** | Average cost across the top 10 sessions. |
-| **Top Cause** | The most common cause of high-cost sessions (e.g., "Expensive Model", "Many Tool Calls", "No Cache"). |
-
-### Daily Budget Gauges
-
-If daily cost limits are configured (in Settings), a gauge section shows:
-
-- Progress bar per agent with spent vs. limit
-- Red highlight when budget is exceeded
-
-### High-Cost Sessions Table
-
-A table of the top 10 most expensive sessions with columns:
-
-| Column | Description |
-|--------|-------------|
-| Agent | Which agent ran the session |
-| Model | Model(s) used |
-| Cost | Total session cost |
-| Reqs | Number of API requests |
-| Tools | Number of tool calls |
-| Causes | Color-coded badges explaining why the session was expensive (e.g., "Expensive Model", "Many Requests", "No Cache") |
-
-### Model Cost Efficiency Table
-
-Compares cost efficiency across models:
-
-| Column | Description |
-|--------|-------------|
-| Model | Model name |
-| Agent | Which agent uses it |
-| Reqs | Request count |
-| Total Cost | Total cost for this model |
-| Avg/Req | Average cost per request |
-| Per 1K Tok | Cost per 1,000 tokens |
-| Avg Speed | Average response time |
-
-### Tips
-
-- Check Insights regularly (weekly) to catch cost optimization opportunities early.
-- Pay attention to "Critical" severity suggestions -- they typically indicate significant savings potential.
-- Use the "Causes" column in the High-Cost Sessions table to understand *why* sessions are expensive, not just *that* they are.
-- The Model Efficiency table helps you choose the best price/performance model for your workflow.
-
----
-
-## 7. Rules (/rules)
-
-View and edit agent configuration files directly from the dashboard.
-
-### File Tree (Left Panel, 35%)
-
-A hierarchical file browser organized by:
-
-1. **Scope** -- "Project" (current project directory) or "User" (global user settings).
-2. **Agent** -- Claude, Codex, or Gemini.
-3. **Files** -- Individual configuration files with contextual icons:
-   - `.mcp.json` -- MCP plugin icon
-   - `.json` / `.toml` -- Settings gear icon
-   - `agents/` / `skills/` -- Folder icon
-   - Other markdown files -- Document icon
-
-Collapsible groups let you expand/collapse scopes and agents.
-
-### File Viewer/Editor (Right Panel, 65%)
-
-When a file is selected:
-
-#### Header
-- Full file path
-- Scope badge (Project / User)
-- **Preview** and **Edit** mode toggle buttons
-
-#### Preview Mode
-- **Markdown files** -- Rendered with headings, code blocks, tables, lists, links, and inline formatting.
-- **JSON files** -- Syntax-highlighted with color-coded keys, strings, numbers, and booleans.
-- **TOML files** -- Syntax-highlighted with section headers, key-value pairs, and comments.
-- **Other files** -- Displayed as plain text with monospace font.
-
-#### Edit Mode
-- A full-height textarea for editing the file content.
-- **Save** button to persist changes back to disk.
-- Success confirmation message after saving.
-
-### Tips
-
-- Use Rules to quickly review and tweak agent settings without leaving the dashboard.
-- The preview mode for Markdown files makes it easy to read agent instructions and skill definitions.
-- Edit mode lets you update MCP configurations, agent prompts, and other settings on the fly.
-
----
-
-## 8. Settings (/settings)
+## 7. Settings (/settings)
 
 Configure the Argus dashboard itself. Organized into 5 sections via a left sidebar.
 
@@ -521,4 +472,4 @@ Step-by-step setup guides for each agent:
 5. **Start coding** with your AI agent -- data will flow automatically
 6. **Check Overview** to see today's activity
 7. **Explore Sessions** to drill into individual conversations
-8. **Review Insights** weekly to optimize your usage
+8. **Check Usage > Efficiency** tab to review cache hit rate and efficiency score

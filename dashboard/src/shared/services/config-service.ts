@@ -19,9 +19,6 @@ export const configService = {
   getConfigContent: (params: QueryParams): Promise<ConfigContentResponse> =>
     dataClient.query('config', params) as Promise<ConfigContentResponse>,
 
-  saveConfig: (body: unknown): Promise<unknown> =>
-    dataClient.mutate('config', body),
-
   getConfigHistory: (params?: QueryParams): Promise<ConfigChange[]> =>
     dataClient.query('config-history', params) as Promise<ConfigChange[]>,
 

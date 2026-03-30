@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
@@ -17,7 +18,8 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-surface-200 bg-white/80 backdrop-blur-md dark:border-surface-800 dark:bg-surface-950/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="text-primary-600">◆</span> Argus
+          <Image src="/icon.png" alt="Argus" width={28} height={28} className="rounded-md" />
+          Argus
         </Link>
 
         {/* Desktop nav */}

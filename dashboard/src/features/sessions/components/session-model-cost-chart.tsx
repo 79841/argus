@@ -69,23 +69,23 @@ export const SessionModelCostChart = ({ events }: SessionModelCostChartProps) =>
         </div>
 
         {/* Model detail list */}
-        <div className="flex flex-1 flex-col justify-center gap-1.5">
+        <div className="flex flex-1 flex-col justify-center gap-2">
           {breakdown.map((item, i) => (
-            <div key={item.model} className="flex items-center gap-2 text-xs">
+            <div key={item.model} className="flex items-center gap-2 text-sm">
               <span
-                className="inline-block h-2 w-2 shrink-0 rounded-full"
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] }}
               />
-              <span className="min-w-0 flex-1 truncate font-mono text-muted-foreground">
+              <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
                 {shortenModel(item.model)}
               </span>
-              <span className="shrink-0 tabular-nums font-medium">
+              <span className="shrink-0 tabular-nums font-semibold">
                 {formatCostChart(item.cost)}
               </span>
-              <span className="shrink-0 tabular-nums text-muted-foreground w-10 text-right">
+              <span className="shrink-0 tabular-nums text-muted-foreground w-12 text-right text-xs">
                 {item.percentage.toFixed(1)}%
               </span>
-              <span className="shrink-0 tabular-nums text-muted-foreground">
+              <span className="shrink-0 tabular-nums text-muted-foreground text-xs">
                 {item.request_count}req
               </span>
             </div>

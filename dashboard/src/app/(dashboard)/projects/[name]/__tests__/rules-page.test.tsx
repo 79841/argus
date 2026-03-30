@@ -22,11 +22,7 @@ vi.mock('@/features/rules', () => ({
     loading: false,
     selectedFile: null,
     fileContent: '',
-    editContent: '',
-    viewMode: 'preview' as const,
     contentLoading: false,
-    saving: false,
-    saveSuccess: false,
     projectGroups: [
       {
         projectName: 'my-project',
@@ -42,10 +38,7 @@ vi.mock('@/features/rules', () => ({
       },
     ],
     userAgents: [],
-    setEditContent: vi.fn(),
-    setViewMode: vi.fn(),
     loadFile: vi.fn(),
-    handleSave: vi.fn(),
   })),
   FileTree: ({ projectGroups }: { projectGroups: Array<{ projectName: string }> }) => (
     <div data-testid="file-tree">
@@ -85,7 +78,6 @@ describe('ProjectRulesPage', () => {
 
   it('global userAgents가 표시되지 않는다', () => {
     render(<ProjectRulesPage />)
-    // userAgents=[] 이므로 사용자 전역 섹션이 FileTree에 전달되지 않는다
     expect(screen.queryByTestId('project-group-other-project')).not.toBeInTheDocument()
   })
 })

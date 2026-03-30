@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import type { RefObject } from 'react'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
+import { useLocale } from '@/shared/lib/i18n'
 
 type ContentSearchProps = {
   containerRef: RefObject<HTMLElement | null>
@@ -53,6 +54,7 @@ const buildRanges = (nodes: Text[], query: string): Range[] => {
 }
 
 export const ContentSearch = ({ containerRef, open, onOpenChange }: ContentSearchProps) => {
+  const { t } = useLocale()
   const [query, setQuery] = useState('')
   const [ranges, setRanges] = useState<Range[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -180,7 +182,7 @@ export const ContentSearch = ({ containerRef, open, onOpenChange }: ContentSearc
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="검색..."
+          placeholder={t('rules.search.placeholder')}
           className="text-xs h-7 w-48 bg-transparent outline-none px-1"
         />
         {matchLabel && (
@@ -192,7 +194,7 @@ export const ContentSearch = ({ containerRef, open, onOpenChange }: ContentSearc
           className="h-6 w-6"
           onClick={goPrev}
           disabled={ranges.length === 0}
-          aria-label="이전 결과"
+          aria-label={t('rules.search.prev')}
         >
           <ChevronUp className="h-3 w-3" />
         </Button>
@@ -202,7 +204,7 @@ export const ContentSearch = ({ containerRef, open, onOpenChange }: ContentSearc
           className="h-6 w-6"
           onClick={goNext}
           disabled={ranges.length === 0}
-          aria-label="다음 결과"
+          aria-label={t('rules.search.next')}
         >
           <ChevronDown className="h-3 w-3" />
         </Button>
@@ -211,7 +213,7 @@ export const ContentSearch = ({ containerRef, open, onOpenChange }: ContentSearc
           size="icon"
           className="h-6 w-6"
           onClick={() => onOpenChange(false)}
-          aria-label="검색 닫기"
+          aria-label={t('rules.search.close')}
         >
           <X className="h-3 w-3" />
         </Button>

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { ArrowUpDown } from 'lucide-react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { ArrowUpDown, Copy, Check } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs'
@@ -12,7 +12,7 @@ import { PromptGroupCard } from '@/features/sessions/components/prompt-group-car
 import type { SessionRow, SessionDetailEvent } from '@/shared/lib/queries'
 import type { AgentType } from '@/shared/lib/agents'
 import { useLocale } from '@/shared/lib/i18n'
-import { formatCost, formatTokens, formatDuration, shortenModel, parseModels } from '@/shared/lib/format'
+import { formatCost, formatTokens, formatDurationLong, shortenModel, parseModels } from '@/shared/lib/format'
 import { groupByPrompt } from '@/features/sessions/hooks/use-session-detail'
 import { computeSummary } from '@/features/sessions/lib/compute-summary'
 
@@ -25,12 +25,24 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
   const { t } = useLocale()
   const [activeTab, setActiveTab] = useState('list')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [copied, setCopied] = useState(false)
   const summary = computeSummary(events, session)
   const rawGroups = useMemo(() => groupByPrompt(events), [events])
   const promptGroups = useMemo(
     () => sortOrder === 'asc' ? rawGroups : [...rawGroups].reverse(),
     [rawGroups, sortOrder],
   )
+
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(session.session_id).then(() => {
+      setCopied(true)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   return (
     <div className="space-y-5 p-6">
@@ -44,9 +56,15 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
             </Badge>
           ))}
         </div>
-        <span className="ml-auto font-mono text-xs text-muted-foreground">
-          {session.session_id.slice(0, 16)}
-        </span>
+        <button
+          type="button"
+          onClick={handleCopyId}
+          title={copied ? t('sessions.id.copied') : t('sessions.id.copy')}
+          className="ml-auto flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {session.session_id.slice(0, 8)}…
+          {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+        </button>
       </div>
 
       {/* Summary Grid */}
@@ -67,12 +85,14 @@ export const SessionDetail = ({ session, events }: SessionDetailProps) => {
           <div className="text-xs text-muted-foreground">{t('sessions.detail.cache')}</div>
           <div className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
             {formatTokens(summary.cacheReadTokens)}
-            {summary.cacheRate > 0 && <span className="ml-1 text-xs font-normal">({summary.cacheRate}%)</span>}
+            {summary.cacheRate > 0 && (
+              <span className="ml-1 text-xs font-normal opacity-80">{summary.cacheRate}%</span>
+            )}
           </div>
         </div>
         <div>
           <div className="text-xs text-muted-foreground">{t('sessions.detail.duration')}</div>
-          <div className="font-semibold tabular-nums">{formatDuration(summary.wallTime)}</div>
+          <div className="font-semibold tabular-nums">{formatDurationLong(summary.wallTime)}</div>
         </div>
         <div>
           <div className="text-xs text-muted-foreground">{t('sessions.detail.reqTools')}</div>

@@ -2,7 +2,7 @@ import { app, ipcMain, Notification } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { registerIpcHandlers } from './infrastructure/ipc/ipc.handler'
-import { createWindow, getMainWindow, togglePipWindow, closePipWindow } from './presentation/window'
+import { createWindow, getMainWindow, isTrayActive } from './presentation/window'
 import { createTray, destroyTray } from './presentation/tray'
 import { startNextServer, waitForServer, killNextProcess, DEV_URL } from './infrastructure/server/next-server'
 
@@ -37,9 +37,6 @@ ipcMain.handle('select-folder', async (_event, title?: string) => {
   return result.filePaths[0]
 })
 
-ipcMain.on('pip-toggle', () => togglePipWindow())
-ipcMain.on('pip-close', () => closePipWindow())
-
 ipcMain.on('show-notification', (_event, title: string, body: string) => {
   new Notification({ title, body }).show()
 })
@@ -53,21 +50,22 @@ ipcMain.on('window-maximize', () => {
 ipcMain.on('window-close', () => getMainWindow()?.close())
 
 app.whenReady().then(async () => {
-  registerIpcHandlers()
-  createTray()
-  await startNextServer()
-
   try {
+    registerIpcHandlers()
+    createTray()
+    await startNextServer()
     await waitForServer(`${DEV_URL}/api/health`)
     createWindow()
-  } catch {
-    process.stderr.write('Failed to start Next.js server\n')
+  } catch (err) {
+    process.stderr.write(`Failed to initialize app: ${err instanceof Error ? err.message : String(err)}\n`)
+    destroyTray()
     app.quit()
   }
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (process.platform === 'darwin') return
+  if (!isTrayActive()) {
     app.quit()
   }
 })

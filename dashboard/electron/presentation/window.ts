@@ -15,23 +15,26 @@ export const setTrayActive = (active: boolean): void => {
   _isTrayActive = active
 }
 
+export const isTrayActive = (): boolean => _isTrayActive
+
 export const createWindow = (): void => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    minWidth: 360,
+    minHeight: 480,
     title: 'Argus',
-    transparent: true,
-    backgroundColor: '#00000000',
+    icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     ...(isMac
-      ? {
-          titleBarStyle: 'hiddenInset' as const,
-          trafficLightPosition: { x: 14, y: 18 },
-          vibrancy: 'under-window' as const,
-          visualEffectState: 'active' as const,
-        }
-      : { frame: false, backgroundMaterial: 'acrylic' as const }),
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 18 } }
+      : {
+          titleBarStyle: 'hidden' as const,
+          titleBarOverlay: {
+            color: '#09090b',
+            symbolColor: '#a1a1aa',
+            height: 36,
+          },
+        }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

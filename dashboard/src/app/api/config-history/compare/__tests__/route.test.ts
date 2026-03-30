@@ -62,4 +62,21 @@ describe('GET /api/config-history/compare', () => {
     const calls = vi.mocked(getImpactCompareBatch).mock.calls
     expect(calls[0][0]).toHaveLength(30)
   })
+
+  it('date 포맷이 잘못되면(YYYY/MM/DD) 400을 반환한다', async () => {
+    const res = await GET(mkRequest({ date: '2026/03/01' }) as never)
+    expect(res.status).toBe(400)
+  })
+
+  it('date가 ISO 형식이 아닌 문자열이면 400을 반환한다', async () => {
+    const res = await GET(mkRequest({ date: 'not-a-date' }) as never)
+    expect(res.status).toBe(400)
+  })
+
+  it('days가 범위를 초과하면 기본값 7을 사용한다', async () => {
+    const { getImpactCompare } = await import('@/shared/lib/queries/impact')
+    vi.mocked(getImpactCompare).mockClear()
+    await GET(mkRequest({ date: '2026-03-01', days: '999' }) as never)
+    expect(getImpactCompare).toHaveBeenCalledWith('2026-03-01', 7, expect.any(String), expect.any(String))
+  })
 })

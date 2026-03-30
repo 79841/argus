@@ -3,7 +3,8 @@
 import { AGENTS } from '@/shared/lib/agents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { AgentDot } from '@/shared/components/ui/agent-dot'
-import { formatCost, formatRelativeTime } from '@/shared/lib/format'
+import { formatCost } from '@/shared/lib/format'
+import { formatRelativeTime } from '@/shared/lib/format'
 import { useLocale } from '@/shared/lib/i18n'
 
 const AGENT_ORDER = ['claude', 'codex', 'gemini'] as const

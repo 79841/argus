@@ -10,14 +10,14 @@ export const AgentsSection = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Collection Status</CardTitle>
+          <CardTitle>{t('settings.agents.collection.title')}</CardTitle>
           <CardDescription>
             {t('settings.agents.collection.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Coming soon &mdash; 수집 상태 모니터링.
+            {t('settings.agents.collection.comingSoon')}
           </p>
         </CardContent>
       </Card>

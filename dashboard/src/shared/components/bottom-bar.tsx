@@ -19,8 +19,9 @@ const getStatusDot = (iso: string | null): string => {
 const formatModel = (model: string): string => {
   if (!model) return ''
   const parts = model.split('/')
-  const name = parts[parts.length - 1]
-  return name.length > 20 ? `${name.slice(0, 18)}...` : name
+  const raw = parts[parts.length - 1]
+  const stripped = raw.replace(/^(claude|codex|gemini)-/i, '')
+  return stripped.length > 16 ? `${stripped.slice(0, 14)}…` : stripped
 }
 
 export const BottomBar = () => {
@@ -28,8 +29,8 @@ export const BottomBar = () => {
   const { t } = useLocale()
 
   return (
-    <footer className="flex h-8 shrink-0 items-center glass-light px-4 text-xs text-muted-foreground">
-      <div className="flex items-center gap-4">
+    <footer className="flex h-8 shrink-0 items-center bg-[var(--bg-sunken)] px-4 text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
+      <div className="flex items-center gap-3">
         {agentTypes.map((type) => {
           const status = agents.find((a) => a.agent_type === type)
           const config = AGENTS[type]
@@ -38,11 +39,15 @@ export const BottomBar = () => {
               <span
                 className={`inline-block h-2 w-2 rounded-full ${getStatusDot(status?.last_received ?? null)}`}
               />
-              <span style={{ color: `var(--agent-${type})` }}>{config.name}</span>
+              <span className="hidden md:inline" style={{ color: `var(--agent-${type})` }}>
+                {config.name}
+              </span>
               {status ? (
-                <span>{formatRelativeTime(status.last_received)}</span>
+                <span className="hidden md:inline">{formatRelativeTime(status.last_received)}</span>
               ) : (
-                <span className="text-muted-foreground/50">{t('shared.bottomBar.noData')}</span>
+                <span className="hidden md:inline text-muted-foreground/50">
+                  {t('shared.bottomBar.noData')}
+                </span>
               )}
             </div>
           )
@@ -50,8 +55,8 @@ export const BottomBar = () => {
       </div>
 
       {activeSessions.length > 0 && (
-        <div className="ml-4 flex items-center gap-1.5">
-          <div className="h-3 w-px bg-border" />
+        <div className="hidden md:flex ml-4 items-center gap-1">
+          <div className="h-3 w-px bg-border mx-1" />
           <AgentDot agent={activeSessions[0].agent_type as AgentType} size="sm" pulse />
           {activeSessions.slice(0, 3).map((s) => {
             const config = AGENTS[s.agent_type as AgentType]
@@ -61,20 +66,25 @@ export const BottomBar = () => {
                   {config?.name ?? s.agent_type}
                 </span>
                 {s.model && (
-                  <span className="text-muted-foreground">{formatModel(s.model)}</span>
+                  <span className="hidden lg:inline text-muted-foreground/70">
+                    {formatModel(s.model)}
+                  </span>
                 )}
-                <span className="text-muted-foreground">{formatCost(s.cost)}</span>
+                <span>{formatCost(s.cost)}</span>
               </div>
             )
           })}
           {activeSessions.length > 3 && (
-            <span className="text-muted-foreground">+{activeSessions.length - 3}</span>
+            <span>+{activeSessions.length - 3}</span>
           )}
         </div>
       )}
 
-      <div className="ml-auto flex items-center gap-3">
-        <span>Total: {formatCost(totals.total_cost)} / {formatTokens(totals.total_tokens)} tokens</span>
+      <div className="ml-auto flex items-center gap-1 whitespace-nowrap">
+        <span>{t('shared.bottomBar.total')}: {formatCost(totals.total_cost)}</span>
+        <span className="hidden lg:inline text-muted-foreground/60">
+          / {formatTokens(totals.total_tokens)} {t('shared.bottomBar.tokens')}
+        </span>
       </div>
     </footer>
   )

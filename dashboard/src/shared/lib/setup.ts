@@ -24,10 +24,12 @@ type ConnectResult = {
 const HOME = os.homedir()
 
 export const toDisplayPath = (absPath: string): string => {
-  if (absPath.startsWith(HOME)) {
-    return ('~' + absPath.slice(HOME.length)).replace(/\\/g, '/')
+  const normalized = absPath.replace(/\\/g, '/')
+  const normalizedHome = HOME.replace(/\\/g, '/')
+  if (normalized.startsWith(normalizedHome)) {
+    return '~' + normalized.slice(normalizedHome.length)
   }
-  return absPath
+  return normalized
 }
 
 const AGENT_CONFIG_PATHS: Record<AgentSetupType, string> = {

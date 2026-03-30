@@ -22,16 +22,9 @@ export default function ProjectRulesPage() {
     loading,
     selectedFile,
     fileContent,
-    editContent,
-    viewMode,
     contentLoading,
-    saving,
-    saveSuccess,
     projectGroups,
-    setEditContent,
-    setViewMode,
     loadFile,
-    handleSave,
   } = useConfigFiles({ agentType })
 
   const filteredProjectGroups = projectGroups.filter(
@@ -50,7 +43,7 @@ export default function ProjectRulesPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        if (selectedFile && viewMode === 'preview' && !contentLoading) {
+        if (selectedFile && !contentLoading) {
           e.preventDefault()
           setSearchOpen(true)
         }
@@ -58,7 +51,7 @@ export default function ProjectRulesPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedFile, viewMode, contentLoading])
+  }, [selectedFile, contentLoading])
 
   return (
     <div className="flex flex-col h-full">
@@ -84,16 +77,9 @@ export default function ProjectRulesPage() {
           <FileViewer
             selectedFile={selectedFile}
             fileContent={fileContent}
-            editContent={editContent}
-            viewMode={viewMode}
             contentLoading={contentLoading}
-            saving={saving}
-            saveSuccess={saveSuccess}
             headings={headings}
             searchOpen={searchOpen}
-            onEditContentChange={setEditContent}
-            onViewModeChange={setViewMode}
-            onSave={handleSave}
             onSearchOpenChange={setSearchOpen}
             onHeadingsChange={setHeadings}
           />

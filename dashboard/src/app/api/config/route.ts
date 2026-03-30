@@ -1,130 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
-import { getDb } from '@/shared/lib/db'
 import { errorResponse, serverError } from '@/shared/lib/api-utils'
-
-const MAX_PATH_LENGTH = 500
-
-const getUserHome = () => os.homedir()
-
-const CONFIG_FILE_PATTERNS = [
-  { agent: 'claude', file: 'CLAUDE.md' },
-  { agent: 'claude', file: '.claude/settings.json' },
-  { agent: 'claude', file: '.mcp.json' },
-  { agent: 'codex', file: 'codex.md' },
-  { agent: 'codex', file: 'AGENTS.md' },
-  { agent: 'gemini', file: 'GEMINI.md' },
-] as const
-
-const USER_STATIC_FILES = [
-  { agent: 'claude', path: '~/.claude/settings.json' },
-  { agent: 'codex', path: '~/.codex/config.toml' },
-  { agent: 'codex', path: '~/.codex/instructions.md' },
-  { agent: 'gemini', path: '~/.gemini/settings.json' },
-]
-
-const resolveUserPath = (filePath: string): string =>
-  path.join(getUserHome(), filePath.slice(2))
-
-const normalizePath = (p: string): string =>
-  process.platform === 'win32' ? p.toLowerCase() : p
-
-const isPathSafe = (filePath: string, projectRoot?: string): boolean => {
-  if (filePath.length > MAX_PATH_LENGTH) return false
-  if (filePath.startsWith('~/')) {
-    const absPath = resolveUserPath(filePath)
-    let realPath: string
-    try {
-      realPath = fs.realpathSync(absPath)
-    } catch {
-      realPath = path.resolve(absPath)
-    }
-    const resolved = normalizePath(realPath)
-    const home = normalizePath(getUserHome())
-    return resolved.startsWith(home + path.sep) || resolved === home
-  }
-  if (!projectRoot) return false
-  const normalizedRoot = normalizePath(path.resolve(projectRoot))
-  const absPath = path.resolve(projectRoot, filePath)
-  let realPath: string
-  try {
-    realPath = fs.realpathSync(absPath)
-  } catch {
-    realPath = absPath
-  }
-  const resolved = normalizePath(realPath)
-  return resolved.startsWith(normalizedRoot + path.sep) || resolved === normalizedRoot
-}
-
-const scanDynamicFiles = (root: string): Array<{ agent: string; path: string }> => {
-  const dynamic: Array<{ agent: string; path: string }> = []
-
-  const agentsDir = path.join(root, '.claude', 'agents')
-  if (fs.existsSync(agentsDir)) {
-    try {
-      for (const entry of fs.readdirSync(agentsDir)) {
-        if (entry.endsWith('.md')) {
-          dynamic.push({ agent: 'claude', path: `.claude/agents/${entry}` })
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  const skillsDir = path.join(root, '.claude', 'skills')
-  if (fs.existsSync(skillsDir)) {
-    try {
-      for (const skillName of fs.readdirSync(skillsDir)) {
-        const skillFile = path.join(skillsDir, skillName, 'SKILL.md')
-        if (fs.existsSync(skillFile)) {
-          dynamic.push({ agent: 'claude', path: `.claude/skills/${skillName}/SKILL.md` })
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return dynamic
-}
-
-const scanUserDynamicFiles = (): Array<{ agent: string; path: string }> => {
-  const dynamic: Array<{ agent: string; path: string }> = []
-  const home = getUserHome()
-
-  const codexDir = path.join(home, '.codex')
-  if (fs.existsSync(codexDir)) {
-    try {
-      for (const entry of fs.readdirSync(codexDir)) {
-        if (entry.endsWith('.md') || entry.endsWith('.toml')) {
-          dynamic.push({ agent: 'codex', path: `~/.codex/${entry}` })
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  const geminiDir = path.join(home, '.gemini')
-  if (fs.existsSync(geminiDir)) {
-    try {
-      for (const entry of fs.readdirSync(geminiDir)) {
-        if (entry.endsWith('.json') || entry.endsWith('.md') || entry.endsWith('.toml')) {
-          dynamic.push({ agent: 'gemini', path: `~/.gemini/${entry}` })
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return dynamic
-}
-
-type RegistryRow = { project_name: string; project_path: string }
+import {
+  getUserHome,
+  resolveUserPath,
+  isPathSafe,
+  scanDirFiles,
+  scanDynamicFiles,
+  type RegistryRow,
+} from '@/shared/lib/config-scanner'
+import { getDb } from '@/shared/lib/db'
 
 const getRegisteredProjects = (): RegistryRow[] => {
   try {
@@ -135,8 +21,32 @@ const getRegisteredProjects = (): RegistryRow[] => {
   }
 }
 
+const INSTRUCTION_FILE_PATTERNS = [
+  { agent: 'claude', file: 'CLAUDE.md' },
+  { agent: 'claude', file: '.claude/CLAUDE.md' },
+  { agent: 'claude', file: 'REVIEW.md' },
+  { agent: 'codex', file: 'AGENTS.md' },
+  { agent: 'codex', file: 'AGENTS.override.md' },
+  { agent: 'gemini', file: 'GEMINI.md' },
+] as const
+
+const USER_STATIC_FILES = [
+  { agent: 'claude', path: '~/.claude/CLAUDE.md' },
+  { agent: 'codex', path: '~/.codex/AGENTS.md' },
+  { agent: 'codex', path: '~/.codex/AGENTS.override.md' },
+  { agent: 'gemini', path: '~/.gemini/GEMINI.md' },
+]
+
+const scanUserDynamicFiles = (): Array<{ agent: string; path: string }> => {
+  const home = getUserHome()
+  return [
+    ...scanDirFiles(path.join(home, '.claude', 'rules'), '.md', 'claude', '~/.claude/rules'),
+    ...scanDirFiles(path.join(home, '.codex', 'rules'), '.rules', 'codex', '~/.codex/rules'),
+  ]
+}
+
 const getProjectFiles = (projectRoot: string, projectName: string) => {
-  const staticFiles = CONFIG_FILE_PATTERNS
+  const staticFiles = INSTRUCTION_FILE_PATTERNS
     .filter(({ file }) => fs.existsSync(path.join(projectRoot, file)))
     .map(({ agent, file }) => ({
       path: file,
@@ -216,61 +126,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'File not found', content: '' }, { status: 404 })
     }
 
-    const content = fs.readFileSync(fullPath, 'utf-8')
+    const content = fs.readFileSync(fullPath, 'utf-8').replace(/\r\n/g, '\n')
     const scope = filePath.startsWith('~/') ? 'user' : 'project'
     return NextResponse.json({ path: filePath, content, scope })
   } catch (error) {
     return serverError('/api/config GET', error)
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    let body: Record<string, unknown>
-    try {
-      body = await request.json()
-    } catch {
-      return errorResponse('Invalid JSON')
-    }
-    const filePath = body['path']
-    const content = body['content']
-    const projectRoot = typeof body['projectRoot'] === 'string' ? body['projectRoot'] : undefined
-
-    if (!filePath || typeof filePath !== 'string') {
-      return errorResponse('path is required')
-    }
-
-    if (filePath.length > MAX_PATH_LENGTH) {
-      return errorResponse('path too long')
-    }
-
-    if (typeof content !== 'string') {
-      return errorResponse('content is required')
-    }
-
-    if (!isPathSafe(filePath, projectRoot)) {
-      return errorResponse('Invalid file path')
-    }
-
-    const fullPath = filePath.startsWith('~/')
-      ? resolveUserPath(filePath)
-      : projectRoot
-        ? path.join(projectRoot, filePath)
-        : null
-
-    if (!fullPath) {
-      return errorResponse('Invalid file path')
-    }
-
-    const dir = path.dirname(fullPath)
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true })
-    }
-
-    fs.writeFileSync(fullPath, content, 'utf-8')
-    return NextResponse.json({ success: true, path: filePath })
-  } catch (error) {
-    return serverError('/api/config POST', error)
   }
 }
 

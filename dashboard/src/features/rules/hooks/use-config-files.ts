@@ -24,18 +24,12 @@ type UseConfigFilesReturn = {
   loading: boolean
   selectedFile: FileEntry | null
   fileContent: string
-  editContent: string
-  viewMode: 'preview' | 'edit'
   contentLoading: boolean
-  saving: boolean
-  saveSuccess: boolean
   projectGroups: ProjectGroup[]
   userFiles: FileEntry[]
   userAgents: Array<{ agent: Agent; files: FileEntry[] }>
-  setEditContent: (content: string) => void
-  setViewMode: (mode: 'preview' | 'edit') => void
+  clearSelectedFile: () => void
   loadFile: (file: FileEntry) => Promise<void>
-  handleSave: () => Promise<void>
 }
 
 export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}): UseConfigFilesReturn => {
@@ -44,11 +38,7 @@ export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}
   const [loading, setLoading] = useState(true)
   const [selectedFile, setSelectedFile] = useState<FileEntry | null>(null)
   const [fileContent, setFileContent] = useState('')
-  const [editContent, setEditContent] = useState('')
-  const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [contentLoading, setContentLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const loadAll = useCallback(async () => {
     try {
@@ -81,50 +71,23 @@ export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}
     if (selectedFile && agentType !== 'all' && selectedFile.agent !== agentType) {
       setSelectedFile(null)
       setFileContent('')
-      setEditContent('')
     }
   }, [agentType, selectedFile])
 
   const loadFile = useCallback(async (file: FileEntry) => {
     setSelectedFile(file)
-    setViewMode('preview')
     setContentLoading(true)
-    setSaveSuccess(false)
     try {
       const params: Record<string, string> = { path: file.path }
       if (file.projectRoot) params.projectRoot = file.projectRoot
       const data = await configService.getConfigContent(params)
-      const content = data.content ?? ''
-      setFileContent(content)
-      setEditContent(content)
+      setFileContent(data.content ?? '')
     } catch {
       setFileContent('')
-      setEditContent('')
     } finally {
       setContentLoading(false)
     }
   }, [])
-
-  const handleSave = async () => {
-    if (!selectedFile) return
-    setSaving(true)
-    setSaveSuccess(false)
-    try {
-      await configService.saveConfig({
-        path: selectedFile.path,
-        content: editContent,
-        projectRoot: selectedFile.projectRoot || undefined,
-      })
-      setFileContent(editContent)
-      setSaveSuccess(true)
-      setViewMode('preview')
-      setTimeout(() => setSaveSuccess(false), 3000)
-    } catch {
-      // ignore
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const projectGroups = useMemo<ProjectGroup[]>(() => dbProjects.map((dp: DbProject) => {
     const projectFiles = files.filter(
@@ -154,17 +117,14 @@ export const useConfigFiles = ({ agentType = 'all' }: UseConfigFilesOptions = {}
     loading,
     selectedFile,
     fileContent,
-    editContent,
-    viewMode,
     contentLoading,
-    saving,
-    saveSuccess,
     projectGroups,
     userFiles,
     userAgents,
-    setEditContent,
-    setViewMode,
+    clearSelectedFile: () => {
+      setSelectedFile(null)
+      setFileContent('')
+    },
     loadFile,
-    handleSave,
   }
 }

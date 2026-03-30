@@ -84,15 +84,15 @@ export default function ToolsPage() {
 
           <Tabs defaultValue="overview">
             <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="overview">{t('tools.tab.overview')}</TabsTrigger>
+              <TabsTrigger value="details">{t('tools.tab.details')}</TabsTrigger>
+              <TabsTrigger value="trends">{t('tools.tab.trends')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
               {loading ? (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-                  Loading...
+                  {t('common.loading')}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -105,7 +105,7 @@ export default function ToolsPage() {
             <TabsContent value="details" className="mt-4">
               {loading ? (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-                  Loading...
+                  {t('common.loading')}
                 </div>
               ) : individual.length === 0 && registered.length === 0 ? (
                 <EmptyState title={t('tools.empty')} />
@@ -117,7 +117,7 @@ export default function ToolsPage() {
             <TabsContent value="trends" className="mt-4 space-y-4">
               {loading ? (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
-                  Loading...
+                  {t('common.loading')}
                 </div>
               ) : (
                 <>

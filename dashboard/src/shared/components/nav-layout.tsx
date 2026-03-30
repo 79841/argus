@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-import { PanelLeft } from 'lucide-react'
+import { Menu, PanelLeft } from 'lucide-react'
 import { Nav } from '@/shared/components/nav'
 import { BottomBar } from '@/shared/components/bottom-bar'
 import { WindowControls } from '@/shared/components/window-controls'
@@ -11,12 +11,15 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/
 import { cn } from '@/shared/lib/utils'
 import { STORAGE_KEYS } from '@/shared/lib/constants'
 import { useLocale } from '@/shared/lib/i18n'
+import { useIsMobile } from '@/shared/hooks/use-media-query'
 
 type TopBarProps = {
+  isMobile: boolean
   onToggleNav: () => void
+  onOpenMobileMenu: () => void
 }
 
-const TopBar = ({ onToggleNav }: TopBarProps) => {
+const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
   const { setTarget } = useTopBarPortal()
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [platform, setPlatform] = useState<'mac' | 'windows' | 'web'>('web')
@@ -49,18 +52,30 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
       )}
 
       <div className="flex w-14 shrink-0 items-center justify-center">
-        <Tooltip>
-          <TooltipTrigger
-            onClick={onToggleNav}
-            className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors [-webkit-app-region:no-drag]"
-          >
-            <PanelLeft className="size-5" />
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{t('shared.navLayout.toggleSidebar')}</TooltipContent>
-        </Tooltip>
+        {isMobile ? (
+          <Tooltip>
+            <TooltipTrigger
+              onClick={onOpenMobileMenu}
+              className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors [-webkit-app-region:no-drag]"
+            >
+              <Menu className="size-5" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t('shared.navLayout.openMenu')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              onClick={onToggleNav}
+              className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors [-webkit-app-region:no-drag]"
+            >
+              <PanelLeft className="size-5" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t('shared.navLayout.toggleSidebar')}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
-      <div ref={setTarget} className="flex flex-1 flex-wrap items-center gap-3 px-2" />
+      <div ref={setTarget} className="flex flex-1 min-w-0 items-center gap-3 overflow-hidden px-2" />
 
       {platform !== 'windows' && (
         <span className="text-xs font-bold tracking-tight text-muted-foreground/30 select-none px-3">Argus</span>
@@ -73,6 +88,8 @@ const TopBar = ({ onToggleNav }: TopBarProps) => {
 
 const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     try {
@@ -85,6 +102,10 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('argus-nav-toggle', handler)
   }, [])
 
+  useEffect(() => {
+    if (!isMobile) setMobileMenuOpen(false)
+  }, [isMobile])
+
   const toggleNav = () => {
     const next = !collapsed
     setCollapsed(next)
@@ -95,15 +116,36 @@ const LayoutInner = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)] [[data-electron]_&]:bg-transparent">
-      <TopBar onToggleNav={toggleNav} />
+    <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)]">
+      <TopBar isMobile={isMobile} onToggleNav={toggleNav} onOpenMobileMenu={() => setMobileMenuOpen(true)} />
       <div className="flex flex-1 min-h-0 gap-0">
-        <Nav />
-        <main className="flex flex-1 flex-col overflow-hidden rounded-tl-2xl glass-light">
+        <div className="hidden md:flex">
+          <Nav />
+        </div>
+        <main className={cn(
+          'flex flex-1 flex-col overflow-hidden bg-[var(--bg-base)]',
+          'md:rounded-tl-2xl'
+        )}>
           {children}
         </main>
       </div>
       <BottomBar />
+
+      {mobileMenuOpen && (
+        <div
+          className="fixed top-[52px] bottom-0 inset-x-0 z-40 bg-black/50"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <div
+        className={cn(
+          'fixed top-[52px] bottom-0 left-0 z-50 bg-[var(--bg-sunken)]',
+          'transform transition-transform duration-200',
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <Nav isOverlay onClose={() => setMobileMenuOpen(false)} />
+      </div>
     </div>
   )
 }
