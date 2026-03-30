@@ -1,4 +1,4 @@
-import { cpSync, rmSync, existsSync, readdirSync } from 'node:fs'
+import { cpSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
@@ -13,10 +13,22 @@ cpSync(assetsSrc, assetsDest, { recursive: true })
 const standaloneRoot = resolve(root, '.next', 'standalone')
 const distStandalone = resolve(root, 'dist-standalone')
 
+/** Recursively find directories matching a predicate */
+const findDirs = (dir, predicate, results = []) => {
+  if (!existsSync(dir)) return results
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (predicate(full)) results.push(full)
+      else findDirs(full, predicate, results)
+    }
+  }
+  return results
+}
+
 if (existsSync(standaloneRoot)) {
   if (existsSync(distStandalone)) rmSync(distStandalone, { recursive: true })
 
-  // Next.js standalone nests output under absolute workspace path
   const findDashboard = (dir) => {
     if (existsSync(join(dir, 'server.js'))) return dir
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -30,8 +42,8 @@ if (existsSync(standaloneRoot)) {
 
   const dashboardDir = findDashboard(standaloneRoot)
   if (dashboardDir) {
-    // Dereference pnpm symlinks to create flat copies
-    execSync(`cp -RLf "${dashboardDir}/" "${distStandalone}/"`)
+    // Use Node.js cpSync with dereference to handle pnpm symlinks (cross-platform)
+    cpSync(dashboardDir, distStandalone, { recursive: true, dereference: true })
 
     // Hoist peer deps (e.g. styled-jsx) that pnpm keeps in .pnpm/node_modules/
     const pnpmHoisted = join(distStandalone, 'node_modules', '.pnpm', 'node_modules')
@@ -40,7 +52,7 @@ if (existsSync(standaloneRoot)) {
         const src = join(pnpmHoisted, entry)
         const dest = join(distStandalone, 'node_modules', entry)
         if (!existsSync(dest)) {
-          execSync(`cp -RLf "${src}" "${dest}"`)
+          cpSync(src, dest, { recursive: true, dereference: true })
         }
       }
     }
@@ -62,8 +74,11 @@ if (existsSync(standaloneRoot)) {
 
     const electronVersion = execSync('npx electron --version').toString().trim().replace('v', '')
     const arch = process.arch
-    const sqliteDirs = execSync(`find "${distStandalone}" -path "*/better-sqlite3/build/Release" -type d`)
-      .toString().trim().split('\n').filter(Boolean)
+
+    // Find better-sqlite3 build/Release dirs using Node.js (cross-platform)
+    const sqliteDirs = findDirs(distStandalone, (p) =>
+      p.endsWith(join('better-sqlite3', 'build', 'Release')) && statSync(p).isDirectory()
+    )
     for (const releaseDir of sqliteDirs) {
       const moduleDir = resolve(releaseDir, '..', '..')
       execSync(
