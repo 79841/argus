@@ -17,7 +17,7 @@ vi.mock('@/shared/lib/i18n', () => ({
   useLocale: () => ({
     t: (key: string) => {
       const map: Record<string, string> = {
-        'nav.dashboard': 'Dashboard',
+        'nav.dashboard': 'Overview',
         'nav.sessions': 'Sessions',
         'nav.usage': 'Usage',
         'nav.tools': 'Tools',

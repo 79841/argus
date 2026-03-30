@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDb } from '@/shared/lib/db'
-import { errorResponse, serverError } from '@/shared/lib/api-utils'
+import { errorResponse, serverError, parseSlug } from '@/shared/lib/api-utils'
+
+const MAX_NAME_LENGTH = 200
+const MAX_PATH_LENGTH = 500
 
 type RegistryRow = {
   project_name: string
@@ -29,6 +32,14 @@ export async function POST(request: NextRequest) {
       return errorResponse('name and path are required')
     }
 
+    if (typeof name !== 'string' || name.length > MAX_NAME_LENGTH) {
+      return errorResponse(`name must be a string under ${MAX_NAME_LENGTH} characters`)
+    }
+
+    if (typeof projectPath !== 'string' || projectPath.length > MAX_PATH_LENGTH) {
+      return errorResponse(`path must be a string under ${MAX_PATH_LENGTH} characters`)
+    }
+
     const resolved = path.resolve(projectPath)
     if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
       return errorResponse('Directory not found')
@@ -47,7 +58,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const name = request.nextUrl.searchParams.get('name')
+    const nameRaw = request.nextUrl.searchParams.get('name')
+    const name = parseSlug(nameRaw ?? '', MAX_NAME_LENGTH)
     if (!name) {
       return errorResponse('name is required')
     }

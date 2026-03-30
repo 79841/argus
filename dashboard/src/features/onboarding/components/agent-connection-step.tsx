@@ -1,9 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, Copy, Plug } from 'lucide-react'
+import { Check, ExternalLink, Plug } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import { useLocale } from '@/shared/lib/i18n'
 import { cn } from '@/shared/lib/utils'
 import { useAgentConnections } from '@/features/settings/hooks/use-agent-connections'
@@ -21,44 +19,7 @@ const AGENTS = [
   { type: 'gemini', label: 'Gemini CLI', color: 'var(--agent-gemini)' },
 ] as const
 
-const SETUP_SNIPPETS: Record<string, { label: string; code: (endpoint: string) => string }> = {
-  claude: {
-    label: 'Shell Profile (~/.zshrc)',
-    code: (ep) => `export CLAUDE_CODE_ENABLE_TELEMETRY=1
-export OTEL_LOGS_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
-export OTEL_EXPORTER_OTLP_ENDPOINT=${ep}
-export OTEL_LOG_USER_PROMPTS=1`,
-  },
-  codex: {
-    label: '~/.codex/config.toml',
-    code: (ep) => `[otel]
-log_user_prompt = true
-
-[otel.exporter.otlp-http]
-endpoint = "${ep}/v1/logs"
-protocol = "json"
-
-[otel.trace_exporter.otlp-http]
-endpoint = "${ep}/v1/logs"
-protocol = "json"
-
-[otel.metrics_exporter.otlp-http]
-endpoint = "${ep}/v1/logs"
-protocol = "json"`,
-  },
-  gemini: {
-    label: '~/.gemini/settings.json',
-    code: (ep) => `{
-  "telemetry": {
-    "enabled": true,
-    "target": "local",
-    "otlpEndpoint": "${ep}",
-    "otlpProtocol": "http"
-  }
-}`,
-  },
-}
+const DOCS_URL = 'https://argus-app.dev/docs/user-guide'
 
 export const AgentConnectionStep = ({
   selectedAgents,
@@ -74,22 +35,12 @@ export const AgentConnectionStep = ({
     connecting,
     handleConnect,
   } = useAgentConnections()
-  const [copiedAgent, setCopiedAgent] = useState<string | null>(null)
-
   const toggleAgent = (type: string) => {
     onSelectedAgentsChange(
       selectedAgents.includes(type)
         ? selectedAgents.filter((a) => a !== type)
         : [...selectedAgents, type]
     )
-  }
-
-  const copyToClipboard = async (agent: string) => {
-    const snippet = SETUP_SNIPPETS[agent]
-    if (!snippet) return
-    await navigator.clipboard.writeText(snippet.code(endpoint))
-    setCopiedAgent(agent)
-    setTimeout(() => setCopiedAgent(null), 2000)
   }
 
   const connectedTypes = connectionStatus.filter((a) => a.configured).map((a) => a.type)
@@ -136,7 +87,7 @@ export const AgentConnectionStep = ({
                   <span>{agent.label}</span>
                   {isConnected && (
                     <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                      <Check className="size-3" /> Connected
+                      <Check className="size-3" /> {t('onboarding.connected')}
                     </span>
                   )}
                 </button>
@@ -146,50 +97,26 @@ export const AgentConnectionStep = ({
         </div>
 
         {selectedAgents.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">{t('onboarding.agent.setupGuide')}</label>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={connecting !== null}
-                onClick={() => handleConnect(selectedAgents)}
-              >
-                <Plug className="mr-1.5 size-3.5" />
-                {connecting ? t('onboarding.connecting') : t('onboarding.agent.autoSetup')}
-              </Button>
-            </div>
-
-            {selectedAgents.map((agentType) => {
-              const snippet = SETUP_SNIPPETS[agentType]
-              if (!snippet) return null
-              return (
-                <Card key={agentType}>
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {snippet.label}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => copyToClipboard(agentType)}
-                      >
-                        {copiedAgent === agentType ? (
-                          <><Check className="mr-1 size-3" />{t('onboarding.agent.copied')}</>
-                        ) : (
-                          <><Copy className="mr-1 size-3" />{t('onboarding.agent.copy')}</>
-                        )}
-                      </Button>
-                    </div>
-                    <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
-                      <code>{snippet.code(endpoint)}</code>
-                    </pre>
-                  </CardContent>
-                </Card>
-              )
-            })}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={connecting !== null}
+              onClick={() => handleConnect(selectedAgents)}
+              className="flex-1"
+            >
+              <Plug className="mr-1.5 size-3.5" />
+              {connecting ? t('onboarding.connecting') : t('onboarding.agent.autoSetup')}
+            </Button>
+            <a
+              href={DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t('onboarding.agent.manualSetup')}
+              <ExternalLink className="size-3.5" />
+            </a>
           </div>
         )}
       </div>

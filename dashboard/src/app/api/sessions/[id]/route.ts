@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionDetail, getSessionSummary } from '@/shared/lib/queries'
-import { errorResponse, serverError } from '@/shared/lib/api-utils'
+import { errorResponse, serverError, parseSlug } from '@/shared/lib/api-utils'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id: rawId } = await params
+    const id = parseSlug(rawId ?? '')
     if (!id) {
       return errorResponse('Session ID required')
     }

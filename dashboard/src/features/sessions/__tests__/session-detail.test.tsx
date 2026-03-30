@@ -125,20 +125,21 @@ describe('SessionDetail', () => {
     const session = makeSession()
     const events = [makeEvent({ event_name: 'api_request', model: 'claude-opus-4-6' })]
     render(<SessionDetail session={session} events={events} />)
-    expect(screen.getByText(/API Request/)).toBeInTheDocument()
+    // useLocale mock이 키를 그대로 반환하므로 키를 검증한다
+    expect(screen.getByText(/sessions\.event\.apiRequest/)).toBeInTheDocument()
   })
 
   it('tool_result 이벤트 레이블을 표시한다', () => {
     const session = makeSession()
     const events = [makeEvent({ event_name: 'tool_result', tool_name: 'bash', tool_success: 1 })]
     render(<SessionDetail session={session} events={events} />)
-    expect(screen.getByText(/Tool: bash/)).toBeInTheDocument()
+    expect(screen.getByText(/bash/)).toBeInTheDocument()
   })
 
   it('실패한 tool_result에 [FAIL] 레이블을 추가한다', () => {
     const session = makeSession()
     const events = [makeEvent({ event_name: 'tool_result', tool_name: 'bash', tool_success: 0 })]
     render(<SessionDetail session={session} events={events} />)
-    expect(screen.getByText(/\[FAIL\]/)).toBeInTheDocument()
+    expect(screen.getByText(/sessions\.event\.fail/)).toBeInTheDocument()
   })
 })

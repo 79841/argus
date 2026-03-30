@@ -113,4 +113,19 @@ describe('GET /api/sessions', () => {
     const json = await res.json()
     expect(json.error).toBeDefined()
   })
+
+  it('from 포맷이 잘못되면 undefined로 폴백한다', async () => {
+    await GET(mkRequest({ from: '2024/01/01', to: '2024-01-31' }))
+    expect(getSessions).toHaveBeenCalledWith('all', 'all', undefined, '2024-01-31', 100)
+  })
+
+  it('to 포맷이 잘못되면 undefined로 폴백한다', async () => {
+    await GET(mkRequest({ from: '2024-01-01', to: 'bad-date' }))
+    expect(getSessions).toHaveBeenCalledWith('all', 'all', '2024-01-01', undefined, 100)
+  })
+
+  it('project가 200자 초과이면 all로 폴백한다', async () => {
+    await GET(mkRequest({ project: 'p'.repeat(201) }))
+    expect(getSessions).toHaveBeenCalledWith('all', 'all', undefined, undefined, 100)
+  })
 })

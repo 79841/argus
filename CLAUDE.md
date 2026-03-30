@@ -2,7 +2,7 @@
 
 AI 코딩 에이전트(Codex CLI, Claude Code, Gemini CLI)의 사용 현황을 통합 측정·시각화하는 **개인용** 오픈소스 모니터링 도구. **한글로 응답**한다.
 
-**핵심 원칙**: 인증 없음, 로컬 전용, Docker Compose 원클릭, 멀티 에이전트 통합 뷰.
+**핵심 원칙**: 인증 없음, 로컬 전용, Electron 데스크톱 앱, 멀티 에이전트 통합 뷰.
 
 ## 아키텍처
 
@@ -233,14 +233,14 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 ## 개발 프로세스
 
 ```
-/plan → /tdd → /develop → /test → /simplify
+/spec → /tdd → /develop → /test → /simplify
 ```
 
 5단계 프로세스를 따르되, 경우에 따라 일부만 실행하거나 중간부터 시작할 수 있다.
 
 | 단계 | 스킬 | 에이전트/도구 | 모델 | 설명 |
 |------|------|--------------|------|------|
-| 1. Plan | `/plan` | `plan-writer` | opus | 요구사항 분석, 테스트 시나리오, 수락 조건 정의 |
+| 1. Spec | `/spec` | `plan-writer` + 빌트인 plan 모드 | opus | 요구사항 분석, 테스트 시나리오, 수락 조건 정의 |
 | 2. TDD | `/tdd` | 직접 작성 | — | 테스트 코드 먼저 작성 (Red 단계) |
 | 3. Develop | `/develop` | `page-builder`, `infra-builder`, `data-seeder` | sonnet | 계획/테스트 기반 구현 (Green 단계) |
 | 4. Test | `/test` | vitest | — | 테스트 실행 및 통과 확인 |
@@ -250,11 +250,11 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 
 어떤 워크플로우든 **커밋 전에 반드시 `/simplify`를 실행**한다.
 
-- **전체 프로세스**: `/plan` → `/tdd` → `/develop` → `/test` → `/simplify` → 커밋
+- **전체 프로세스**: `/spec` → `/tdd` → `/develop` → `/test` → `/simplify` → 커밋
 - **버그 수정**: `/bugfix` (재현 테스트 → 최소 수정 → 통과 확인 → `/simplify`) → 커밋
 - **기존 코드 개선**: `/simplify` → `/test` → 커밋
 - **테스트 추가**: `/tdd` → `/test` → 커밋
-- **계획만 수립**: `/plan`
+- **계획만 수립**: `/spec`
 
 ### 버그 수정 워크플로우
 
@@ -286,7 +286,7 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 |----------|------|------|--------|
 | `plan-writer` | TDD 기반 구현 계획 수립 | opus | 새 기능 계획 시 |
 | `merge-manager` | Gitflow 브랜치 머지 | opus | 브랜치 머지 시 |
-| `infra-builder` | Docker/SQLite/OTel 인프라 구성 | sonnet | 인프라 변경 시 |
+| `infra-builder` | SQLite/OTel 인프라 구성 | sonnet | 인프라 변경 시 |
 | `page-builder` | 대시보드 페이지 + API + 컴포넌트 구현 | sonnet | 페이지 개발 시 |
 | `data-seeder` | 테스트 데이터 생성 및 파이프라인 검증 | sonnet | 데이터 검증 시 |
 
@@ -294,7 +294,7 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 
 ### 1. 인프라 팀
 인프라 컴포넌트를 병렬로 구축할 때 사용한다.
-- 팀원: `infra-builder` × 2 (SQLite 스키마 + OTel/Docker)
+- 팀원: `infra-builder` × 2 (SQLite 스키마 + OTel 수집)
 
 ### 2. 대시보드 팀
 대시보드 페이지를 병렬로 개발할 때 사용한다.
@@ -338,7 +338,7 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 
 | 라벨 | 색상 | 용도 |
 |------|------|------|
-| `Infra` | 초록 | Docker, SQLite, OTel Collector |
+| `Infra` | 초록 | SQLite, Electron, CI/CD |
 | `Dashboard` | 하늘 | Next.js 대시보드 (페이지, 컴포넌트, API) |
 | `Data` | 주황 | 데이터 파이프라인, 쿼리, 시드 |
 | `Config` | 노랑 | 설정 변경 추적, Git diff |
@@ -378,7 +378,7 @@ git worktree add .claude/worktrees/<이름> feature/<이름>
 1. Linear 이슈 확인/생성
 2. /feature-start <이름>       → feature 브랜치 생성
 3. cd dashboard && pnpm dev    → 대시보드 시작
-4. /plan                       → 구현 계획 수립
+4. /spec                       → 구현 계획 수립
 5. /tdd                        → 테스트 코드 작성 (Red)
 6. /develop                    → 구현 (Green)
 7. /test                       → 테스트 실행

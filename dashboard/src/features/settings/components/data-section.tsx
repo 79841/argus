@@ -9,36 +9,36 @@ export const DataSection = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Export</CardTitle>
+          <CardTitle>{t('settings.data.export.title')}</CardTitle>
           <CardDescription>{t('settings.data.export.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Coming soon &mdash; CSV/JSON export.
+            {t('settings.data.export.comingSoon')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Data Cleanup</CardTitle>
+          <CardTitle>{t('settings.data.cleanup.title')}</CardTitle>
           <CardDescription>{t('settings.data.cleanup.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Coming soon &mdash; data cleanup.
+            {t('settings.data.cleanup.comingSoon')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>DB Statistics</CardTitle>
+          <CardTitle>{t('settings.data.dbstats.title')}</CardTitle>
           <CardDescription>{t('settings.data.dbstats.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Coming soon &mdash; DB statistics.
+            {t('settings.data.dbstats.comingSoon')}
           </p>
         </CardContent>
       </Card>

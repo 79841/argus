@@ -8,8 +8,10 @@ import type { AgentType } from '@/shared/lib/agents'
 import type { Heading } from '@/features/rules/components/markdown-viewer'
 import { useConfigFiles, FileTree, FileViewer } from '@/features/rules'
 import { useIsMobile } from '@/shared/hooks/use-media-query'
+import { UnusedToolsCard } from '@/shared/components/unused-tools-card'
+import { useUnusedTools } from '@/shared/hooks/use-unused-tools'
 
-export default function RulesPage() {
+export default function UserPage() {
   const { t } = useLocale()
   const isMobile = useIsMobile()
   const [agentType, setAgentType] = useState<AgentType>('all')
@@ -21,19 +23,12 @@ export default function RulesPage() {
     loading,
     selectedFile,
     fileContent,
-    editContent,
-    viewMode,
     contentLoading,
-    saving,
-    saveSuccess,
-    projectGroups,
     userAgents,
-    setEditContent,
-    setViewMode,
     clearSelectedFile,
     loadFile,
-    handleSave,
   } = useConfigFiles({ agentType })
+  const unusedTools = useUnusedTools({ globalOnly: true })
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups((prev) => {
@@ -47,7 +42,7 @@ export default function RulesPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        if (selectedFile && viewMode === 'preview' && !contentLoading) {
+        if (selectedFile && !contentLoading) {
           e.preventDefault()
           setSearchOpen(true)
         }
@@ -55,7 +50,7 @@ export default function RulesPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedFile, viewMode, contentLoading])
+  }, [selectedFile, contentLoading])
 
   const showTree = isMobile ? !selectedFile : true
   const showViewer = isMobile ? !!selectedFile : true
@@ -63,16 +58,25 @@ export default function RulesPage() {
   return (
     <div className="flex h-full flex-col">
       <FilterBar>
-        <span className="text-sm font-semibold">Rules</span>
-        <span className="text-xs text-muted-foreground">{t('rules.subtitle')}</span>
+        <span className="text-sm font-semibold">{t('nav.user')}</span>
+        <span className="text-xs text-muted-foreground">{t('user.subtitle')}</span>
         <AgentFilter value={agentType} onChange={setAgentType} />
       </FilterBar>
+      {!unusedTools.loading && (
+        <div className="px-4 pt-4">
+          <UnusedToolsCard
+            agents={unusedTools.agents}
+            skills={unusedTools.skills}
+            mcpServers={unusedTools.mcpServers}
+          />
+        </div>
+      )}
       <div className="flex flex-1 min-h-0">
         {showTree && (
           <div className="w-full md:w-[35%] flex flex-col overflow-auto">
             <FileTree
               loading={loading}
-              projectGroups={projectGroups}
+              projectGroups={[]}
               userAgents={userAgents}
               selectedFile={selectedFile}
               collapsedGroups={collapsedGroups}
@@ -95,16 +99,9 @@ export default function RulesPage() {
             <FileViewer
               selectedFile={selectedFile}
               fileContent={fileContent}
-              editContent={editContent}
-              viewMode={viewMode}
               contentLoading={contentLoading}
-              saving={saving}
-              saveSuccess={saveSuccess}
               headings={headings}
               searchOpen={searchOpen}
-              onEditContentChange={setEditContent}
-              onViewModeChange={setViewMode}
-              onSave={handleSave}
               onSearchOpenChange={setSearchOpen}
               onHeadingsChange={setHeadings}
             />

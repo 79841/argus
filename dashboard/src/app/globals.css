@@ -70,6 +70,7 @@
   --fill-active: oklch(0 0 0 / 8%);
 
   /* Agent accent colors */
+  --agent-default: oklch(0.511 0.096 186.391);
   --agent-claude: oklch(0.70 0.17 45);
   --agent-codex: oklch(0.72 0.17 165);
   --agent-gemini: oklch(0.62 0.17 255);
@@ -150,6 +151,7 @@
   --fill-active: oklch(1 0 0 / 10%);
 
   /* Agent accent colors (lightness +0.08 for dark) */
+  --agent-default: oklch(0.437 0.078 188.216);
   --agent-claude: oklch(0.78 0.17 45);
   --agent-codex: oklch(0.80 0.17 165);
   --agent-gemini: oklch(0.70 0.17 255);

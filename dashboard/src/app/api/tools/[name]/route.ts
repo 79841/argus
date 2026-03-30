@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToolSingleStat, getToolDailyStats, getToolRelatedSessions } from '@/shared/lib/queries'
-import { parseDays, serverError } from '@/shared/lib/api-utils'
+import { parseDays, serverError, errorResponse, parseSlug } from '@/shared/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +9,11 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> },
 ) {
   try {
-    const { name } = await params
-    const toolName = decodeURIComponent(name)
+    const { name: rawName } = await params
+    const toolName = parseSlug(decodeURIComponent(rawName ?? ''))
+    if (!toolName) {
+      return errorResponse('Tool name is required')
+    }
     const sp = request.nextUrl.searchParams
     const days = parseDays(sp.get('days'), 7)
 

@@ -155,9 +155,12 @@ export const getProjectDetailStats = (
 
 export const getProjectDailyCosts = (
   days: number = 30,
-  dbOverride?: Database.Database
+  dbOverride?: Database.Database,
+  projectName?: string
 ): ProjectDailyCost[] => {
   const db = dbOverride ?? getDb()
+  const projectClause = projectName ? 'AND project_name = ?' : ''
+  const projectParams = projectName ? [projectName] : []
 
   return db.prepare(`
     SELECT
@@ -168,9 +171,10 @@ export const getProjectDailyCosts = (
     WHERE ${API_REQUEST_FILTER}
       AND project_name != ''
       AND date(timestamp) >= date('now', '-' || ? || ' days')
+      ${projectClause}
     GROUP BY date(timestamp), project_name
     ORDER BY date ASC, cost DESC
-  `).all(days) as ProjectDailyCost[]
+  `).all(days, ...projectParams) as ProjectDailyCost[]
 }
 
 export const getProjectComparison = (

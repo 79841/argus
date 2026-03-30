@@ -51,11 +51,11 @@ export type IngestStatusRow = {
   total_count: number
 }
 
-export const getOverviewStats = (agentType: string, project: string = 'all', from?: string, to?: string): OverviewStats => {
+export const getOverviewStats = (agentType: string, project: string = 'all', from?: string, to?: string, today?: string): OverviewStats => {
   const db = getDb()
   const useDate = from && to
-  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) = date('now')"
-  const dateParams = useDate ? [from, to] : []
+  const dateClause = useDate ? dateRangeFilter() : `AND date(timestamp) = ${today ? '?' : "date('now')"}`
+  const dateParams = useDate ? [from, to] : today ? [today] : []
 
   const row = db.prepare(`
     SELECT
@@ -80,8 +80,48 @@ export const getOverviewStats = (agentType: string, project: string = 'all', fro
   return row ?? { total_sessions: 0, total_cost: 0, total_requests: 0, total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, cache_hit_rate: 0 }
 }
 
-export const getOverviewDelta = (agentType: string, project: string = 'all'): OverviewDelta => {
+export const getOverviewDelta = (agentType: string, project: string = 'all', today?: string): OverviewDelta => {
   const db = getDb()
+
+  type DayRow = { total_sessions: number; total_requests: number; total_cost: number; cache_hit_rate: number }
+  const params = [...agentParams(agentType), ...projectParams(project)]
+
+  if (today) {
+    const query = `
+      SELECT
+        count(DISTINCT session_id) as total_sessions,
+        count(*) as total_requests,
+        COALESCE(sum(cost_usd), 0) as total_cost,
+        CASE
+          WHEN (sum(input_tokens) + sum(cache_read_tokens)) > 0
+          THEN CAST(sum(cache_read_tokens) AS REAL) / (sum(input_tokens) + sum(cache_read_tokens))
+          ELSE 0
+        END as cache_hit_rate
+      FROM agent_logs
+      WHERE ${API_REQUEST_FILTER}
+        AND date(timestamp) = ?
+        ${agentFilter(agentType)}
+        ${projectFilter(project)}
+    `
+    const stmt = db.prepare(query)
+    const todayRow = stmt.get(today, ...params) as DayRow | undefined
+    const d = new Date(today)
+    d.setDate(d.getDate() - 1)
+    const yesterday = d.toISOString().split('T')[0]
+    const yesterdayRow = stmt.get(yesterday, ...params) as DayRow | undefined
+
+    const calcDelta = (curr: number, prev: number): number | null => {
+      if (prev === 0) return null
+      return ((curr - prev) / prev) * 100
+    }
+
+    return {
+      cost_delta_pct: calcDelta(todayRow?.total_cost ?? 0, yesterdayRow?.total_cost ?? 0),
+      sessions_delta_pct: calcDelta(todayRow?.total_sessions ?? 0, yesterdayRow?.total_sessions ?? 0),
+      requests_delta_pct: calcDelta(todayRow?.total_requests ?? 0, yesterdayRow?.total_requests ?? 0),
+      cache_rate_delta_pct: calcDelta(todayRow?.cache_hit_rate ?? 0, yesterdayRow?.cache_hit_rate ?? 0),
+    }
+  }
 
   const query = `
     SELECT
@@ -100,11 +140,9 @@ export const getOverviewDelta = (agentType: string, project: string = 'all'): Ov
       ${projectFilter(project)}
   `
 
-  type DayRow = { total_sessions: number; total_requests: number; total_cost: number; cache_hit_rate: number }
   const stmt = db.prepare(query)
-  const params = [...agentParams(agentType), ...projectParams(project)]
-  const today = stmt.get('0 days', ...params) as DayRow | undefined
-  const yesterday = stmt.get('-1 day', ...params) as DayRow | undefined
+  const todayRow = stmt.get('0 days', ...params) as DayRow | undefined
+  const yesterdayRow = stmt.get('-1 day', ...params) as DayRow | undefined
 
   const calcDelta = (curr: number, prev: number): number | null => {
     if (prev === 0) return null
@@ -112,15 +150,17 @@ export const getOverviewDelta = (agentType: string, project: string = 'all'): Ov
   }
 
   return {
-    cost_delta_pct: calcDelta(today?.total_cost ?? 0, yesterday?.total_cost ?? 0),
-    sessions_delta_pct: calcDelta(today?.total_sessions ?? 0, yesterday?.total_sessions ?? 0),
-    requests_delta_pct: calcDelta(today?.total_requests ?? 0, yesterday?.total_requests ?? 0),
-    cache_rate_delta_pct: calcDelta(today?.cache_hit_rate ?? 0, yesterday?.cache_hit_rate ?? 0),
+    cost_delta_pct: calcDelta(todayRow?.total_cost ?? 0, yesterdayRow?.total_cost ?? 0),
+    sessions_delta_pct: calcDelta(todayRow?.total_sessions ?? 0, yesterdayRow?.total_sessions ?? 0),
+    requests_delta_pct: calcDelta(todayRow?.total_requests ?? 0, yesterdayRow?.total_requests ?? 0),
+    cache_rate_delta_pct: calcDelta(todayRow?.cache_hit_rate ?? 0, yesterdayRow?.cache_hit_rate ?? 0),
   }
 }
 
-export const getAgentTodaySummaries = (): AgentTodaySummary[] => {
+export const getAgentTodaySummaries = (today?: string): AgentTodaySummary[] => {
   const db = getDb()
+  const dateClause = today ? 'AND date(timestamp) = ?' : "AND date(timestamp) = date('now')"
+  const dateParams = today ? [today] : []
   return db.prepare(`
     SELECT
       agent_type,
@@ -129,10 +169,10 @@ export const getAgentTodaySummaries = (): AgentTodaySummary[] => {
       max(timestamp) as last_active
     FROM agent_logs
     WHERE ${API_REQUEST_FILTER}
-      AND date(timestamp) = date('now')
+      ${dateClause}
       AND agent_type IN ('claude', 'codex', 'gemini')
     GROUP BY agent_type
-  `).all() as AgentTodaySummary[]
+  `).all(...dateParams) as AgentTodaySummary[]
 }
 
 export const getAllTimeStats = (agentType: string, project: string = 'all'): AllTimeStats => {
@@ -189,11 +229,11 @@ export type AgentDistribution = {
   cost: number
 }
 
-export const getAgentDistribution = (from?: string, to?: string): AgentDistribution[] => {
+export const getAgentDistribution = (from?: string, to?: string, today?: string): AgentDistribution[] => {
   const db = getDb()
   const useDate = from && to
-  const dateClause = useDate ? dateRangeFilter() : "AND date(timestamp) = date('now')"
-  const dateParams = useDate ? [from, to] : []
+  const dateClause = useDate ? dateRangeFilter() : today ? 'AND date(timestamp) = ?' : "AND date(timestamp) = date('now')"
+  const dateParams = useDate ? [from, to] : today ? [today] : []
 
   return db.prepare(`
     SELECT

@@ -6,18 +6,18 @@ import { formatCostDetail, formatCostChart, formatTokens, formatDuration, shorte
 import type { SessionDetailEvent } from '@/shared/lib/queries'
 import type { PromptGroup } from '../hooks/use-session-detail'
 
-const eventLabel = (ev: SessionDetailEvent): string => {
+const eventLabel = (ev: SessionDetailEvent, t: (key: string) => string): string => {
   switch (ev.event_name) {
     case 'api_request':
-      return `API Request${ev.model ? ` · ${shortenModel(ev.model)}` : ''}`
+      return `${t('sessions.event.apiRequest')}${ev.model ? ` · ${shortenModel(ev.model)}` : ''}`
     case 'tool_result':
-      return `Tool: ${ev.tool_name || 'unknown'}${ev.tool_success === 0 ? ' [FAIL]' : ''}`
+      return `${t('sessions.event.tool')} ${ev.tool_name || t('sessions.event.unknown')}${ev.tool_success === 0 ? ` ${t('sessions.event.fail')}` : ''}`
     case 'user_prompt':
-      return 'User Prompt'
+      return t('sessions.event.userPrompt')
     case 'tool_decision':
-      return `Tool Decision: ${ev.tool_name || 'unknown'}`
+      return `${t('sessions.event.toolDecision')} ${ev.tool_name || t('sessions.event.unknown')}`
     case 'api_error':
-      return 'API Error'
+      return t('sessions.event.apiError')
     default:
       return ev.event_name
   }
@@ -76,6 +76,7 @@ export const PromptGroupCard = ({ group, index, agentType }: PromptGroupCardProp
     <div className="rounded-lg">
       <button
         type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-muted/30"
       >
@@ -94,7 +95,7 @@ export const PromptGroupCard = ({ group, index, agentType }: PromptGroupCardProp
         <span className="ml-auto shrink-0 text-xs font-medium tabular-nums">
           {formatCostDetail(group.cost)}
         </span>
-        <span className="text-muted-foreground">{expanded ? '▴' : '▾'}</span>
+        <span className="text-muted-foreground" aria-hidden="true">{expanded ? '▴' : '▾'}</span>
       </button>
 
       {expanded && (
@@ -106,7 +107,7 @@ export const PromptGroupCard = ({ group, index, agentType }: PromptGroupCardProp
             >
               <span className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${eventDotColor(ev)}`} />
               <div className="min-w-0 flex-1">
-                <div className="font-medium">{eventLabel(ev)}</div>
+                <div className="font-medium">{eventLabel(ev, t)}</div>
                 {ev.event_name === 'user_prompt' && (
                   ev.body && !ev.body.includes('REDACTED') && !ev.body.endsWith('.user_prompt') ? (
                     <p className="mt-1 whitespace-pre-wrap break-words rounded bg-violet-50 px-2 py-1.5 text-xs text-foreground dark:bg-violet-950/30">

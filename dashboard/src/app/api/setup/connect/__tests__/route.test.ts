@@ -47,4 +47,33 @@ describe('POST /api/setup/connect', () => {
     const res = await POST(mkRequest({ agents: 'claude' }) as never)
     expect(res.status).toBe(400)
   })
+
+  it('유효하지 않은 endpoint URL이면 400을 반환한다', async () => {
+    const res = await POST(mkRequest({ agents: ['claude'], endpoint: 'not-a-url' }) as never)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toMatch(/valid URL/)
+  })
+
+  it('http:// 이외의 프로토콜 endpoint이면 400을 반환한다', async () => {
+    const res = await POST(mkRequest({ agents: ['claude'], endpoint: 'ftp://localhost:9845' }) as never)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toMatch(/http/)
+  })
+
+  it('유효한 http endpoint이면 통과한다', async () => {
+    const res = await POST(mkRequest({ agents: ['claude'], endpoint: 'http://localhost:9845' }) as never)
+    expect(res.status).toBe(200)
+  })
+
+  it('유효한 https endpoint이면 통과한다', async () => {
+    const res = await POST(mkRequest({ agents: ['claude'], endpoint: 'https://example.com:9845' }) as never)
+    expect(res.status).toBe(200)
+  })
+
+  it('endpoint가 없으면 기본값을 사용한다', async () => {
+    const res = await POST(mkRequest({ agents: ['claude'] }) as never)
+    expect(res.status).toBe(200)
+  })
 })

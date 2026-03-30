@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/shared/lib/db'
-import { errorResponse } from '@/shared/lib/api-utils'
+import { errorResponse, parseAgentType } from '@/shared/lib/api-utils'
+
+const VALID_DETAIL_TYPES = ['mcp', 'skill', 'agent', ''] as const
+const MAX_STR_LEN = 300
 
 type ToolDetailPayload = {
   session_id?: string
@@ -26,9 +29,31 @@ export async function POST(request: NextRequest) {
     return errorResponse('session_id is required')
   }
 
+  if (data.session_id.length > MAX_STR_LEN) {
+    return errorResponse('session_id is too long')
+  }
+
   if (!data.tool_name || typeof data.tool_name !== 'string' || data.tool_name.trim() === '') {
     return errorResponse('tool_name is required')
   }
+
+  if (data.tool_name.length > MAX_STR_LEN) {
+    return errorResponse('tool_name is too long')
+  }
+
+  if (data.detail_type !== undefined && !VALID_DETAIL_TYPES.includes(data.detail_type as typeof VALID_DETAIL_TYPES[number])) {
+    return errorResponse(`detail_type must be one of: ${VALID_DETAIL_TYPES.filter(Boolean).join(', ')}`)
+  }
+
+  if (data.detail_name && typeof data.detail_name === 'string' && data.detail_name.length > MAX_STR_LEN) {
+    return errorResponse('detail_name is too long')
+  }
+
+  if (data.project_name && typeof data.project_name === 'string' && data.project_name.length > MAX_STR_LEN) {
+    return errorResponse('project_name is too long')
+  }
+
+  const agentType = parseAgentType(data.agent_type ?? null)
 
   try {
     const db = getDb()
@@ -47,7 +72,7 @@ export async function POST(request: NextRequest) {
       data.success === undefined ? null : data.success ? 1 : 0,
       data.project_name ?? '',
       data.metadata ? JSON.stringify(data.metadata) : '{}',
-      data.agent_type ?? 'claude'
+      agentType === 'all' ? 'claude' : agentType
     )
 
     return NextResponse.json({ accepted: 1 })

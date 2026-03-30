@@ -9,10 +9,12 @@ import { ChartCard } from '@/shared/components/ui/chart-card'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
 import { formatCost, formatCostChart } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
+import { useLocale } from '@/shared/lib/i18n'
 import { useCostData } from '../hooks/use-cost-data'
 import type { CostTabProps } from '@/features/usage/types/usage'
 
 export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
+  const { t } = useLocale()
   const { daily, agentCosts, projectCosts, overview, prevOverview } = useCostData({ agentType, project, dateRange })
 
   const totalCost = overview?.total_cost ?? 0
@@ -25,12 +27,12 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard label="Total Cost" value={formatCost(totalCost)} delta={delta} deltaInverted />
-        <KpiCard label="Daily Average" value={formatCost(avgCost)} sub="per day" />
-        <KpiCard label="Requests" value={(overview?.total_requests ?? 0).toLocaleString()} sub="API requests" />
+        <KpiCard label={t('usage.kpi.totalCost')} value={formatCost(totalCost)} delta={delta} deltaInverted />
+        <KpiCard label={t('usage.kpi.dailyAverage')} value={formatCost(avgCost)} sub={t('usage.kpi.perDay')} />
+        <KpiCard label={t('usage.kpi.requests')} value={(overview?.total_requests ?? 0).toLocaleString()} sub={t('usage.kpi.apiRequests')} />
       </div>
 
-      <ChartCard title="Daily Cost Trend" height={220}>
+      <ChartCard title={t('usage.chart.dailyCostTrend')} height={220}>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid {...CHART_THEME.grid} />
@@ -46,12 +48,12 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
       </ChartCard>
 
       <div className={cn('grid gap-4', project !== 'all' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}>
-        <ChartCard title="Cost by Agent" height={160}>
+        <ChartCard title={t('usage.chart.costByAgent')} height={160}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={agentCosts} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} />
               <YAxis type="category" dataKey="agent" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={80} />
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), t('usage.col.cost')]} />
               <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                 {agentCosts.map((entry) => (
                   <Cell key={entry.agent} fill={AGENT_CHART_COLORS[entry.agentId]} />
@@ -61,12 +63,12 @@ export const CostTab = ({ agentType, project, dateRange }: CostTabProps) => {
           </ResponsiveContainer>
         </ChartCard>
 
-        {project === 'all' && <ChartCard title="Cost by Project" height={160} empty={projectCosts.length === 0} emptyMessage="No project data">
+        {project === 'all' && <ChartCard title={t('usage.chart.costByProject')} height={160} empty={projectCosts.length === 0} emptyMessage={t('usage.noProjectData')}>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={projectCosts.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} tickFormatter={v => formatCost(v)} />
               <YAxis type="category" dataKey="project" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} width={120} tickFormatter={(v: string) => v.length > 16 ? `${v.slice(0, 14)}…` : v} />
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), t('usage.col.cost')]} />
               <Bar dataKey="cost" fill={AGENT_CHART_COLORS.all} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>

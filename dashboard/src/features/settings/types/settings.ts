@@ -1,5 +1,5 @@
 export type Theme = 'light' | 'dark' | 'system'
-export type AgentTheme = 'claude' | 'codex' | 'gemini'
+export type AgentTheme = 'default' | 'claude' | 'codex' | 'gemini'
 
 export type Category = 'general' | 'pricing' | 'agentConnection' | 'projectConnection'
 

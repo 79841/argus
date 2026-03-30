@@ -91,7 +91,7 @@ export default function ToolDetailPage() {
       <div className="flex-1 overflow-auto px-4 py-4">
         {loading ? (
           <div className="flex h-[400px] items-center justify-center text-sm text-muted-foreground">
-            Loading...
+            {t('common.loading')}
           </div>
         ) : !tool ? (
           <div className="flex flex-1 items-center justify-center">

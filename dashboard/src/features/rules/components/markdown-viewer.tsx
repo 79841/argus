@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import remarkFrontmatter from 'remark-frontmatter'
 import { Copy, Check, FileText } from 'lucide-react'
 import type { Components } from 'react-markdown'
+import { useLocale } from '@/shared/lib/i18n'
 import 'highlight.js/styles/tokyo-night-light.min.css'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -97,19 +98,20 @@ const parseFrontmatter = (content: string): { frontmatter: FrontmatterData | nul
   }
 }
 
-const FRONTMATTER_LABELS: Record<string, string> = {
-  title: '제목',
-  name: '이름',
-  description: '설명',
-  date: '날짜',
-  author: '작성자',
-  type: '유형',
-  tags: '태그',
-  version: '버전',
-  model: '모델',
+const FRONTMATTER_I18N_KEYS: Record<string, string> = {
+  title: 'rules.frontmatter.title',
+  name: 'rules.frontmatter.name',
+  description: 'rules.frontmatter.description',
+  date: 'rules.frontmatter.date',
+  author: 'rules.frontmatter.author',
+  type: 'rules.frontmatter.type',
+  tags: 'rules.frontmatter.tags',
+  version: 'rules.frontmatter.version',
+  model: 'rules.frontmatter.model',
 }
 
 const FrontmatterCard = ({ data }: { data: FrontmatterData }) => {
+  const { t } = useLocale()
   const title = data.title || data.name
   const entries = Object.entries(data).filter(([k]) => k !== 'title' && k !== 'name')
 
@@ -126,7 +128,7 @@ const FrontmatterCard = ({ data }: { data: FrontmatterData }) => {
           {entries.map(([key, value]) => (
             <div key={key} className="contents">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {FRONTMATTER_LABELS[key] ?? key}
+                {FRONTMATTER_I18N_KEYS[key] ? t(FRONTMATTER_I18N_KEYS[key]) : key}
               </span>
               <span className="text-xs">{value}</span>
             </div>
@@ -143,8 +145,11 @@ type CodeBlockProps = {
 }
 
 const CodeBlock = ({ language, code }: CodeBlockProps) => {
+  const { t } = useLocale()
   const [copied, setCopied] = useState(false)
 
+  // highlight.js는 입력 코드의 특수문자(<, >, &, " 등)를 HTML 엔티티로 이스케이프한 뒤
+  // span 태그만 감싸 반환하므로 dangerouslySetInnerHTML에 사용해도 XSS 위험이 없다.
   const highlightedHtml = useMemo(() => {
     if (language && hljs.getLanguage(language)) {
       try {
@@ -163,9 +168,7 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
   }, [code, language])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code).catch(() => {
-      // clipboard API 미지원 환경 무시
-    })
+    navigator.clipboard.writeText(code).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -181,7 +184,7 @@ const CodeBlock = ({ language, code }: CodeBlockProps) => {
         <button
           onClick={handleCopy}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="코드 복사"
+          aria-label={t('rules.code.copy')}
         >
           {copied ? (
             <Check className="size-3 text-emerald-500" />

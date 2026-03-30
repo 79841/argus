@@ -4,29 +4,32 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import { useMemo } from 'react'
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { DataTable } from '@/shared/components/ui/data-table'
 import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { CHART_THEME, SERIES_COLORS } from '@/shared/lib/chart-theme'
 import { formatCostChart } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 import { useModelsData } from '../hooks/use-models-data'
 import type { AgentType } from '@/shared/lib/agents'
 import type { ModelsTabProps, ModelTableRow } from '@/features/usage/types/usage'
 
-const modelColumns = [
-  { key: 'model', label: 'Model', format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
-  {
-    key: 'agent_type',
-    label: 'Agent',
-    format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
-  },
-  { key: 'request_count', label: 'Reqs', align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
-  { key: 'cost', label: 'Cost', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
-  { key: 'avg_cost', label: 'Avg/req', align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
-]
-
 export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => {
+  const { t } = useLocale()
   const { models } = useModelsData({ agentType, project, dateRange })
+
+  const modelColumns = useMemo(() => [
+    { key: 'model', label: t('usage.col.model'), format: (v: unknown) => <span className="font-mono text-xs">{String(v)}</span> },
+    {
+      key: 'agent_type',
+      label: t('usage.col.agent'),
+      format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
+    },
+    { key: 'request_count', label: t('usage.col.reqs'), align: 'right' as const, format: (v: unknown) => Number(v).toLocaleString() },
+    { key: 'cost', label: t('usage.col.cost'), align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
+    { key: 'avg_cost', label: t('usage.col.avgPerReq'), align: 'right' as const, format: (v: unknown) => formatCostChart(Number(v)) },
+  ], [t])
 
   const totalCost = models.reduce((s, m) => s + m.cost, 0)
   const pieData = models.slice(0, 8).map((m, i) => ({
@@ -37,16 +40,16 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
 
   return (
     <div className="space-y-4">
-      <ChartCard title="Model Usage">
+      <ChartCard title={t('usage.chart.modelUsage')}>
         <DataTable<ModelTableRow>
           columns={modelColumns}
           data={models}
-          emptyMessage="No model data"
+          emptyMessage={t('usage.noModelData')}
         />
       </ChartCard>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <ChartCard title="Cost by Model" height={200} empty={pieData.length === 0}>
+        <ChartCard title={t('usage.chart.costByModel')} height={200} empty={pieData.length === 0}>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -65,18 +68,18 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), 'Cost']} />
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [formatCostChart(Number(v)), t('usage.col.cost')]} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Requests by Model" height={200} empty={models.length === 0}>
+        <ChartCard title={t('usage.chart.requestsByModel')} height={200} empty={models.length === 0}>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={models.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 10 }}>
               <XAxis type="number" tick={{ fontSize: CHART_THEME.axis.fontSize, fill: CHART_THEME.axis.fill }} tickLine={false} />
               <YAxis type="category" dataKey="model" tick={{ fontSize: 9, fill: CHART_THEME.axis.fill }} tickLine={false} width={90} />
-              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [Number(v).toLocaleString(), 'Requests']} />
-              <Bar dataKey="request_count" name="Requests" radius={[0, 4, 4, 0]}>
+              <Tooltip contentStyle={CHART_THEME.tooltip.containerStyle} labelStyle={CHART_THEME.tooltip.labelStyle} itemStyle={CHART_THEME.tooltip.itemStyle} formatter={(v: unknown) => [Number(v).toLocaleString(), t('usage.col.reqs')]} />
+              <Bar dataKey="request_count" name={t('usage.col.reqs')} radius={[0, 4, 4, 0]}>
                 {models.slice(0, 8).map((_, i) => (
                   <Cell key={i} fill={SERIES_COLORS[i % SERIES_COLORS.length]} />
                 ))}
@@ -88,7 +91,7 @@ export const ModelsTab = ({ agentType, project, dateRange }: ModelsTabProps) => 
 
       {totalCost > 0 && (
         <div className="text-xs text-muted-foreground text-right px-1">
-          Total: {formatCostChart(totalCost)} across {models.length} model{models.length !== 1 ? 's' : ''}
+          {t('usage.totalAcrossModels', { cost: formatCostChart(totalCost), count: String(models.length) })}
         </div>
       )}
     </div>

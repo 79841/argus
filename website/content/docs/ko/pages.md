@@ -3,7 +3,7 @@ title: "대시보드 페이지"
 description: "대시보드 페이지 시각적 개요"
 ---
 
-Argus는 사이드바 내비게이션에서 접근할 수 있는 8개의 주요 페이지로 구성됩니다.
+Argus는 사이드바 내비게이션에서 접근할 수 있는 7개의 주요 페이지로 구성됩니다.
 
 ## Overview
 
@@ -29,21 +29,17 @@ Argus는 사이드바 내비게이션에서 접근할 수 있는 8개의 주요 
 
 ![Tools](/screenshots/tools.png)
 
+## User
+
+홈 디렉토리의 전역 에이전트 설정 파일을 탐색합니다. `~/.claude/settings.json`, `~/.codex/config.toml` 등 사용자 수준의 설정을 확인하고 편집합니다.
+
+![User](/screenshots/user.png)
+
 ## Projects
 
-프로젝트별 비용 비교와 상세 분석을 제공합니다.
+프로젝트별 비용 비교와 상세 분석을 제공합니다. 프로젝트 상세 페이지에서는 Overview, Sessions, Usage, Tools, Rules 서브 탭으로 프로젝트별 심층 분석이 가능합니다.
 
 ![Projects](/screenshots/projects.png)
-
-## Insights
-
-AI 기반 제안, 고비용 세션 분석, 예산 추적을 제공합니다.
-
-![Insights](/screenshots/insights.png)
-
-## Rules
-
-에이전트 설정 파일(CLAUDE.md, settings.json 등)을 보고 편집합니다.
 
 ## Settings
 

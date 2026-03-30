@@ -96,4 +96,39 @@ describe('POST /api/ingest/tool-detail', () => {
     expect(row.detail_type).toBe('mcp')
     expect(JSON.parse(row.metadata)).toEqual({ key: 'value' })
   })
+
+  it('session_id가 300자 초과이면 400을 반환한다', async () => {
+    const res = await POST(mkRequest({ session_id: 'a'.repeat(301), tool_name: 'bash' }) as never)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toMatch(/too long/)
+  })
+
+  it('tool_name이 300자 초과이면 400을 반환한다', async () => {
+    const res = await POST(mkRequest({ session_id: 'sess-1', tool_name: 'b'.repeat(301) }) as never)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toMatch(/too long/)
+  })
+
+  it('유효하지 않은 detail_type이면 400을 반환한다', async () => {
+    const res = await POST(mkRequest({ session_id: 'sess-1', tool_name: 'bash', detail_type: 'invalid' }) as never)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toMatch(/detail_type/)
+  })
+
+  it('유효한 detail_type(mcp, skill, agent)은 허용한다', async () => {
+    for (const dt of ['mcp', 'skill', 'agent']) {
+      const res = await POST(mkRequest({ session_id: `sess-${dt}`, tool_name: 'bash', detail_type: dt }) as never)
+      expect(res.status).toBe(200)
+    }
+  })
+
+  it('알 수 없는 agent_type은 claude로 저장한다', async () => {
+    const res = await POST(mkRequest({ session_id: 'sess-unknown', tool_name: 'bash', agent_type: 'unknown' }) as never)
+    expect(res.status).toBe(200)
+    const row = testDb.prepare("SELECT agent_type FROM tool_details WHERE session_id = 'sess-unknown'").get() as { agent_type: string }
+    expect(row.agent_type).toBe('claude')
+  })
 })

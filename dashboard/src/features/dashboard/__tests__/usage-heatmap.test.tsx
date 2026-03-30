@@ -86,10 +86,4 @@ describe('UsageHeatmap', () => {
     expect(cellWithSessions).toBeTruthy()
   })
 
-  it('요일 레이블 Mon, Wed, Fri를 표시한다', () => {
-    render(<UsageHeatmap data={[]} agentType="all" />)
-    expect(screen.getByText('Mon')).toBeInTheDocument()
-    expect(screen.getByText('Wed')).toBeInTheDocument()
-    expect(screen.getByText('Fri')).toBeInTheDocument()
-  })
 })

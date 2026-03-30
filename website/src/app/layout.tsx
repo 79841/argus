@@ -11,6 +11,13 @@ export const metadata: Metadata = {
     template: '%s | Argus',
   },
   description: 'Monitor and visualize AI coding agent usage across Claude Code, Codex CLI, and Gemini CLI.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', type: 'image/png', sizes: '256x256' },
+    ],
+    apple: '/icon.png',
+  },
   openGraph: {
     type: 'website',
     siteName: 'Argus',

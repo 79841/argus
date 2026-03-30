@@ -3,25 +3,31 @@
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme {
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
+  /* Primary — teal/cyan (hue ~181-190), mist 프리셋 기반 */
+  --color-primary-50: oklch(0.97 0.02 182);
+  --color-primary-100: oklch(0.94 0.04 182);
+  --color-primary-200: oklch(0.90 0.08 181);
+  --color-primary-300: oklch(0.855 0.138 181.071);
+  --color-primary-400: oklch(0.78 0.14 182);
+  --color-primary-500: oklch(0.704 0.14 182.503);
+  --color-primary-600: oklch(0.6 0.118 184.704);
+  --color-primary-700: oklch(0.511 0.096 186.391);
+  --color-primary-800: oklch(0.437 0.078 188.216);
+  --color-primary-900: oklch(0.37 0.06 190);
+  --color-primary-950: oklch(0.31 0.045 192);
 
-  --color-surface-50: #fafafa;
-  --color-surface-100: #f4f4f5;
-  --color-surface-200: #e4e4e7;
-  --color-surface-300: #d4d4d8;
-  --color-surface-700: #3f3f46;
-  --color-surface-800: #27272a;
-  --color-surface-900: #18181b;
-  --color-surface-950: #09090b;
+  /* Surface — blue-tinted cool gray (hue ~197-229), mist 프리셋 기반 */
+  --color-surface-50: oklch(0.987 0.002 197.1);
+  --color-surface-100: oklch(0.963 0.002 197.1);
+  --color-surface-200: oklch(0.925 0.005 214.3);
+  --color-surface-300: oklch(0.88 0.008 214.3);
+  --color-surface-400: oklch(0.723 0.014 214.4);
+  --color-surface-500: oklch(0.56 0.021 213.5);
+  --color-surface-600: oklch(0.42 0.008 228.8);
+  --color-surface-700: oklch(0.355 0.01 224);
+  --color-surface-800: oklch(0.275 0.011 216.9);
+  --color-surface-900: oklch(0.218 0.008 223.9);
+  --color-surface-950: oklch(0.148 0.004 228.8);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;

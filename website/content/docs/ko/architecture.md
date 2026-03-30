@@ -376,7 +376,6 @@ graph LR
 | `insights` | `getHighCostSessions` + `getModelCostEfficiency` + `getBudgetStatus` |
 | `suggestions` | `getSuggestionMetrics` + `generateSuggestions` |
 | `config-history` | `getConfigHistory` (Git 기반) |
-| `settings/limits` | `app_meta`에 대한 직접 DB 쿼리 |
 
 ## 5. 데이터 클라이언트 추상화
 
@@ -425,9 +424,8 @@ argus/
 │   │   │   │   ├── sessions/          # 세션 목록 + [id] 상세
 │   │   │   │   ├── usage/             # 사용량 분석 (M3)
 │   │   │   │   ├── tools/             # 도구 추적
-│   │   │   │   ├── insights/          # 인사이트
-│   │   │   │   ├── projects/          # 프로젝트 목록 + [name] 상세
-│   │   │   │   ├── rules/             # 설정 변경 추적 (M4)
+│   │   │   │   ├── user/              # 사용자 설정 파일 뷰어
+│   │   │   │   ├── projects/          # 프로젝트 목록 + [name] 상세 (서브 탭: overview, sessions, usage, tools, rules)
 │   │   │   │   └── settings/          # 설정
 │   │   │   ├── onboarding/            # 온보딩 플로우
 │   │   │   └── v1/                    # OTLP 표준 엔드포인트

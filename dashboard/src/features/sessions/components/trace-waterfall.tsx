@@ -10,6 +10,7 @@ import {
   type TimeScale,
 } from '@/features/sessions/lib/trace-waterfall'
 import { formatDuration, formatTime, shortenModel, formatCostDetail } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 
 type TraceWaterfallProps = {
   events: SessionDetailEvent[]
@@ -35,18 +36,18 @@ const getEventBarColor = (ev: SessionDetailEvent): string => {
   return EVENT_BAR_COLOR[ev.event_name] ?? EVENT_BAR_COLOR.default
 }
 
-const getEventLabel = (ev: SessionDetailEvent): string => {
+const getEventLabel = (ev: SessionDetailEvent, t: (key: string) => string): string => {
   switch (ev.event_name) {
     case 'api_request':
-      return `API ${ev.model ? shortenModel(ev.model) : 'Request'}`
+      return ev.model ? `API ${shortenModel(ev.model)}` : t('sessions.event.apiRequest')
     case 'tool_result':
-      return `${ev.tool_name || 'Tool'}${ev.tool_success === 0 ? ' [FAIL]' : ''}`
+      return `${ev.tool_name || t('sessions.waterfall.toolLabel')}${ev.tool_success === 0 ? ` ${t('sessions.event.fail')}` : ''}`
     case 'user_prompt':
-      return 'User Prompt'
+      return t('sessions.event.userPrompt')
     case 'tool_decision':
-      return `Decision: ${ev.tool_name || 'unknown'}`
+      return `${t('sessions.event.decision')} ${ev.tool_name || t('sessions.event.unknown')}`
     case 'api_error':
-      return 'API Error'
+      return t('sessions.event.apiError')
     default:
       return ev.event_name
   }
@@ -66,9 +67,10 @@ type WaterfallRowProps = {
 }
 
 const WaterfallRow = ({ event, scale, indent = false, onHover }: WaterfallRowProps) => {
+  const { t } = useLocale()
   const pos = calculateBarPosition(event, scale)
   const barColor = getEventBarColor(event)
-  const label = getEventLabel(event)
+  const label = getEventLabel(event, t)
 
   return (
     <div
@@ -188,6 +190,7 @@ type TooltipProps = {
 }
 
 const WaterfallTooltip = ({ data }: TooltipProps) => {
+  const { t } = useLocale()
   const { event, x, y } = data
 
   return (
@@ -195,25 +198,25 @@ const WaterfallTooltip = ({ data }: TooltipProps) => {
       className="pointer-events-none fixed z-50 max-w-xs rounded-lg border bg-popover p-3 text-xs shadow-lg"
       style={{ left: x + 12, top: y - 8 }}
     >
-      <div className="mb-1 font-semibold">{getEventLabel(event)}</div>
+      <div className="mb-1 font-semibold">{getEventLabel(event, t)}</div>
       <div className="space-y-0.5 text-muted-foreground">
         <div>{formatTime(event.timestamp)}</div>
-        {event.duration_ms > 0 && <div>Duration: {formatDuration(event.duration_ms)}</div>}
+        {event.duration_ms > 0 && <div>{t('sessions.waterfall.duration')}: {formatDuration(event.duration_ms)}</div>}
         {event.event_name === 'api_request' && (
           <>
-            {event.model && <div>Model: {shortenModel(event.model)}</div>}
-            <div>Input: {event.input_tokens.toLocaleString()} tok</div>
-            <div>Output: {event.output_tokens.toLocaleString()} tok</div>
+            {event.model && <div>{t('sessions.waterfall.model')}: {shortenModel(event.model)}</div>}
+            <div>{t('sessions.waterfall.input')}: {event.input_tokens.toLocaleString()} tok</div>
+            <div>{t('sessions.waterfall.output')}: {event.output_tokens.toLocaleString()} tok</div>
             {event.cache_read_tokens > 0 && (
               <div className="text-emerald-600 dark:text-emerald-400">
-                Cache: {event.cache_read_tokens.toLocaleString()} tok
+                {t('sessions.waterfall.cache')}: {event.cache_read_tokens.toLocaleString()} tok
               </div>
             )}
-            {event.cost_usd > 0 && <div>Cost: {formatCost(event.cost_usd)}</div>}
+            {event.cost_usd > 0 && <div>{t('sessions.waterfall.costLabel')}: {formatCost(event.cost_usd)}</div>}
           </>
         )}
         {event.event_name === 'tool_result' && event.tool_name && (
-          <div>Tool: {event.tool_name}</div>
+          <div>{t('sessions.waterfall.toolLabel')}: {event.tool_name}</div>
         )}
         {event.event_name === 'user_prompt' && event.body && (
           <div className="mt-1 max-h-20 overflow-hidden whitespace-pre-wrap break-words text-foreground">
@@ -226,6 +229,7 @@ const WaterfallTooltip = ({ data }: TooltipProps) => {
 }
 
 export const TraceWaterfall = ({ events }: TraceWaterfallProps) => {
+  const { t } = useLocale()
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
   const groups = groupEventsForWaterfall(events)
@@ -234,7 +238,7 @@ export const TraceWaterfall = ({ events }: TraceWaterfallProps) => {
   if (groups.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
-        이벤트 없음
+        {t('sessions.detail.noEvents')}
       </div>
     )
   }
@@ -243,10 +247,10 @@ export const TraceWaterfall = ({ events }: TraceWaterfallProps) => {
     <div className="relative">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-3 py-1 text-xs font-medium text-muted-foreground">
-        <div className="w-[180px] shrink-0">Name</div>
-        <div className="min-w-0 flex-1 text-center">Timeline</div>
-        <div className="w-[52px] shrink-0 text-right">Duration</div>
-        <div className="w-[52px] shrink-0 text-right">Cost</div>
+        <div className="w-[180px] shrink-0">{t('sessions.waterfall.name')}</div>
+        <div className="min-w-0 flex-1 text-center">{t('sessions.waterfall.timeline')}</div>
+        <div className="w-[52px] shrink-0 text-right">{t('sessions.waterfall.duration')}</div>
+        <div className="w-[52px] shrink-0 text-right">{t('sessions.waterfall.costLabel')}</div>
         <div className="ml-1 w-3" />
       </div>
 

@@ -27,6 +27,19 @@ describe('toDisplayPath', () => {
     const result = toDisplayPath(mixedPath)
     expect(result).not.toContain('\\')
   })
+
+  it('홈 디렉토리가 아닌 경로에서도 백슬래시를 슬래시로 변환한다', () => {
+    const windowsAbsPath = 'C:\\Users\\foo\\project\\CLAUDE.md'
+    const result = toDisplayPath(windowsAbsPath)
+    expect(result).not.toContain('\\')
+    expect(result).toContain('/')
+  })
+
+  it('Windows 홈 경로(백슬래시)를 ~ 로 시작하는 슬래시 경로로 변환한다', () => {
+    const windowsHomePath = HOME.replace(/\//g, '\\') + '\\.claude\\settings.json'
+    const result = toDisplayPath(windowsHomePath)
+    expect(result).toBe('~/.claude/settings.json')
+  })
 })
 
 describe('buildGeminiTelemetry', () => {

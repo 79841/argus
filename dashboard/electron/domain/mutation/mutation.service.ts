@@ -3,7 +3,6 @@ import fs from 'fs'
 import { getDb } from '../../../src/shared/lib/db'
 import { syncPricingFromLiteLLM } from '../../../src/shared/lib/pricing-sync'
 import { connectAgents, disconnectAgents } from '../../../src/shared/lib/setup'
-import { isPathSafe, resolvePath } from '../config/config.service'
 import { AGENT_TYPES } from '../../../src/shared/lib/constants'
 
 export const handleMutate = async (name: string, body?: unknown): Promise<unknown> => {
@@ -12,23 +11,6 @@ export const handleMutate = async (name: string, body?: unknown): Promise<unknow
       const db = getDb()
       const count = await syncPricingFromLiteLLM(db)
       return { synced: count }
-    }
-
-    case 'config': {
-      const { path: filePath, content } = body as { path: string; content: string }
-      if (!filePath || typeof content !== 'string') {
-        throw new Error('path and content are required')
-      }
-      if (!isPathSafe(filePath)) {
-        throw new Error('Invalid file path')
-      }
-      const fullPath = resolvePath(filePath)
-      const dir = path.dirname(fullPath)
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true })
-      }
-      fs.writeFileSync(fullPath, content, 'utf-8')
-      return { success: true, path: filePath }
     }
 
     case 'projects/registry/delete': {

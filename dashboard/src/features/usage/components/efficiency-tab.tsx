@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -11,36 +12,38 @@ import { AgentBadge } from '@/shared/components/ui/agent-badge'
 import { AGENTS } from '@/shared/lib/agents'
 import { AGENT_TYPES } from '@/shared/lib/constants'
 import { AGENT_CHART_COLORS, CHART_THEME } from '@/shared/lib/chart-theme'
+import { useLocale } from '@/shared/lib/i18n'
 import { useEfficiencyData } from '../hooks/use-efficiency-data'
 import type { AgentType } from '@/shared/lib/agents'
 import type { EfficiencyTabProps, EfficiencyAgentRow } from '@/features/usage/types/usage'
 
 const DOT_CONFIG = { r: 3 } as const
 
-const efficiencyColumns = [
-  {
-    key: 'agent_type',
-    label: 'Agent',
-    format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
-  },
-  { key: 'cache_rate', label: 'Cache Rate', align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(1)}%` },
-  { key: 'token_efficiency', label: 'Token Eff.', align: 'right' as const, format: (v: unknown) => Number(v).toFixed(2) },
-  { key: 'avg_duration_s', label: 'Avg Speed', align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(2)}s` },
-  { key: 'score', label: 'Score', align: 'right' as const, format: (v: unknown) => <span className="font-semibold">{String(v)}</span> },
-]
-
 export const EfficiencyTab = ({ agentType, project, dateRange }: EfficiencyTabProps) => {
+  const { t } = useLocale()
   const { agentRows, trend, overall } = useEfficiencyData({ agentType, project, dateRange })
+
+  const efficiencyColumns = useMemo(() => [
+    {
+      key: 'agent_type',
+      label: t('usage.col.agent'),
+      format: (v: unknown) => <AgentBadge agent={v as AgentType} />,
+    },
+    { key: 'cache_rate', label: t('usage.col.cacheRate'), align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(1)}%` },
+    { key: 'token_efficiency', label: t('usage.col.tokenEff'), align: 'right' as const, format: (v: unknown) => Number(v).toFixed(2) },
+    { key: 'avg_duration_s', label: t('usage.col.avgSpeed'), align: 'right' as const, format: (v: unknown) => `${Number(v).toFixed(2)}s` },
+    { key: 'score', label: t('usage.col.score'), align: 'right' as const, format: (v: unknown) => <span className="font-semibold">{String(v)}</span> },
+  ], [t])
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard label="Cache Hit Rate" value={overall ? `${overall.cacheRate.toFixed(1)}%` : '-'} sub="cache_read / total input" />
-        <KpiCard label="Avg Response Time" value={overall ? `${overall.avgDuration.toFixed(2)}s` : '-'} sub="per API request" />
-        <KpiCard label="Efficiency Score" value={overall ? `${overall.score}` : '-'} sub="composite score (0-100)" />
+        <KpiCard label={t('usage.kpi.cacheHitRate')} value={overall ? `${overall.cacheRate.toFixed(1)}%` : '-'} sub={t('usage.kpi.cacheReadDesc')} />
+        <KpiCard label={t('usage.kpi.avgResponseTime')} value={overall ? `${overall.avgDuration.toFixed(2)}s` : '-'} sub={t('usage.kpi.perApiRequest')} />
+        <KpiCard label={t('usage.kpi.efficiencyScore')} value={overall ? `${overall.score}` : '-'} sub={t('usage.kpi.compositeScore')} />
       </div>
 
-      <ChartCard title="Efficiency Trend" height={180} empty={trend.length === 0}>
+      <ChartCard title={t('usage.chart.efficiencyTrend')} height={180} empty={trend.length === 0}>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart data={trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid {...CHART_THEME.grid} />
@@ -55,11 +58,11 @@ export const EfficiencyTab = ({ agentType, project, dateRange }: EfficiencyTabPr
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="Efficiency by Agent">
+      <ChartCard title={t('usage.chart.efficiencyByAgent')}>
         <DataTable<EfficiencyAgentRow>
           columns={efficiencyColumns}
           data={agentRows}
-          emptyMessage="No efficiency data"
+          emptyMessage={t('usage.noEfficiencyData')}
         />
       </ChartCard>
     </div>

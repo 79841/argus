@@ -3,7 +3,7 @@ title: "Dashboard Pages"
 description: "Visual overview of all dashboard pages"
 ---
 
-Argus has 8 main pages accessible from the sidebar navigation.
+Argus has 7 main pages accessible from the sidebar navigation.
 
 ## Overview
 
@@ -29,21 +29,17 @@ Tool usage statistics, category distribution, and daily trends.
 
 ![Tools](/screenshots/tools.png)
 
+## User
+
+Browse global agent configuration files in your home directory. View and edit user-level settings such as `~/.claude/settings.json`, `~/.codex/config.toml`, and more.
+
+![User](/screenshots/user.png)
+
 ## Projects
 
-Project-level cost comparison and detailed breakdowns.
+Project-level cost comparison and detailed breakdowns. The project detail page provides Overview, Sessions, Usage, Tools, and Rules sub-tabs for in-depth per-project analysis.
 
 ![Projects](/screenshots/projects.png)
-
-## Insights
-
-AI-powered suggestions, high-cost session analysis, and budget tracking.
-
-![Insights](/screenshots/insights.png)
-
-## Rules
-
-View and edit agent configuration files (CLAUDE.md, settings.json, etc.).
 
 ## Settings
 
