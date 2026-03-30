@@ -15,6 +15,8 @@ export const setTrayActive = (active: boolean): void => {
   _isTrayActive = active
 }
 
+export const isTrayActive = (): boolean => _isTrayActive
+
 export const createWindow = (): void => {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -25,7 +27,14 @@ export const createWindow = (): void => {
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     ...(isMac
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 18 } }
-      : { frame: false }),
+      : {
+          titleBarStyle: 'hidden' as const,
+          titleBarOverlay: {
+            color: '#09090b',
+            symbolColor: '#a1a1aa',
+            height: 36,
+          },
+        }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
