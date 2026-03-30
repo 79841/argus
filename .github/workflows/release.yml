@@ -40,6 +40,8 @@ jobs:
       run:
         working-directory: dashboard
     steps:
+      - run: git config --system core.longpaths true
+        working-directory: .
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
