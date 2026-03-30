@@ -57,6 +57,8 @@ export const initSchema = (db: Database.Database) => {
     CREATE INDEX IF NOT EXISTS idx_agent_logs_date ON agent_logs(date(timestamp));
     CREATE INDEX IF NOT EXISTS idx_agent_logs_prompt_id ON agent_logs(prompt_id);
     CREATE INDEX IF NOT EXISTS idx_agent_logs_project ON agent_logs(project_name);
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_event_agent_ts ON agent_logs(event_name, agent_type, timestamp);
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_session_event ON agent_logs(session_id, event_name);
 
     CREATE TABLE IF NOT EXISTS pricing_model (
       model_id TEXT NOT NULL,

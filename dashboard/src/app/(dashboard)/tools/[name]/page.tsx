@@ -14,13 +14,7 @@ import {
   ToolSessionsTable,
 } from '@/features/tools'
 import type { ToolDailyRow } from '@/shared/lib/queries'
-
-const DATE_OPTIONS = [
-  { value: 7, labelKey: 'tools.date.7' },
-  { value: 14, labelKey: 'tools.date.14' },
-  { value: 30, labelKey: 'tools.date.30' },
-  { value: 90, labelKey: 'tools.date.90' },
-]
+import { TOOLS_DATE_OPTIONS_NUM } from '@/shared/lib/constants'
 
 const toCallTrend = (daily: ToolDailyRow[]) =>
   daily.map((d) => ({ date: d.date, value: d.count }))
@@ -71,7 +65,7 @@ export default function ToolDetailPage() {
         </button>
         <span className="text-sm font-medium font-mono">{toolName}</span>
         <div className="ml-auto flex items-center gap-1 rounded-md border bg-background p-1">
-          {DATE_OPTIONS.map((opt) => (
+          {TOOLS_DATE_OPTIONS_NUM.map((opt) => (
             <button
               key={opt.value}
               type="button"

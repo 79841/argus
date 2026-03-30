@@ -17,13 +17,7 @@ import { AgentFilter } from '@/shared/components/agent-filter'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 import { useLocale } from '@/shared/lib/i18n'
 import { formatDuration, formatNumber, formatPercent } from '@/shared/lib/format'
-
-const DATE_OPTIONS = [
-  { value: '7', labelKey: 'tools.date.7' },
-  { value: '14', labelKey: 'tools.date.14' },
-  { value: '30', labelKey: 'tools.date.30' },
-  { value: '90', labelKey: 'tools.date.90' },
-]
+import { TOOLS_DATE_OPTIONS } from '@/shared/lib/constants'
 
 export default function ProjectToolsPage() {
   const { t } = useLocale()
@@ -44,7 +38,7 @@ export default function ProjectToolsPage() {
       <div className="flex items-center gap-2 flex-wrap">
         <AgentFilter value={agentType} onChange={setAgentType} />
         <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-          {DATE_OPTIONS.map((opt) => (
+          {TOOLS_DATE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setDays(opt.value)}

@@ -9,9 +9,9 @@ import { WindowControls } from '@/shared/components/window-controls'
 import { TopBarPortalProvider, useTopBarPortal } from '@/shared/components/top-bar-portal'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { STORAGE_KEYS } from '@/shared/lib/constants'
 import { useLocale } from '@/shared/lib/i18n'
 import { useIsMobile } from '@/shared/hooks/use-media-query'
+import { useNavCollapsed } from '@/shared/hooks/use-nav-collapsed'
 
 type TopBarProps = {
   isMobile: boolean
@@ -87,33 +87,13 @@ const TopBar = ({ isMobile, onToggleNav, onOpenMobileMenu }: TopBarProps) => {
 }
 
 const LayoutInner = ({ children }: { children: React.ReactNode }) => {
-  const [collapsed, setCollapsed] = useState(true)
+  const [, toggleNav] = useNavCollapsed()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.NAV_COLLAPSED)
-      if (stored !== null) setCollapsed(JSON.parse(stored))
-    } catch {}
-
-    const handler = (e: Event) => setCollapsed((e as CustomEvent<boolean>).detail)
-    window.addEventListener('argus-nav-toggle', handler)
-    return () => window.removeEventListener('argus-nav-toggle', handler)
-  }, [])
-
-  useEffect(() => {
     if (!isMobile) setMobileMenuOpen(false)
   }, [isMobile])
-
-  const toggleNav = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    try {
-      localStorage.setItem(STORAGE_KEYS.NAV_COLLAPSED, JSON.stringify(next))
-      window.dispatchEvent(new CustomEvent('argus-nav-toggle', { detail: next }))
-    } catch {}
-  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg-sunken)]">

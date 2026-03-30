@@ -8,10 +8,11 @@ import {
   Download,
   ArrowRight,
   Github,
-  Terminal,
+
   Settings,
   BarChart3,
 } from "lucide-react";
+import { DownloadButton } from "@/components/download-button";
 
 const features = [
   {
@@ -92,13 +93,7 @@ export default function Home() {
             and Gemini CLI — all in one local dashboard.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/docs/en/installation"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-primary-700"
-            >
-              <Download size={18} />
-              Download
-            </Link>
+            <DownloadButton />
             <Link
               href="/docs/en/getting-started"
               className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-6 py-3 text-base font-semibold text-surface-900 transition-colors hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:hover:bg-surface-800"
@@ -165,25 +160,15 @@ export default function Home() {
               time.
             </p>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-surface-200 bg-surface-100 shadow-2xl dark:border-surface-700 dark:bg-surface-800">
-            <div className="flex items-center gap-2 border-b border-surface-200 px-4 py-3 dark:border-surface-700">
-              <span className="h-3 w-3 rounded-full bg-red-400" />
-              <span className="h-3 w-3 rounded-full bg-yellow-400" />
-              <span className="h-3 w-3 rounded-full bg-green-400" />
-              <div className="ml-2 flex-1 rounded-md border border-surface-200 bg-white px-3 py-1 text-xs text-surface-500 dark:border-surface-600 dark:bg-surface-900 dark:text-surface-400">
-                localhost:9845
-              </div>
-            </div>
-            <div className="relative">
-              <Image
-                src="/screenshots/overview.png"
-                alt="Argus dashboard overview"
-                width={1200}
-                height={675}
-                className="w-full"
-                priority
-              />
-            </div>
+          <div className="overflow-hidden rounded-2xl shadow-2xl">
+            <Image
+              src="/screenshots/overview.png"
+              alt="Argus dashboard overview"
+              width={1200}
+              height={675}
+              className="w-full rounded-2xl"
+              priority
+            />
           </div>
         </div>
       </section>
@@ -221,39 +206,8 @@ export default function Home() {
               );
             })}
           </div>
-          <div className="mt-12 overflow-hidden rounded-2xl border border-surface-200 bg-surface-900 p-6 dark:border-surface-700">
-            <div className="mb-3 flex items-center gap-2">
-              <Terminal size={14} className="text-surface-400" />
-              <span className="text-xs text-surface-400">
-                Configure Claude Code telemetry
-              </span>
-            </div>
-            <pre className="overflow-x-auto text-sm">
-              <code>
-                <span className="text-surface-500"># Add to your shell profile (~/.zshrc or ~/.bashrc){"\n"}</span>
-                <span className="text-green-400">export </span>
-                <span className="text-blue-300">CLAUDE_CODE_ENABLE_TELEMETRY</span>
-                <span className="text-white">=1{"\n"}</span>
-                <span className="text-green-400">export </span>
-                <span className="text-blue-300">OTEL_LOGS_EXPORTER</span>
-                <span className="text-white">=otlp{"\n"}</span>
-                <span className="text-green-400">export </span>
-                <span className="text-blue-300">OTEL_EXPORTER_OTLP_PROTOCOL</span>
-                <span className="text-white">=http/json{"\n"}</span>
-                <span className="text-green-400">export </span>
-                <span className="text-blue-300">OTEL_EXPORTER_OTLP_ENDPOINT</span>
-                <span className="text-white">=http://localhost:9845</span>
-              </code>
-            </pre>
-          </div>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/docs/en/installation"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-primary-700"
-            >
-              <Download size={18} />
-              Download Argus
-            </Link>
+            <DownloadButton />
             <Link
               href="/docs/en/getting-started"
               className="inline-flex items-center gap-2 text-base font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
