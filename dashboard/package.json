@@ -1,6 +1,6 @@
 {
   "name": "argus",
-  "version": "1.1.0-alpha.1",
+  "version": "1.1.0-alpha.4",
   "description": "Personal monitoring tool for AI coding agents (Claude Code, Codex CLI, Gemini CLI) — unified measurement and visualization",
   "license": "MIT",
   "homepage": "https://github.com/79841/argus",
@@ -92,7 +92,7 @@
     },
     "asar": true,
     "asarUnpack": [
-      "dist-standalone/**/*"
+      "**/*.node"
     ],
     "afterPack": "./scripts/after-pack.mjs",
     "files": [
