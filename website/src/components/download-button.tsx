@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Download, ChevronDown, Apple, Monitor } from "lucide-react";
 
-type Platform = "mac" | "windows" | "linux";
+type Platform = "mac" | "windows";
 
 const REPO = "79841/argus";
 
@@ -23,41 +23,25 @@ const platforms: Record<
     filePattern: ".exe",
     suffix: "x64",
   },
-  linux: {
-    label: "Linux",
-    icon: Monitor,
-    filePattern: ".AppImage",
-    suffix: "x64",
-  },
 };
 
 const detectPlatform = (): Platform => {
   if (typeof navigator === "undefined") return "mac";
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes("win")) return "windows";
-  if (ua.includes("linux")) return "linux";
   return "mac";
 };
 
 const getDownloadUrl = (platform: Platform) =>
-  `https://github.com/${REPO}/releases/latest/download/Argus${
-    platform === "mac"
-      ? ".dmg"
-      : platform === "windows"
-        ? ".exe"
-        : ".AppImage"
-  }`;
+  `https://github.com/${REPO}/releases/latest/download/Argus${platforms[platform].filePattern}`;
 
 export const DownloadButton = () => {
-  const [detected, setDetected] = useState<Platform>("mac");
+  const [detected] = useState<Platform>(detectPlatform);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setDetected(detectPlatform());
-  }, []);
-
-  useEffect(() => {
+    if (!open) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -65,7 +49,7 @@ export const DownloadButton = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [open]);
 
   const current = platforms[detected];
   const Icon = current.icon;
