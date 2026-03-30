@@ -7,13 +7,7 @@ import { FilterBar } from '@/shared/components/filter-bar'
 import { cn } from '@/shared/lib/utils'
 import { formatCost } from '@/shared/lib/format'
 import { useInsightsData, SuggestionsSection, HighCostTable, ModelEfficiencyTable } from '@/features/insights'
-
-const DATE_OPTIONS = [
-  { value: '7', labelKey: 'insights.date.7' },
-  { value: '14', labelKey: 'insights.date.14' },
-  { value: '30', labelKey: 'insights.date.30' },
-  { value: '90', labelKey: 'insights.date.90' },
-]
+import { INSIGHTS_DATE_OPTIONS } from '@/shared/lib/constants'
 
 const CAUSE_I18N_KEYS: Record<string, string> = {
   expensive_model: 'insights.cause.expensiveModel',
@@ -48,7 +42,7 @@ export default function InsightsPage() {
     <div className="flex h-full flex-col">
       <FilterBar>
         <div className="flex items-center gap-1 rounded-md border bg-background p-1">
-          {DATE_OPTIONS.map((opt) => (
+          {INSIGHTS_DATE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setDays(opt.value)}

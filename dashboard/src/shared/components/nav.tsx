@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -15,7 +14,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { useLocale } from '@/shared/lib/i18n'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/shared/components/ui/tooltip'
-import { STORAGE_KEYS } from '@/shared/lib/constants'
+import { useNavCollapsed } from '@/shared/hooks/use-nav-collapsed'
 
 import type { LucideIcon } from 'lucide-react'
 
@@ -48,18 +47,7 @@ type NavProps = {
 export const Nav = ({ isOverlay = false, onClose }: NavProps) => {
   const pathname = usePathname()
   const { t } = useLocale()
-  const [collapsed, setCollapsed] = useState(true)
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.NAV_COLLAPSED)
-      if (stored !== null) setCollapsed(JSON.parse(stored))
-    } catch {}
-
-    const handler = (e: Event) => setCollapsed((e as CustomEvent<boolean>).detail)
-    window.addEventListener('argus-nav-toggle', handler)
-    return () => window.removeEventListener('argus-nav-toggle', handler)
-  }, [])
+  const [collapsed] = useNavCollapsed()
 
   const effectiveCollapsed = isOverlay ? false : collapsed
 

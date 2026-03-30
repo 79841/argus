@@ -49,3 +49,25 @@ export const API_LIMITS = {
 
 // Agent types (without 'all')
 export const AGENT_TYPES = ['claude', 'codex', 'gemini'] as const
+
+// Date selector options (shared across tools, insights pages)
+export const TOOLS_DATE_OPTIONS = [
+  { value: '7', labelKey: 'tools.date.7' },
+  { value: '14', labelKey: 'tools.date.14' },
+  { value: '30', labelKey: 'tools.date.30' },
+  { value: '90', labelKey: 'tools.date.90' },
+] as const
+
+export const TOOLS_DATE_OPTIONS_NUM = [
+  { value: 7, labelKey: 'tools.date.7' },
+  { value: 14, labelKey: 'tools.date.14' },
+  { value: 30, labelKey: 'tools.date.30' },
+  { value: 90, labelKey: 'tools.date.90' },
+] as const
+
+export const INSIGHTS_DATE_OPTIONS = [
+  { value: '7', labelKey: 'insights.date.7' },
+  { value: '14', labelKey: 'insights.date.14' },
+  { value: '30', labelKey: 'insights.date.30' },
+  { value: '90', labelKey: 'insights.date.90' },
+] as const

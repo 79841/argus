@@ -1,6 +1,7 @@
 'use client'
 
 import { useTheme } from '@/shared/components/theme-provider'
+import { useLocale } from '@/shared/lib/i18n'
 
 const SunIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,20 +33,27 @@ const MonitorIcon = () => (
 
 export const ThemeToggle = () => {
   const { theme, setTheme } = useTheme()
+  const { t } = useLocale()
 
   const cycle = () => {
     const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'
     setTheme(next)
   }
 
+  const label = theme === 'dark'
+    ? t('settings.theme.dark')
+    : theme === 'light'
+      ? t('settings.theme.light')
+      : t('settings.theme.system')
+
   return (
     <button
       onClick={cycle}
       className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      title={`Theme: ${theme}`}
+      aria-label={label}
     >
       {theme === 'dark' ? <MoonIcon /> : theme === 'light' ? <SunIcon /> : <MonitorIcon />}
-      <span>{theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}</span>
+      <span>{label}</span>
     </button>
   )
 }

@@ -4,12 +4,24 @@ import { ThemeToggle } from '@/shared/components/theme-toggle'
 
 const mockSetTheme = vi.fn()
 let mockTheme = 'system'
+const mockT = (key: string) => {
+  const map: Record<string, string> = {
+    'settings.theme.dark': 'Dark',
+    'settings.theme.light': 'Light',
+    'settings.theme.system': 'System',
+  }
+  return map[key] ?? key
+}
 
 vi.mock('@/shared/components/theme-provider', () => ({
   useTheme: () => ({
     theme: mockTheme,
     setTheme: mockSetTheme,
   }),
+}))
+
+vi.mock('@/shared/lib/i18n', () => ({
+  useLocale: () => ({ t: mockT, locale: 'en' }),
 }))
 
 describe('ThemeToggle', () => {
@@ -56,9 +68,9 @@ describe('ThemeToggle', () => {
     expect(mockSetTheme).toHaveBeenCalledWith('system')
   })
 
-  it('버튼의 title 속성에 현재 테마를 표시한다', () => {
+  it('버튼의 aria-label 속성에 현재 테마를 표시한다', () => {
     mockTheme = 'dark'
     render(<ThemeToggle />)
-    expect(screen.getByRole('button')).toHaveAttribute('title', 'Theme: dark')
+    expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Dark')
   })
 })

@@ -14,10 +14,9 @@ import {
 import { ChartCard } from '@/shared/components/ui/chart-card'
 import { CHART_THEME } from '@/shared/lib/chart-theme'
 import { useLocale } from '@/shared/lib/i18n'
+import { formatNumber } from '@/shared/lib/format'
 import type { ToolUsageRow } from '@/shared/lib/queries'
 import { TOP_COLORS } from './constants'
-
-const formatNumber = (n: number): string => n.toLocaleString()
 
 export const TopToolsChart = ({ data }: { data: ToolUsageRow[] }) => {
   const { t } = useLocale()
