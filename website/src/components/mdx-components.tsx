@@ -136,7 +136,9 @@ export function getMdxComponents(): MDXComponents {
         </span>
       )
     },
-    Mermaid: ({ chart }: { chart?: string }) => <MermaidDiagram chart={chart ?? ''} />,
+    Mermaid: ({ chart, children }: { chart?: string; children?: React.ReactNode }) => (
+      <MermaidDiagram chart={chart ?? ''}>{ children }</MermaidDiagram>
+    ),
     DownloadCards: () => <DownloadCards />,
     hr: () => <hr className="my-8 border-surface-200 dark:border-surface-700" />,
     strong: ({ children }: { children?: React.ReactNode }) => (
