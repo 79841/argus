@@ -7,8 +7,7 @@ Argus는 AI 코딩 에이전트(Claude Code, Codex CLI, Gemini CLI)에서 OpenTe
 
 ## 1. 시스템 개요
 
-```mermaid
-graph TB
+<Mermaid chart={`graph TB
   subgraph "AI Coding Agents"
     CC[Claude Code]
     CX[Codex CLI]
@@ -34,8 +33,7 @@ graph TB
   DB --> QE
   QE --> UI
   SE --> UI
-  CT -->|"git log"| UI
-```
+  CT -->|"git log"| UI`} />
 
 ### 핵심 설계 결정
 
@@ -48,8 +46,7 @@ graph TB
 
 ### 수집 파이프라인
 
-```mermaid
-sequenceDiagram
+<Mermaid chart={`sequenceDiagram
     participant Agent as AI Agent
     participant V1 as /v1/logs
     participant Ingest as /api/ingest
@@ -68,8 +65,7 @@ sequenceDiagram
 
     Ingest->>DB: INSERT INTO agent_logs (transaction)
     Ingest->>DB: INSERT INTO tool_details (orchestration tools)
-    Ingest-->>Agent: { accepted: N }
-```
+    Ingest-->>Agent: { accepted: N }`} />
 
 ### OTLP 엔드포인트
 
@@ -251,8 +247,7 @@ cost = (input_tokens * input_per_mtok
 
 ### 엔터티 관계
 
-```mermaid
-erDiagram
+<Mermaid chart={`erDiagram
     agent_logs ||--o{ tool_details : "session_id"
     agent_logs }o--|| pricing_model : "model → model_id"
     agent_logs }o--o| project_registry : "project_name"
@@ -307,15 +302,13 @@ erDiagram
         text agent_type
         text file_path
         text content_hash
-    }
-```
+    }`} />
 
 ## 4. Electron 아키텍처
 
 Argus는 웹 애플리케이션(`pnpm dev`)과 데스크톱 애플리케이션(`pnpm electron:dev`) 양쪽으로 실행됩니다.
 
-```mermaid
-graph LR
+<Mermaid chart={`graph LR
   subgraph "Electron Main Process"
     M["main.ts<br/>(app lifecycle)"]
     IPC["ipc-handlers.ts<br/>(query router)"]
@@ -338,8 +331,7 @@ graph LR
   UI --> DC
   DC -->|"IPC (Electron)"| P
   P -->|"ipcRenderer.invoke"| IPC
-  DC -->|"HTTP fallback"| NS
-```
+  DC -->|"HTTP fallback"| NS`} />
 
 ### 라이프사이클
 
@@ -381,16 +373,14 @@ graph LR
 
 `data-client.ts`는 웹과 Electron 환경 모두에서 작동하는 통합 데이터 접근 계층을 제공합니다.
 
-```mermaid
-flowchart TD
+<Mermaid chart={`flowchart TD
     A["dataClient.query(name, params)"] --> B{isElectron?}
     B -->|Yes| C["window.electronAPI.query()"]
     C -->|Success| D[Return data]
     C -->|Failure| E["Set ipcDisabled = true"]
     E --> F["fetch(/api/name)"]
     B -->|No| F
-    F --> D
-```
+    F --> D`} />
 
 ### 동작 방식
 

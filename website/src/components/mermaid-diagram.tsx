@@ -3,33 +3,49 @@
 import { useEffect, useRef, useState } from "react";
 
 type MermaidDiagramProps = {
-  code: string;
+  chart: string;
+  children?: React.ReactNode;
 };
 
-export function MermaidDiagram({ code }: MermaidDiagramProps) {
+export function MermaidDiagram({ chart, children }: MermaidDiagramProps) {
+  const code = chart || (typeof children === "string" ? children : "");
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    if (!code) return;
     let cancelled = false;
 
     const render = async () => {
-      const mermaid = (await import("mermaid")).default;
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "dark",
-        fontFamily: "inherit",
-      });
-      const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
-      const { svg: rendered } = await mermaid.render(id, code);
-      if (!cancelled) setSvg(rendered);
+      try {
+        const mermaid = (await import("mermaid")).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "dark",
+          fontFamily: "inherit",
+        });
+        const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+        const { svg: rendered } = await mermaid.render(id, code.trim());
+        if (!cancelled) setSvg(rendered);
+      } catch (e) {
+        if (!cancelled) setError(String(e));
+      }
     };
 
-    render().catch(() => {});
+    render();
     return () => {
       cancelled = true;
     };
   }, [code]);
+
+  if (error) {
+    return (
+      <pre className="my-6 overflow-x-auto rounded-lg bg-red-950 p-4 text-sm text-red-300">
+        {code}
+      </pre>
+    );
+  }
 
   if (!svg) {
     return (

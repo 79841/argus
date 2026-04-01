@@ -7,8 +7,7 @@ Argus is a local-only, zero-auth monitoring tool that collects OpenTelemetry dat
 
 ## 1. System Overview
 
-```mermaid
-graph TB
+<Mermaid chart={`graph TB
   subgraph "AI Coding Agents"
     CC[Claude Code]
     CX[Codex CLI]
@@ -34,8 +33,7 @@ graph TB
   DB --> QE
   QE --> UI
   SE --> UI
-  CT -->|"git log"| UI
-```
+  CT -->|"git log"| UI`} />
 
 ### Key Design Decisions
 
@@ -48,8 +46,7 @@ graph TB
 
 ### Ingestion Pipeline
 
-```mermaid
-sequenceDiagram
+<Mermaid chart={`sequenceDiagram
     participant Agent as AI Agent
     participant V1 as /v1/logs
     participant Ingest as /api/ingest
@@ -68,8 +65,7 @@ sequenceDiagram
 
     Ingest->>DB: INSERT INTO agent_logs (transaction)
     Ingest->>DB: INSERT INTO tool_details (orchestration tools)
-    Ingest-->>Agent: { accepted: N }
-```
+    Ingest-->>Agent: { accepted: N }`} />
 
 ### OTLP Endpoints
 
@@ -251,8 +247,7 @@ App-level metadata (key-value store).
 
 ### Entity Relationship
 
-```mermaid
-erDiagram
+<Mermaid chart={`erDiagram
     agent_logs ||--o{ tool_details : "session_id"
     agent_logs }o--|| pricing_model : "model → model_id"
     agent_logs }o--o| project_registry : "project_name"
@@ -307,15 +302,13 @@ erDiagram
         text agent_type
         text file_path
         text content_hash
-    }
-```
+    }`} />
 
 ## 4. Electron Architecture
 
 Argus runs as both a web application (`pnpm dev`) and a desktop application (`pnpm electron:dev`).
 
-```mermaid
-graph LR
+<Mermaid chart={`graph LR
   subgraph "Electron Main Process"
     M["main.ts<br/>(app lifecycle)"]
     IPC["ipc-handlers.ts<br/>(query router)"]
@@ -338,8 +331,7 @@ graph LR
   UI --> DC
   DC -->|"IPC (Electron)"| P
   P -->|"ipcRenderer.invoke"| IPC
-  DC -->|"HTTP fallback"| NS
-```
+  DC -->|"HTTP fallback"| NS`} />
 
 ### Lifecycle
 
@@ -381,16 +373,14 @@ The `ipc-handlers.ts` maps query names to the same functions used by API routes:
 
 `data-client.ts` provides a unified data access layer that works in both web and Electron environments.
 
-```mermaid
-flowchart TD
+<Mermaid chart={`flowchart TD
     A["dataClient.query(name, params)"] --> B{isElectron?}
     B -->|Yes| C["window.electronAPI.query()"]
     C -->|Success| D[Return data]
     C -->|Failure| E["Set ipcDisabled = true"]
     E --> F["fetch(/api/name)"]
     B -->|No| F
-    F --> D
-```
+    F --> D`} />
 
 ### Behavior
 
