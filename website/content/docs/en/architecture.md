@@ -7,33 +7,9 @@ Argus is a local-only, zero-auth monitoring tool that collects OpenTelemetry dat
 
 ## 1. System Overview
 
-<Mermaid chart={`graph TB
-  subgraph "AI Coding Agents"
-    CC[Claude Code]
-    CX[Codex CLI]
-    GM[Gemini CLI]
-  end
-
-  subgraph "Argus"
-    direction TB
-    V1["/v1/logs<br/>(OTLP standard)"]
-    API["/api/ingest<br/>(Next.js API Route)"]
-    DB[(SQLite<br/>WAL mode)]
-    QE["Query Engine<br/>(queries.ts)"]
-    SE["Suggestion Engine<br/>(suggestions.ts)"]
-    CT["Config Tracker<br/>(Git diff)"]
-    UI["Dashboard<br/>(Next.js App Router)"]
-  end
-
-  CC -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  CX -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  GM -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  V1 -->|"proxy"| API
-  API -->|"INSERT"| DB
-  DB --> QE
-  QE --> UI
-  SE --> UI
-  CT -->|"git log"| UI`} />
+<Mermaid>
+{"graph TB\n  subgraph \"AI Coding Agents\"\n    CC[Claude Code]\n    CX[Codex CLI]\n    GM[Gemini CLI]\n  end\n\n  subgraph \"Argus\"\n    direction TB\n    V1[\"/v1/logs<br/>(OTLP standard)\"]\n    API[\"/api/ingest<br/>(Next.js API Route)\"]\n    DB[(SQLite<br/>WAL mode)]\n    QE[\"Query Engine<br/>(queries.ts)\"]\n    SE[\"Suggestion Engine<br/>(suggestions.ts)\"]\n    CT[\"Config Tracker<br/>(Git diff)\"]\n    UI[\"Dashboard<br/>(Next.js App Router)\"]\n  end\n\n  CC -->|\"OTLP HTTP<br/>JSON / Protobuf\"| V1\n  CX -->|\"OTLP HTTP<br/>JSON / Protobuf\"| V1\n  GM -->|\"OTLP HTTP<br/>JSON / Protobuf\"| V1\n  V1 -->|\"proxy\"| API\n  API -->|\"INSERT\"| DB\n  DB --> QE\n  QE --> UI\n  SE --> UI\n  CT -->|\"git log\"| UI"}
+</Mermaid>
 
 ### Key Design Decisions
 
@@ -46,26 +22,9 @@ Argus is a local-only, zero-auth monitoring tool that collects OpenTelemetry dat
 
 ### Ingestion Pipeline
 
-<Mermaid chart={`sequenceDiagram
-    participant Agent as AI Agent
-    participant V1 as /v1/logs
-    participant Ingest as /api/ingest
-    participant DB as SQLite
-
-    Agent->>V1: POST OTLP (JSON or Protobuf)
-    V1->>V1: Detect format (JSON vs Protobuf)
-    V1->>V1: Decode Protobuf → JSON (if needed)
-    V1->>Ingest: Proxy as JSON
-
-    Ingest->>Ingest: Extract resource attributes
-    Ingest->>Ingest: detectAgentType(service.name)
-    Ingest->>Ingest: normalizeEventName(event.name)
-    Ingest->>Ingest: normalizeModelId(model)
-    Ingest->>Ingest: calculateCost (pricing_model lookup)
-
-    Ingest->>DB: INSERT INTO agent_logs (transaction)
-    Ingest->>DB: INSERT INTO tool_details (orchestration tools)
-    Ingest-->>Agent: { accepted: N }`} />
+<Mermaid>
+{"sequenceDiagram\n    participant Agent as AI Agent\n    participant V1 as /v1/logs\n    participant Ingest as /api/ingest\n    participant DB as SQLite\n\n    Agent->>V1: POST OTLP (JSON or Protobuf)\n    V1->>V1: Detect format (JSON vs Protobuf)\n    V1->>V1: Decode Protobuf → JSON (if needed)\n    V1->>Ingest: Proxy as JSON\n\n    Ingest->>Ingest: Extract resource attributes\n    Ingest->>Ingest: detectAgentType(service.name)\n    Ingest->>Ingest: normalizeEventName(event.name)\n    Ingest->>Ingest: normalizeModelId(model)\n    Ingest->>Ingest: calculateCost (pricing_model lookup)\n\n    Ingest->>DB: INSERT INTO agent_logs (transaction)\n    Ingest->>DB: INSERT INTO tool_details (orchestration tools)\n    Ingest-->>Agent: { accepted: N }"}
+</Mermaid>
 
 ### OTLP Endpoints
 
@@ -247,91 +206,17 @@ App-level metadata (key-value store).
 
 ### Entity Relationship
 
-<Mermaid chart={`erDiagram
-    agent_logs ||--o{ tool_details : "session_id"
-    agent_logs }o--|| pricing_model : "model → model_id"
-    agent_logs }o--o| project_registry : "project_name"
-    config_snapshots }o--|| agent_logs : "agent_type"
-
-    agent_logs {
-        int id PK
-        text timestamp
-        text agent_type
-        text event_name
-        text session_id
-        text model
-        int input_tokens
-        int output_tokens
-        int reasoning_tokens
-        real cost_usd
-        text tool_name
-        text project_name
-    }
-
-    pricing_model {
-        text model_id PK
-        text effective_date PK
-        text agent_type
-        real input_per_mtok
-        real output_per_mtok
-    }
-
-    tool_details {
-        int id PK
-        text session_id FK
-        text tool_name
-        text detail_name
-        text detail_type
-        text agent_type
-    }
-
-    project_registry {
-        int id PK
-        text project_name UK
-        text project_path
-        text created_at
-    }
-
-    app_meta {
-        text key PK
-        text value
-    }
-
-    config_snapshots {
-        int id PK
-        text agent_type
-        text file_path
-        text content_hash
-    }`} />
+<Mermaid>
+{"erDiagram\n    agent_logs ||--o{ tool_details : \"session_id\"\n    agent_logs }o--|| pricing_model : \"model → model_id\"\n    agent_logs }o--o| project_registry : \"project_name\"\n    config_snapshots }o--|| agent_logs : \"agent_type\"\n\n    agent_logs {\n        int id PK\n        text timestamp\n        text agent_type\n        text event_name\n        text session_id\n        text model\n        int input_tokens\n        int output_tokens\n        int reasoning_tokens\n        real cost_usd\n        text tool_name\n        text project_name\n    }\n\n    pricing_model {\n        text model_id PK\n        text effective_date PK\n        text agent_type\n        real input_per_mtok\n        real output_per_mtok\n    }\n\n    tool_details {\n        int id PK\n        text session_id FK\n        text tool_name\n        text detail_name\n        text detail_type\n        text agent_type\n    }\n\n    project_registry {\n        int id PK\n        text project_name UK\n        text project_path\n        text created_at\n    }\n\n    app_meta {\n        text key PK\n        text value\n    }\n\n    config_snapshots {\n        int id PK\n        text agent_type\n        text file_path\n        text content_hash\n    }"}
+</Mermaid>
 
 ## 4. Electron Architecture
 
 Argus runs as both a web application (`pnpm dev`) and a desktop application (`pnpm electron:dev`).
 
-<Mermaid chart={`graph LR
-  subgraph "Electron Main Process"
-    M["main.ts<br/>(app lifecycle)"]
-    IPC["ipc-handlers.ts<br/>(query router)"]
-    NS["Next.js Server<br/>(spawned child process)"]
-    DB[(SQLite)]
-    TR[System Tray]
-  end
-
-  subgraph "Electron Renderer Process"
-    P["preload.ts<br/>(context bridge)"]
-    DC["data-client.ts<br/>(IPC / HTTP adapter)"]
-    UI["React Pages<br/>(Next.js App Router)"]
-  end
-
-  M --> NS
-  M --> TR
-  M --> IPC
-  IPC --> DB
-
-  UI --> DC
-  DC -->|"IPC (Electron)"| P
-  P -->|"ipcRenderer.invoke"| IPC
-  DC -->|"HTTP fallback"| NS`} />
+<Mermaid>
+{"graph LR\n  subgraph \"Electron Main Process\"\n    M[\"main.ts<br/>(app lifecycle)\"]\n    IPC[\"ipc-handlers.ts<br/>(query router)\"]\n    NS[\"Next.js Server<br/>(spawned child process)\"]\n    DB[(SQLite)]\n    TR[System Tray]\n  end\n\n  subgraph \"Electron Renderer Process\"\n    P[\"preload.ts<br/>(context bridge)\"]\n    DC[\"data-client.ts<br/>(IPC / HTTP adapter)\"]\n    UI[\"React Pages<br/>(Next.js App Router)\"]\n  end\n\n  M --> NS\n  M --> TR\n  M --> IPC\n  IPC --> DB\n\n  UI --> DC\n  DC -->|\"IPC (Electron)\"| P\n  P -->|\"ipcRenderer.invoke\"| IPC\n  DC -->|\"HTTP fallback\"| NS"}
+</Mermaid>
 
 ### Lifecycle
 
@@ -373,14 +258,9 @@ The `ipc-handlers.ts` maps query names to the same functions used by API routes:
 
 `data-client.ts` provides a unified data access layer that works in both web and Electron environments.
 
-<Mermaid chart={`flowchart TD
-    A["dataClient.query(name, params)"] --> B{isElectron?}
-    B -->|Yes| C["window.electronAPI.query()"]
-    C -->|Success| D[Return data]
-    C -->|Failure| E["Set ipcDisabled = true"]
-    E --> F["fetch(/api/name)"]
-    B -->|No| F
-    F --> D`} />
+<Mermaid>
+{"flowchart TD\n    A[\"dataClient.query(name, params)\"] --> B{isElectron?}\n    B -->|Yes| C[\"window.electronAPI.query()\"]\n    C -->|Success| D[Return data]\n    C -->|Failure| E[\"Set ipcDisabled = true\"]\n    E --> F[\"fetch(/api/name)\"]\n    B -->|No| F\n    F --> D"}
+</Mermaid>
 
 ### Behavior
 
