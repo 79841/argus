@@ -51,6 +51,10 @@ export function getMdxComponents(): MDXComponents {
       </blockquote>
     ),
     code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
+      if (className === 'language-mermaid') {
+        const code = typeof children === 'string' ? children.trimEnd() : ''
+        return <MermaidDiagram code={code} />
+      }
       const isInline = !className
       if (isInline) {
         return (
@@ -62,14 +66,13 @@ export function getMdxComponents(): MDXComponents {
       return <code className={className}>{children}</code>
     },
     pre: ({ children }: { children?: React.ReactNode }) => {
+      // If the child is a MermaidDiagram (from code component), render without wrapper
       const codeEl = children as React.ReactElement<{ children?: string; className?: string }>
+      if (codeEl?.props?.className === 'language-mermaid') {
+        return <>{children}</>
+      }
       const rawCode = codeEl?.props?.children ?? ''
       const code = typeof rawCode === 'string' ? rawCode.trimEnd() : ''
-      const lang = codeEl?.props?.className?.replace('language-', '') ?? ''
-
-      if (lang === 'mermaid') {
-        return <MermaidDiagram code={code} />
-      }
 
       return (
         <HighlightedCode html={null} code={code}>
