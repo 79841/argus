@@ -7,9 +7,7 @@ Argus는 AI 코딩 에이전트를 위한 로컬 모니터링 대시보드입니
 
 ## 작동 방식
 
-<Mermaid>
-{"flowchart LR\n    A[Claude Code / Codex CLI / Gemini CLI] -- OTLP HTTP --> B[Argus 데스크톱 앱]\n    B -- 저장 --> C[(SQLite)]\n    C -- 쿼리 --> D[대시보드]"}
-</Mermaid>
+<Mermaid chart="flowchart LR\nA[Claude Code / Codex CLI / Gemini CLI] -- OTLP HTTP --> B[Argus 데스크톱 앱]\nB -- 저장 --> C[(SQLite)]\nC -- 쿼리 --> D[대시보드]" />
 
 1. **AI 에이전트**가 OTLP를 통해 텔레메트리 이벤트(API 요청, 도구 사용, 비용)를 전송합니다
 2. **Argus**가 이를 수신하여 로컬 SQLite 데이터베이스에 저장합니다

@@ -7,9 +7,7 @@ Argus is a local monitoring dashboard for AI coding agents. It receives OpenTele
 
 ## How It Works
 
-<Mermaid>
-{"flowchart LR\n    A[Claude Code / Codex CLI / Gemini CLI] -- OTLP HTTP --> B[Argus Desktop App]\n    B -- Store --> C[(SQLite)]\n    C -- Query --> D[Dashboard]"}
-</Mermaid>
+<Mermaid chart="flowchart LR\nA[Claude Code / Codex CLI / Gemini CLI] -- OTLP HTTP --> B[Argus Desktop App]\nB -- Store --> C[(SQLite)]\nC -- Query --> D[Dashboard]" />
 
 1. **AI agents** emit telemetry events (API requests, tool usage, costs) via OTLP
 2. **Argus** receives and stores them in a local SQLite database

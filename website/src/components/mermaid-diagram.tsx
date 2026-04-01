@@ -20,7 +20,9 @@ function extractText(node: ReactNode): string {
 }
 
 export function MermaidDiagram({ chart, children }: MermaidDiagramProps) {
-  const code = chart || extractText(children);
+  // chart prop may contain literal \n — convert to real newlines
+  const raw = chart || extractText(children);
+  const code = raw.replace(/\\n/g, "\n");
   const containerRef = useRef<HTMLDivElement>(null);
   const [html, setHtml] = useState<string>("");
   const [error, setError] = useState<string>("");
