@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type MermaidDiagramProps = {
   chart?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 };
 
+/** Recursively extract text from React children */
+function extractText(node: ReactNode): string {
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (!node) return "";
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (typeof node === "object" && "props" in node) {
+    return extractText((node as { props: { children?: ReactNode } }).props.children);
+  }
+  return "";
+}
+
 export function MermaidDiagram({ chart, children }: MermaidDiagramProps) {
-  const code = chart || (typeof children === "string" ? children : "");
+  const code = chart || extractText(children);
   const containerRef = useRef<HTMLDivElement>(null);
   const [html, setHtml] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -60,9 +72,6 @@ export function MermaidDiagram({ chart, children }: MermaidDiagramProps) {
         </summary>
         <pre className="mt-2 overflow-x-auto text-xs text-red-600 dark:text-red-400">
           {error}
-        </pre>
-        <pre className="mt-2 overflow-x-auto text-xs text-surface-600 dark:text-surface-400">
-          {code}
         </pre>
       </details>
     );
