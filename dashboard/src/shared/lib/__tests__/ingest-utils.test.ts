@@ -5,6 +5,7 @@ import {
   getTokenAttr, getSessionId, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
   getStatusCode, extractProjectFromArgs, getToolCategory,
+  extractFilePathFromToolParams, matchProjectByPath,
 } from '../ingest-utils'
 import type { KeyValue } from '../ingest-utils'
 import { initSchema } from '../db'
@@ -527,5 +528,71 @@ describe('calculateCost', () => {
     // 1M reasoning tokens at output rate = $10.0
     const cost = calculateCost(db, 'gemini-2.5-pro', 0, 0, 0, 1_000_000)
     expect(cost).toBe(10.0)
+  })
+})
+
+describe('extractFilePathFromToolParams', () => {
+  it('tool_parameters에서 file_path 추출', () => {
+    const attrs = [mkAttr('tool_parameters', JSON.stringify({ file_path: '/Users/me/project/src/app.ts' }))]
+    expect(extractFilePathFromToolParams(attrs)).toBe('/Users/me/project/src/app.ts')
+  })
+
+  it('tool_input에서 path 추출', () => {
+    const attrs = [mkAttr('tool_input', JSON.stringify({ path: '/Users/me/project/README.md' }))]
+    expect(extractFilePathFromToolParams(attrs)).toBe('/Users/me/project/README.md')
+  })
+
+  it('command 필드는 무시 (shell 명령어 오매칭 방지)', () => {
+    const attrs = [mkAttr('tool_parameters', JSON.stringify({ command: '/usr/bin/ls' }))]
+    expect(extractFilePathFromToolParams(attrs)).toBe('')
+  })
+
+  it('상대 경로는 무시', () => {
+    const attrs = [mkAttr('tool_parameters', JSON.stringify({ file_path: 'src/app.ts' }))]
+    expect(extractFilePathFromToolParams(attrs)).toBe('')
+  })
+
+  it('attrs가 없으면 빈 문자열', () => {
+    expect(extractFilePathFromToolParams(undefined)).toBe('')
+  })
+
+  it('유효하지 않은 JSON은 빈 문자열', () => {
+    const attrs = [mkAttr('tool_parameters', 'not-json')]
+    expect(extractFilePathFromToolParams(attrs)).toBe('')
+  })
+})
+
+describe('matchProjectByPath', () => {
+  const registry = [
+    { project_name: 'argus', project_path: '/Users/me/Desktop/code/argus' },
+    { project_name: 'webapp', project_path: '/Users/me/Desktop/code/webapp' },
+  ]
+
+  it('파일 경로가 프로젝트 경로에 포함되면 매칭', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/code/argus/src/app.ts', registry)).toBe('argus')
+  })
+
+  it('다른 프로젝트 매칭', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/code/webapp/index.ts', registry)).toBe('webapp')
+  })
+
+  it('매칭되지 않는 경로는 빈 문자열', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/other/file.ts', registry)).toBe('')
+  })
+
+  it('빈 파일 경로는 빈 문자열', () => {
+    expect(matchProjectByPath('', registry)).toBe('')
+  })
+
+  it('빈 레지스트리는 빈 문자열', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/code/argus/src/app.ts', [])).toBe('')
+  })
+
+  it('프로젝트 경로 자체와 일치해도 매칭', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/code/argus', registry)).toBe('argus')
+  })
+
+  it('프로젝트 경로 접두사만 같고 디렉토리가 다르면 매칭 안 됨', () => {
+    expect(matchProjectByPath('/Users/me/Desktop/code/argus-v2/src/app.ts', registry)).toBe('')
   })
 })
