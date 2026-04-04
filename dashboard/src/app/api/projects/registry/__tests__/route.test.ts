@@ -145,3 +145,77 @@ describe('DELETE /api/projects/registry', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('기존 세션 backfill', () => {
+  it('프로젝트 등록 시 매칭되는 기존 세션의 project_name을 backfill', async () => {
+    // 기존 세션 데이터 삽입 (project_name 비어있음, log_attributes에 파일 경로 포함)
+    testDb.prepare(`
+      INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, model,
+        input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
+        reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success, project_name, log_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      new Date().toISOString(), 'claude', 'tool_result', 'sess-old', '', 0, 0, 0, 0, 0, 0, 100,
+      'Read', 1, '',
+      JSON.stringify({ 'tool_parameters': JSON.stringify({ file_path: `${tmpDir}/src/app.ts` }) })
+    )
+
+    // 같은 세션의 api_request (파일 경로 없음)
+    testDb.prepare(`
+      INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, model,
+        input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
+        reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success, project_name, log_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      new Date().toISOString(), 'claude', 'api_request', 'sess-old', 'claude-sonnet-4-6',
+      100, 50, 0, 0, 0, 0.01, 1000, '', null, '', '{}'
+    )
+
+    // 프로젝트 등록
+    const res = await POST(mkPostRequest({ name: 'my-proj', path: tmpDir }))
+    const json = await res.json()
+    expect(json.backfilled).toBe(1)
+
+    // 기존 세션의 모든 이벤트가 backfill되었는지 확인
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-old'").all() as { project_name: string }[]
+    expect(logs).toHaveLength(2)
+    expect(logs[0].project_name).toBe('my-proj')
+    expect(logs[1].project_name).toBe('my-proj')
+  })
+
+  it('매칭되지 않는 세션은 backfill하지 않음', async () => {
+    testDb.prepare(`
+      INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, model,
+        input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
+        reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success, project_name, log_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      new Date().toISOString(), 'claude', 'tool_result', 'sess-other', '', 0, 0, 0, 0, 0, 0, 100,
+      'Read', 1, '',
+      JSON.stringify({ 'tool_parameters': JSON.stringify({ file_path: '/other/path/src/app.ts' }) })
+    )
+
+    await POST(mkPostRequest({ name: 'my-proj', path: tmpDir }))
+
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-other'").all() as { project_name: string }[]
+    expect(logs[0].project_name).toBe('')
+  })
+
+  it('이미 project_name이 있는 이벤트는 덮어쓰지 않음', async () => {
+    testDb.prepare(`
+      INSERT INTO agent_logs (timestamp, agent_type, event_name, session_id, model,
+        input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
+        reasoning_tokens, cost_usd, duration_ms, tool_name, tool_success, project_name, log_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      new Date().toISOString(), 'claude', 'tool_result', 'sess-existing', '', 0, 0, 0, 0, 0, 0, 100,
+      'Read', 1, 'other-proj',
+      JSON.stringify({ 'tool_parameters': JSON.stringify({ file_path: `${tmpDir}/src/app.ts` }) })
+    )
+
+    await POST(mkPostRequest({ name: 'my-proj', path: tmpDir }))
+
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-existing'").all() as { project_name: string }[]
+    expect(logs[0].project_name).toBe('other-proj')
+  })
+})
