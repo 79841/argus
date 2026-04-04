@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
       }
       return registry
     }
+    const selectSessionProject = db.prepare(
+      "SELECT project_name FROM agent_logs WHERE session_id = ? AND project_name != '' LIMIT 1"
+    )
 
     const tx = db.transaction(() => {
       for (const resourceLog of data.resourceLogs ?? []) {
@@ -94,15 +97,21 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            if (!resolvedProject) {
-              if (sessionId && sessionProjects.has(sessionId)) {
+            if (!resolvedProject && sessionId) {
+              if (sessionProjects.has(sessionId)) {
                 resolvedProject = sessionProjects.get(sessionId)!
               } else {
                 const filePath = extractFilePathFromToolParams(attrs)
                 const matched = matchProjectByPath(filePath, getRegistry())
-                if (matched && sessionId) {
+                if (matched) {
                   resolvedProject = matched
                   sessionProjects.set(sessionId, matched)
+                } else {
+                  const existing = selectSessionProject.get(sessionId) as { project_name: string } | undefined
+                  if (existing) {
+                    resolvedProject = existing.project_name
+                    sessionProjects.set(sessionId, existing.project_name)
+                  }
                 }
               }
             }

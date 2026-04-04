@@ -706,4 +706,48 @@ describe('project_registry 기반 자동 식별', () => {
     expect(after[0].project_name).toBe('argus')
     expect(after[1].project_name).toBe('argus')
   })
+
+  it('별도 배치로 들어온 이벤트도 DB 세션 조회로 프로젝트 식별', async () => {
+    // 1차: project.name 포함 이벤트 삽입
+    const payload1: OtlpLogsRequest = {
+      resourceLogs: [{
+        resource: {
+          attributes: [
+            mkAttr('service.name', 'claude_desktop'),
+            mkAttr('project.name', 'ddubuk'),
+          ],
+        },
+        scopeLogs: [{
+          logRecords: [{
+            timeUnixNano: '1710000000000000000',
+            severityText: 'INFO',
+            body: { stringValue: '' },
+            attributes: [
+              mkAttr('event.name', 'claude_code.api_request'),
+              mkAttr('session.id', 'sess-existing-proj'),
+              mkAttr('model', 'claude-sonnet-4-6'),
+              mkIntAttr('input_tokens', 100),
+              mkIntAttr('output_tokens', 50),
+            ],
+          }],
+        }],
+      }],
+    }
+    await POST(mkRequest(payload1) as never)
+
+    // 2차: 같은 세션, project.name 없이 별도 배치로 이벤트 도착
+    const payload2 = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.api_request'),
+      mkAttr('session.id', 'sess-existing-proj'),
+      mkAttr('model', 'claude-sonnet-4-6'),
+      mkIntAttr('input_tokens', 200),
+      mkIntAttr('output_tokens', 100),
+    ])
+    await POST(mkRequest(payload2) as never)
+
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-existing-proj' ORDER BY id").all() as { project_name: string }[]
+    expect(logs).toHaveLength(2)
+    expect(logs[0].project_name).toBe('ddubuk')
+    expect(logs[1].project_name).toBe('ddubuk')
+  })
 })
