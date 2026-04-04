@@ -186,7 +186,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.detail.back': '← 세션 목록',
     'sessions.detail.openDetail': '상세 페이지 열기',
     'sessions.detail.costChart': '프롬프트별 비용 분포',
-    'sessions.detail.noProject': '프로젝트 없음',
+    'sessions.detail.unknownProject': '알 수 없음',
     'sessions.detail.promptNum': '프롬프트 #',
     'sessions.detail.toolCalls': '도구 호출',
 
@@ -810,7 +810,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'sessions.detail.back': '← Sessions',
     'sessions.detail.openDetail': 'Open detail page',
     'sessions.detail.costChart': 'Cost by Prompt',
-    'sessions.detail.noProject': 'No project',
+    'sessions.detail.unknownProject': 'Unknown',
     'sessions.detail.promptNum': 'Prompt #',
     'sessions.detail.toolCalls': 'tool calls',
 

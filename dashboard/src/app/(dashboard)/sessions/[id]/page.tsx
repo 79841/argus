@@ -61,7 +61,7 @@ export default function SessionDetailPage() {
         <button type="button" onClick={() => router.push('/sessions')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
           {t('sessions.detail.back')}
         </button>
-        <span className="text-sm font-medium">{summary.project_name || t('sessions.detail.noProject')}</span>
+        <span className="text-sm font-medium">{summary.project_name || t('sessions.detail.unknownProject')}</span>
       </FilterBar>
 
       <div className="flex-1 overflow-auto px-4 py-4">

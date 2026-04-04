@@ -31,6 +31,12 @@ const proxyMutate = async (name: string, body?: unknown): Promise<unknown> => {
   return res.json()
 }
 
+const proxyDelete = async (name: string, params?: QueryParams): Promise<unknown> => {
+  const res = await fetch(buildUrl(name, params), { method: 'DELETE' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
 export const registerIpcHandlers = (): void => {
   ipcMain.handle('db:query', async (_event, name: string, params?: QueryParams) => {
     try {
@@ -47,6 +53,14 @@ export const registerIpcHandlers = (): void => {
       return await handleMutate(name, body)
     } catch (err) {
       throw new Error(`IPC mutate "${name}" failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  })
+
+  ipcMain.handle('db:delete', async (_event, name: string, params?: QueryParams) => {
+    try {
+      return await proxyDelete(name, params)
+    } catch (err) {
+      throw new Error(`IPC delete "${name}" failed: ${err instanceof Error ? err.message : String(err)}`)
     }
   })
 }

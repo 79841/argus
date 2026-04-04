@@ -73,7 +73,7 @@ export const SessionListItem = ({ session: s, selected, cacheRate, onSelect }: S
         </div>
         {/* Row 2: project + duration */}
         <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="truncate max-w-[120px]">{s.project_name || t('sessions.detail.noProject')}</span>
+          <span className="truncate max-w-[120px]">{s.project_name || t('sessions.detail.unknownProject')}</span>
           <span className="text-border">·</span>
           <span>{formatDuration(s.duration_ms)}</span>
         </div>
