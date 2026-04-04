@@ -65,11 +65,6 @@ export function getMdxComponents(): MDXComponents {
       const codeEl = children as React.ReactElement<{ children?: string; className?: string }>
       const rawCode = codeEl?.props?.children ?? ''
       const code = typeof rawCode === 'string' ? rawCode.trimEnd() : ''
-      const lang = codeEl?.props?.className?.replace('language-', '') ?? ''
-
-      if (lang === 'mermaid') {
-        return <MermaidDiagram code={code} />
-      }
 
       return (
         <HighlightedCode html={null} code={code}>
@@ -141,6 +136,9 @@ export function getMdxComponents(): MDXComponents {
         </span>
       )
     },
+    Mermaid: ({ chart, children }: { chart?: string; children?: React.ReactNode }) => (
+      <MermaidDiagram chart={chart ?? ''}>{ children }</MermaidDiagram>
+    ),
     DownloadCards: () => <DownloadCards />,
     hr: () => <hr className="my-8 border-surface-200 dark:border-surface-700" />,
     strong: ({ children }: { children?: React.ReactNode }) => (

@@ -578,3 +578,176 @@ describe('multi-agent payload', () => {
     expect(agents).toEqual(['claude', 'codex', 'gemini'])
   })
 })
+
+describe('project_registry 기반 자동 식별', () => {
+  it('tool_parameters의 file_path로 프로젝트 매칭', async () => {
+    testDb.prepare('INSERT INTO project_registry (project_name, project_path) VALUES (?, ?)').run('my-project', '/Users/me/code/my-project')
+
+    const payload = mkPayload('claude_desktop', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'sess-registry'),
+      mkAttr('tool_name', 'Read'),
+      mkAttr('tool_parameters', JSON.stringify({ file_path: '/Users/me/code/my-project/src/app.ts' })),
+      mkAttr('success', 'true'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+    const logs = getLogs()
+    expect(logs[0].project_name).toBe('my-project')
+  })
+
+  it('같은 세션의 후속 이벤트도 프로젝트 이름으로 backfill', async () => {
+    testDb.prepare('INSERT INTO project_registry (project_name, project_path) VALUES (?, ?)').run('my-project', '/Users/me/code/my-project')
+
+    const payload: OtlpLogsRequest = {
+      resourceLogs: [{
+        resource: {
+          attributes: [mkAttr('service.name', 'claude_desktop')],
+        },
+        scopeLogs: [{
+          logRecords: [
+            {
+              timeUnixNano: '1710000000000000000',
+              severityText: 'INFO',
+              body: { stringValue: '' },
+              attributes: [
+                mkAttr('event.name', 'claude_code.api_request'),
+                mkAttr('session.id', 'sess-backfill'),
+                mkAttr('model', 'claude-sonnet-4-6'),
+                mkIntAttr('input_tokens', 100),
+                mkIntAttr('output_tokens', 50),
+              ],
+            },
+            {
+              timeUnixNano: '1710000001000000000',
+              severityText: 'INFO',
+              body: { stringValue: '' },
+              attributes: [
+                mkAttr('event.name', 'claude_code.tool_result'),
+                mkAttr('session.id', 'sess-backfill'),
+                mkAttr('tool_name', 'Edit'),
+                mkAttr('tool_parameters', JSON.stringify({ file_path: '/Users/me/code/my-project/src/main.ts' })),
+                mkAttr('success', 'true'),
+              ],
+            },
+          ],
+        }],
+      }],
+    }
+
+    await POST(mkRequest(payload) as never)
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-backfill' ORDER BY id").all() as { project_name: string }[]
+    expect(logs).toHaveLength(2)
+    expect(logs[0].project_name).toBe('my-project')
+    expect(logs[1].project_name).toBe('my-project')
+  })
+
+  it('매칭되지 않으면 빈 문자열 유지', async () => {
+    testDb.prepare('INSERT INTO project_registry (project_name, project_path) VALUES (?, ?)').run('other', '/Users/me/code/other')
+
+    const payload = mkPayload('claude_desktop', [
+      mkAttr('event.name', 'claude_code.tool_result'),
+      mkAttr('session.id', 'sess-nomatch'),
+      mkAttr('tool_name', 'Read'),
+      mkAttr('tool_parameters', JSON.stringify({ file_path: '/Users/me/code/unregistered/src/app.ts' })),
+      mkAttr('success', 'true'),
+    ])
+
+    await POST(mkRequest(payload) as never)
+    const logs = getLogs()
+    expect(logs[0].project_name).toBe('')
+  })
+
+  it('기존 Unknown 세션에 프로젝트 정보가 있는 새 이벤트가 오면 해당 세션을 backfill', async () => {
+    // 1차 ingest: project.name 없이 이벤트 삽입
+    const payload1 = mkPayload('claude_desktop', [
+      mkAttr('event.name', 'claude_code.api_request'),
+      mkAttr('session.id', 'sess-unknown'),
+      mkAttr('model', 'claude-sonnet-4-6'),
+      mkIntAttr('input_tokens', 100),
+      mkIntAttr('output_tokens', 50),
+    ])
+    await POST(mkRequest(payload1) as never)
+
+    // 확인: project_name이 비어있음
+    const before = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-unknown'").all() as { project_name: string }[]
+    expect(before[0].project_name).toBe('')
+
+    // 2차 ingest: 같은 세션에 project.name이 포함된 이벤트
+    const payload2: OtlpLogsRequest = {
+      resourceLogs: [{
+        resource: {
+          attributes: [
+            mkAttr('service.name', 'claude_desktop'),
+            mkAttr('project.name', 'argus'),
+          ],
+        },
+        scopeLogs: [{
+          logRecords: [{
+            timeUnixNano: '1710000002000000000',
+            severityText: 'INFO',
+            body: { stringValue: '' },
+            attributes: [
+              mkAttr('event.name', 'claude_code.api_request'),
+              mkAttr('session.id', 'sess-unknown'),
+              mkAttr('model', 'claude-sonnet-4-6'),
+              mkIntAttr('input_tokens', 200),
+              mkIntAttr('output_tokens', 100),
+            ],
+          }],
+        }],
+      }],
+    }
+    await POST(mkRequest(payload2) as never)
+
+    // 기존 이벤트도 project_name이 업데이트되었는지 확인
+    const after = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-unknown' ORDER BY id").all() as { project_name: string }[]
+    expect(after).toHaveLength(2)
+    expect(after[0].project_name).toBe('argus')
+    expect(after[1].project_name).toBe('argus')
+  })
+
+  it('별도 배치로 들어온 이벤트도 DB 세션 조회로 프로젝트 식별', async () => {
+    // 1차: project.name 포함 이벤트 삽입
+    const payload1: OtlpLogsRequest = {
+      resourceLogs: [{
+        resource: {
+          attributes: [
+            mkAttr('service.name', 'claude_desktop'),
+            mkAttr('project.name', 'ddubuk'),
+          ],
+        },
+        scopeLogs: [{
+          logRecords: [{
+            timeUnixNano: '1710000000000000000',
+            severityText: 'INFO',
+            body: { stringValue: '' },
+            attributes: [
+              mkAttr('event.name', 'claude_code.api_request'),
+              mkAttr('session.id', 'sess-existing-proj'),
+              mkAttr('model', 'claude-sonnet-4-6'),
+              mkIntAttr('input_tokens', 100),
+              mkIntAttr('output_tokens', 50),
+            ],
+          }],
+        }],
+      }],
+    }
+    await POST(mkRequest(payload1) as never)
+
+    // 2차: 같은 세션, project.name 없이 별도 배치로 이벤트 도착
+    const payload2 = mkPayload('claude-code', [
+      mkAttr('event.name', 'claude_code.api_request'),
+      mkAttr('session.id', 'sess-existing-proj'),
+      mkAttr('model', 'claude-sonnet-4-6'),
+      mkIntAttr('input_tokens', 200),
+      mkIntAttr('output_tokens', 100),
+    ])
+    await POST(mkRequest(payload2) as never)
+
+    const logs = testDb.prepare("SELECT project_name FROM agent_logs WHERE session_id = 'sess-existing-proj' ORDER BY id").all() as { project_name: string }[]
+    expect(logs).toHaveLength(2)
+    expect(logs[0].project_name).toBe('ddubuk')
+    expect(logs[1].project_name).toBe('ddubuk')
+  })
+})

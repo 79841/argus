@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('db:query', name, params),
   mutate: (name: string, body?: unknown) =>
     ipcRenderer.invoke('db:mutate', name, body),
+  delete: (name: string, params?: Record<string, unknown>) =>
+    ipcRenderer.invoke('db:delete', name, params),
   captureScreenshot: (savePath: string) =>
     ipcRenderer.invoke('capture-screenshot', savePath),
   selectFolder: (title?: string) =>

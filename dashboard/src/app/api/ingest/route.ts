@@ -6,7 +6,7 @@ import {
   getVal, getAttr, getNumAttr, detectAgentType, normalizeEventName,
   getTokenAttr, getSessionId, getToolParams, normalizeModelId, calculateCost,
   parseTimestamp, attrsToJson, extractMcpServer, getErrorMessage,
-  extractProjectFromArgs,
+  extractProjectFromArgs, extractFilePathFromToolParams, matchProjectByPath,
 } from '@/shared/lib/ingest-utils'
 import type { OtlpLogsRequest } from '@/shared/lib/ingest-utils'
 
@@ -42,6 +42,16 @@ export async function POST(request: NextRequest) {
     let count = 0
     const sessionProjects = new Map<string, string>()
     const codexSessions = new Set<string>()
+    let registry: { project_name: string; project_path: string }[] | null = null
+    const getRegistry = () => {
+      if (registry === null) {
+        registry = db.prepare('SELECT project_name, project_path FROM project_registry').all() as { project_name: string; project_path: string }[]
+      }
+      return registry
+    }
+    const selectSessionProject = db.prepare(
+      "SELECT project_name FROM agent_logs WHERE session_id = ? AND project_name != '' LIMIT 1"
+    )
 
     const tx = db.transaction(() => {
       for (const resourceLog of data.resourceLogs ?? []) {
@@ -73,8 +83,10 @@ export async function POST(request: NextRequest) {
               costUsd = calculateCost(db, model, inputTokens, outputTokens, cacheReadTokens, reasoningTokens)
             }
 
-            // Extract project from Codex tool arguments workdir
             let resolvedProject = projectName
+            if (resolvedProject && sessionId && !sessionProjects.has(sessionId)) {
+              sessionProjects.set(sessionId, resolvedProject)
+            }
             if (!resolvedProject && agentType === 'codex') {
               resolvedProject = extractProjectFromArgs(attrs)
               if (resolvedProject && sessionId) {
@@ -82,6 +94,25 @@ export async function POST(request: NextRequest) {
               }
               if (!resolvedProject && sessionId) {
                 resolvedProject = sessionProjects.get(sessionId) ?? ''
+              }
+            }
+
+            if (!resolvedProject && sessionId) {
+              if (sessionProjects.has(sessionId)) {
+                resolvedProject = sessionProjects.get(sessionId)!
+              } else {
+                const filePath = extractFilePathFromToolParams(attrs)
+                const matched = matchProjectByPath(filePath, getRegistry())
+                if (matched) {
+                  resolvedProject = matched
+                  sessionProjects.set(sessionId, matched)
+                } else {
+                  const existing = selectSessionProject.get(sessionId) as { project_name: string } | undefined
+                  if (existing) {
+                    resolvedProject = existing.project_name
+                    sessionProjects.set(sessionId, existing.project_name)
+                  }
+                }
               }
             }
 
@@ -237,10 +268,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Backfill project_name for Codex sessions where some events got the project
+      // Backfill project_name for sessions where some events got the project
       if (sessionProjects.size > 0) {
         const backfill = db.prepare(
-          "UPDATE agent_logs SET project_name = ? WHERE session_id = ? AND agent_type = 'codex' AND project_name = ''"
+          "UPDATE agent_logs SET project_name = ? WHERE session_id = ? AND project_name = ''"
         )
         for (const [sid, proj] of sessionProjects) {
           backfill.run(proj, sid)

@@ -256,3 +256,27 @@ export const extractProjectFromArgs = (attrs: KeyValue[] | undefined): string =>
   } catch { /* ignore */ }
   return ''
 }
+
+export const extractFilePathFromToolParams = (attrs: KeyValue[] | undefined): string => {
+  const params = getToolParams(attrs)
+  if (!params) return ''
+  try {
+    const parsed = JSON.parse(params) as Record<string, unknown>
+    const filePath = parsed.file_path ?? parsed.path
+    if (typeof filePath === 'string' && filePath.startsWith('/')) return filePath
+  } catch { /* ignore */ }
+  return ''
+}
+
+export const matchProjectByPath = (
+  filePath: string,
+  registry: { project_name: string; project_path: string }[],
+): string => {
+  if (!filePath) return ''
+  for (const entry of registry) {
+    if (filePath.startsWith(entry.project_path + '/') || filePath === entry.project_path) {
+      return entry.project_name
+    }
+  }
+  return ''
+}

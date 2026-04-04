@@ -1,5 +1,5 @@
-import { existsSync, cpSync, readdirSync, statSync } from 'node:fs'
-import { resolve, join, basename } from 'node:path'
+import { existsSync, cpSync, readdirSync } from 'node:fs'
+import { resolve, join } from 'node:path'
 
 /** Recursively find files by name */
 const findFiles = (dir, fileName, results = []) => {

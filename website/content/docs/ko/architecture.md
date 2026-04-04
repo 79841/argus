@@ -7,35 +7,7 @@ Argus는 AI 코딩 에이전트(Claude Code, Codex CLI, Gemini CLI)에서 OpenTe
 
 ## 1. 시스템 개요
 
-```mermaid
-graph TB
-  subgraph "AI Coding Agents"
-    CC[Claude Code]
-    CX[Codex CLI]
-    GM[Gemini CLI]
-  end
-
-  subgraph "Argus"
-    direction TB
-    V1["/v1/logs<br/>(OTLP standard)"]
-    API["/api/ingest<br/>(Next.js API Route)"]
-    DB[(SQLite<br/>WAL mode)]
-    QE["Query Engine<br/>(queries.ts)"]
-    SE["Suggestion Engine<br/>(suggestions.ts)"]
-    CT["Config Tracker<br/>(Git diff)"]
-    UI["Dashboard<br/>(Next.js App Router)"]
-  end
-
-  CC -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  CX -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  GM -->|"OTLP HTTP<br/>JSON / Protobuf"| V1
-  V1 -->|"proxy"| API
-  API -->|"INSERT"| DB
-  DB --> QE
-  QE --> UI
-  SE --> UI
-  CT -->|"git log"| UI
-```
+<Mermaid chart="graph TB\n  subgraph &quot;AI Coding Agents&quot;\n    CC[Claude Code]\n    CX[Codex CLI]\n    GM[Gemini CLI]\n  end\n\n  subgraph &quot;Argus&quot;\n    direction TB\n    V1[&quot;/v1/logs<br/>(OTLP standard)&quot;]\n    API[&quot;/api/ingest<br/>(Next.js API Route)&quot;]\n    DB[(SQLite<br/>WAL mode)]\n    QE[&quot;Query Engine<br/>(queries.ts)&quot;]\n    SE[&quot;Suggestion Engine<br/>(suggestions.ts)&quot;]\n    CT[&quot;Config Tracker<br/>(Git diff)&quot;]\n    UI[&quot;Dashboard<br/>(Next.js App Router)&quot;]\n  end\n\n  CC -->|&quot;OTLP HTTP<br/>JSON / Protobuf&quot;| V1\n  CX -->|&quot;OTLP HTTP<br/>JSON / Protobuf&quot;| V1\n  GM -->|&quot;OTLP HTTP<br/>JSON / Protobuf&quot;| V1\n  V1 -->|&quot;proxy&quot;| API\n  API -->|&quot;INSERT&quot;| DB\n  DB --> QE\n  QE --> UI\n  SE --> UI\n  CT -->|&quot;git log&quot;| UI" />
 
 ### 핵심 설계 결정
 
@@ -48,28 +20,7 @@ graph TB
 
 ### 수집 파이프라인
 
-```mermaid
-sequenceDiagram
-    participant Agent as AI Agent
-    participant V1 as /v1/logs
-    participant Ingest as /api/ingest
-    participant DB as SQLite
-
-    Agent->>V1: POST OTLP (JSON or Protobuf)
-    V1->>V1: Detect format (JSON vs Protobuf)
-    V1->>V1: Decode Protobuf → JSON (if needed)
-    V1->>Ingest: Proxy as JSON
-
-    Ingest->>Ingest: Extract resource attributes
-    Ingest->>Ingest: detectAgentType(service.name)
-    Ingest->>Ingest: normalizeEventName(event.name)
-    Ingest->>Ingest: normalizeModelId(model)
-    Ingest->>Ingest: calculateCost (pricing_model lookup)
-
-    Ingest->>DB: INSERT INTO agent_logs (transaction)
-    Ingest->>DB: INSERT INTO tool_details (orchestration tools)
-    Ingest-->>Agent: { accepted: N }
-```
+<Mermaid chart="sequenceDiagram\n    participant Agent as AI Agent\n    participant V1 as /v1/logs\n    participant Ingest as /api/ingest\n    participant DB as SQLite\n\n    Agent->>V1: POST OTLP (JSON or Protobuf)\n    V1->>V1: Detect format (JSON vs Protobuf)\n    V1->>V1: Decode Protobuf → JSON (if needed)\n    V1->>Ingest: Proxy as JSON\n\n    Ingest->>Ingest: Extract resource attributes\n    Ingest->>Ingest: detectAgentType(service.name)\n    Ingest->>Ingest: normalizeEventName(event.name)\n    Ingest->>Ingest: normalizeModelId(model)\n    Ingest->>Ingest: calculateCost (pricing_model lookup)\n\n    Ingest->>DB: INSERT INTO agent_logs (transaction)\n    Ingest->>DB: INSERT INTO tool_details (orchestration tools)\n    Ingest-->>Agent: { accepted: N }" />
 
 ### OTLP 엔드포인트
 
@@ -251,95 +202,13 @@ cost = (input_tokens * input_per_mtok
 
 ### 엔터티 관계
 
-```mermaid
-erDiagram
-    agent_logs ||--o{ tool_details : "session_id"
-    agent_logs }o--|| pricing_model : "model → model_id"
-    agent_logs }o--o| project_registry : "project_name"
-    config_snapshots }o--|| agent_logs : "agent_type"
-
-    agent_logs {
-        int id PK
-        text timestamp
-        text agent_type
-        text event_name
-        text session_id
-        text model
-        int input_tokens
-        int output_tokens
-        int reasoning_tokens
-        real cost_usd
-        text tool_name
-        text project_name
-    }
-
-    pricing_model {
-        text model_id PK
-        text effective_date PK
-        text agent_type
-        real input_per_mtok
-        real output_per_mtok
-    }
-
-    tool_details {
-        int id PK
-        text session_id FK
-        text tool_name
-        text detail_name
-        text detail_type
-        text agent_type
-    }
-
-    project_registry {
-        int id PK
-        text project_name UK
-        text project_path
-        text created_at
-    }
-
-    app_meta {
-        text key PK
-        text value
-    }
-
-    config_snapshots {
-        int id PK
-        text agent_type
-        text file_path
-        text content_hash
-    }
-```
+<Mermaid chart="erDiagram\n    agent_logs ||--o{ tool_details : &quot;session_id&quot;\n    agent_logs }o--|| pricing_model : &quot;model → model_id&quot;\n    agent_logs }o--o| project_registry : &quot;project_name&quot;\n    config_snapshots }o--|| agent_logs : &quot;agent_type&quot;\n\n    agent_logs {\n        int id PK\n        text timestamp\n        text agent_type\n        text event_name\n        text session_id\n        text model\n        int input_tokens\n        int output_tokens\n        int reasoning_tokens\n        real cost_usd\n        text tool_name\n        text project_name\n    }\n\n    pricing_model {\n        text model_id PK\n        text effective_date PK\n        text agent_type\n        real input_per_mtok\n        real output_per_mtok\n    }\n\n    tool_details {\n        int id PK\n        text session_id FK\n        text tool_name\n        text detail_name\n        text detail_type\n        text agent_type\n    }\n\n    project_registry {\n        int id PK\n        text project_name UK\n        text project_path\n        text created_at\n    }\n\n    app_meta {\n        text key PK\n        text value\n    }\n\n    config_snapshots {\n        int id PK\n        text agent_type\n        text file_path\n        text content_hash\n    }" />
 
 ## 4. Electron 아키텍처
 
 Argus는 웹 애플리케이션(`pnpm dev`)과 데스크톱 애플리케이션(`pnpm electron:dev`) 양쪽으로 실행됩니다.
 
-```mermaid
-graph LR
-  subgraph "Electron Main Process"
-    M["main.ts<br/>(app lifecycle)"]
-    IPC["ipc-handlers.ts<br/>(query router)"]
-    NS["Next.js Server<br/>(spawned child process)"]
-    DB[(SQLite)]
-    TR[System Tray]
-  end
-
-  subgraph "Electron Renderer Process"
-    P["preload.ts<br/>(context bridge)"]
-    DC["data-client.ts<br/>(IPC / HTTP adapter)"]
-    UI["React Pages<br/>(Next.js App Router)"]
-  end
-
-  M --> NS
-  M --> TR
-  M --> IPC
-  IPC --> DB
-
-  UI --> DC
-  DC -->|"IPC (Electron)"| P
-  P -->|"ipcRenderer.invoke"| IPC
-  DC -->|"HTTP fallback"| NS
-```
+<Mermaid chart="graph LR\n  subgraph &quot;Electron Main Process&quot;\n    M[&quot;main.ts<br/>(app lifecycle)&quot;]\n    IPC[&quot;ipc-handlers.ts<br/>(query router)&quot;]\n    NS[&quot;Next.js Server<br/>(spawned child process)&quot;]\n    DB[(SQLite)]\n    TR[System Tray]\n  end\n\n  subgraph &quot;Electron Renderer Process&quot;\n    P[&quot;preload.ts<br/>(context bridge)&quot;]\n    DC[&quot;data-client.ts<br/>(IPC / HTTP adapter)&quot;]\n    UI[&quot;React Pages<br/>(Next.js App Router)&quot;]\n  end\n\n  M --> NS\n  M --> TR\n  M --> IPC\n  IPC --> DB\n\n  UI --> DC\n  DC -->|&quot;IPC (Electron)&quot;| P\n  P -->|&quot;ipcRenderer.invoke&quot;| IPC\n  DC -->|&quot;HTTP fallback&quot;| NS" />
 
 ### 라이프사이클
 
@@ -381,16 +250,7 @@ graph LR
 
 `data-client.ts`는 웹과 Electron 환경 모두에서 작동하는 통합 데이터 접근 계층을 제공합니다.
 
-```mermaid
-flowchart TD
-    A["dataClient.query(name, params)"] --> B{isElectron?}
-    B -->|Yes| C["window.electronAPI.query()"]
-    C -->|Success| D[Return data]
-    C -->|Failure| E["Set ipcDisabled = true"]
-    E --> F["fetch(/api/name)"]
-    B -->|No| F
-    F --> D
-```
+<Mermaid chart="flowchart TD\n    A[&quot;dataClient.query(name, params)&quot;] --> B{isElectron?}\n    B -->|Yes| C[&quot;window.electronAPI.query()&quot;]\n    C -->|Success| D[Return data]\n    C -->|Failure| E[&quot;Set ipcDisabled = true&quot;]\n    E --> F[&quot;fetch(/api/name)&quot;]\n    B -->|No| F\n    F --> D" />
 
 ### 동작 방식
 
