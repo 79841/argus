@@ -80,8 +80,10 @@ export async function POST(request: NextRequest) {
               costUsd = calculateCost(db, model, inputTokens, outputTokens, cacheReadTokens, reasoningTokens)
             }
 
-            // Extract project from Codex tool arguments workdir
             let resolvedProject = projectName
+            if (resolvedProject && sessionId && !sessionProjects.has(sessionId)) {
+              sessionProjects.set(sessionId, resolvedProject)
+            }
             if (!resolvedProject && agentType === 'codex') {
               resolvedProject = extractProjectFromArgs(attrs)
               if (resolvedProject && sessionId) {

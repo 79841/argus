@@ -54,30 +54,6 @@ const removeProjectResourceAttr = (projectPath: string): void => {
   }
 }
 
-const backfillExistingSessions = (db: ReturnType<typeof getDb>, projectName: string, projectPath: string): number => {
-  const pathPattern = `%${projectPath}/%`
-  const sessions = db.prepare(
-    "SELECT DISTINCT session_id FROM agent_logs WHERE project_name = '' AND log_attributes LIKE ?"
-  ).all(pathPattern) as { session_id: string }[]
-
-  if (sessions.length === 0) return 0
-
-  const updateLogs = db.prepare(
-    "UPDATE agent_logs SET project_name = ? WHERE session_id = ? AND project_name = ''"
-  )
-  const updateTools = db.prepare(
-    "UPDATE tool_details SET project_name = ? WHERE session_id = ? AND project_name = ''"
-  )
-  db.transaction(() => {
-    for (const { session_id } of sessions) {
-      updateLogs.run(projectName, session_id)
-      updateTools.run(projectName, session_id)
-    }
-  })()
-
-  return sessions.length
-}
-
 type RegistryRow = {
   project_name: string
   project_path: string
@@ -123,10 +99,7 @@ export async function POST(request: NextRequest) {
 
     writeProjectResourceAttr(resolved, name)
 
-    // 기존 세션 중 project_name이 비어있고 파일 경로가 매칭되는 세션을 backfill
-    const backfilled = backfillExistingSessions(db, name, resolved)
-
-    return NextResponse.json({ success: true, name, path: resolved, backfilled })
+    return NextResponse.json({ success: true, name, path: resolved })
   } catch (error) {
     return serverError('/api/projects/registry POST', error)
   }
