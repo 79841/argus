@@ -78,8 +78,9 @@ if (existsSync(standaloneRoot)) {
     const electronVersion = execSync(`"${process.execPath}" "${electronBin}" --version`).toString().trim().replace('v', '')
     const arch = process.arch
 
-    // Find better-sqlite3 build/Release dirs using Node.js (cross-platform)
-    const prebuildBin = join(dirname(require.resolve('prebuild-install/package.json')), 'bin.js')
+    // Resolve prebuild-install from better-sqlite3's dependency tree (pnpm strict mode)
+    const sqliteRequire = createRequire(require.resolve('better-sqlite3/package.json'))
+    const prebuildBin = join(dirname(sqliteRequire.resolve('prebuild-install/package.json')), 'bin.js')
 
     const sqliteDirs = findDirs(distStandalone, (p) =>
       p.endsWith(join('better-sqlite3', 'build', 'Release')) && statSync(p).isDirectory()
