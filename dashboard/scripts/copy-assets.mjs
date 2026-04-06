@@ -2,9 +2,11 @@ import { cpSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
+const require = createRequire(import.meta.url)
 
 const assetsSrc = resolve(root, 'electron', 'assets')
 const assetsDest = resolve(root, 'dist-electron', 'electron', 'assets')
@@ -72,17 +74,20 @@ if (existsSync(standaloneRoot)) {
       cpSync(publicSrc, publicDest, { recursive: true })
     }
 
-    const electronVersion = execSync('npx electron --version').toString().trim().replace('v', '')
+    const electronBin = require.resolve('electron/cli.js')
+    const electronVersion = execSync(`"${process.execPath}" "${electronBin}" --version`).toString().trim().replace('v', '')
     const arch = process.arch
 
     // Find better-sqlite3 build/Release dirs using Node.js (cross-platform)
+    const prebuildBin = join(dirname(require.resolve('prebuild-install/package.json')), 'bin.js')
+
     const sqliteDirs = findDirs(distStandalone, (p) =>
       p.endsWith(join('better-sqlite3', 'build', 'Release')) && statSync(p).isDirectory()
     )
     for (const releaseDir of sqliteDirs) {
       const moduleDir = resolve(releaseDir, '..', '..')
       execSync(
-        `npx prebuild-install --runtime=electron --target=${electronVersion} --arch=${arch} --force`,
+        `"${process.execPath}" "${prebuildBin}" --runtime=electron --target=${electronVersion} --arch=${arch} --force`,
         { cwd: moduleDir, stdio: 'inherit' },
       )
     }
