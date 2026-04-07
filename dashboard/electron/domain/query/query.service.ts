@@ -27,6 +27,9 @@ import {
   getHighCostSessions,
   getModelCostEfficiency,
   getSuggestionMetrics,
+  getActiveAgentSessions,
+  getSessionAgentBlocks,
+  groupAgentsByProject,
 } from '../../../src/shared/lib/queries'
 import { generateSuggestions } from '../../../src/shared/lib/suggestions'
 import { getDb } from '../../../src/shared/lib/db'
@@ -219,6 +222,13 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     case 'config': {
       const filePath = params?.path ? str(params.path) : null
       return handleConfigGet(filePath, params)
+    }
+
+    case 'agents': {
+      const sessions = getActiveAgentSessions()
+      const sessionIds = sessions.map((s) => s.session_id)
+      const blocks = getSessionAgentBlocks(sessionIds)
+      return { projects: groupAgentsByProject(sessions, blocks) }
     }
 
     case 'setup/status':

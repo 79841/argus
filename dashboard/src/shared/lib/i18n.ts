@@ -10,6 +10,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Nav
     'nav.dashboard': '오버뷰',
     'nav.sessions': '세션',
+    'nav.agents': '에이전트',
     'nav.usage': '사용량',
     'nav.tools': '도구',
     'nav.user': '사용자',
@@ -152,6 +153,13 @@ const translations: Record<Locale, Record<string, string>> = {
     'onboarding.loading': '로딩 중...',
     'settings.onboarding.restart': '온보딩 다시 보기',
     'settings.onboarding.restart.desc': '초기 설정 가이드를 다시 실행합니다.',
+
+    // Agents page
+    'agents.title': '에이전트',
+    'agents.activeSessions': '{count}개 활성 세션',
+    'agents.empty': '활성 세션 없음',
+    'agents.emptyDescription': '최근 5분 이내 활동이 있는 세션이 표시됩니다.',
+    'agents.noAgents': '에이전트 없음',
 
     // Sessions page
     'sessions.search.placeholder': '세션 ID, 프로젝트, 모델 검색...',
@@ -636,6 +644,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Nav
     'nav.dashboard': 'Overview',
     'nav.sessions': 'Sessions',
+    'nav.agents': 'Agents',
     'nav.usage': 'Usage',
     'nav.tools': 'Tools',
     'nav.user': 'User',
@@ -776,6 +785,13 @@ const translations: Record<Locale, Record<string, string>> = {
     'onboarding.loading': 'Loading...',
     'settings.onboarding.restart': 'Restart Onboarding',
     'settings.onboarding.restart.desc': 'Run the initial setup guide again.',
+
+    // Agents page
+    'agents.title': 'Agents',
+    'agents.activeSessions': '{count} active sessions',
+    'agents.empty': 'No active sessions',
+    'agents.emptyDescription': 'Sessions with activity in the last 5 minutes will appear here.',
+    'agents.noAgents': 'No agents',
 
     // Sessions page
     'sessions.search.placeholder': 'Search session ID, project, model...',

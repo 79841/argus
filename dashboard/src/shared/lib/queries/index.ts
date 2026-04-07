@@ -27,3 +27,6 @@ export { getImpactCompare, getImpactCompareBatch, getDailyMetrics } from './impa
 
 export type { HeartbeatPoint } from './heartbeat'
 export { getHeartbeatData } from './heartbeat'
+
+export type { ActiveAgentSession, SessionAgentBlock, AgentBlock, AgentSession, AgentProject } from './agents'
+export { getActiveAgentSessions, getSessionAgentBlocks, groupAgentsByProject } from './agents'
