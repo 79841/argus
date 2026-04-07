@@ -1,12 +1,6 @@
 import { getDb } from '../db'
 import { API_REQUEST_FILTER } from './helpers'
 
-const KNOWN_AGENT_TYPES = [
-  'Explore', 'Plan', 'general-purpose',
-  'page-builder', 'infra-builder', 'plan-writer',
-  'data-seeder', 'merge-manager', 'claude-code-guide',
-]
-
 export type ActiveAgentSession = {
   session_id: string
   agent_type: string
@@ -49,7 +43,6 @@ export const getSessionAgentBlocks = (sessionIds: string[]): SessionAgentBlock[]
   if (sessionIds.length === 0) return []
   const db = getDb()
   const placeholders = sessionIds.map(() => '?').join(',')
-  const agentPlaceholders = KNOWN_AGENT_TYPES.map(() => '?').join(',')
   return db.prepare(`
     SELECT
       session_id,
@@ -59,10 +52,9 @@ export const getSessionAgentBlocks = (sessionIds: string[]): SessionAgentBlock[]
       timestamp
     FROM tool_details
     WHERE detail_type = 'agent'
-      AND detail_name IN (${agentPlaceholders})
       AND session_id IN (${placeholders})
     ORDER BY timestamp ASC
-  `).all(...KNOWN_AGENT_TYPES, ...sessionIds) as SessionAgentBlock[]
+  `).all(...sessionIds) as SessionAgentBlock[]
 }
 
 export type RunningAgentCount = {

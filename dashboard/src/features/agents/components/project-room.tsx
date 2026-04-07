@@ -11,14 +11,9 @@ export const ProjectRoom = ({ project }: ProjectRoomProps) => {
       <div className="mb-2 px-1 text-sm font-medium text-muted-foreground">
         {project.project_name}
       </div>
-      <div className="rounded-2xl bg-muted/30 px-5 py-2">
-        {project.sessions.map((session, i) => (
-          <div
-            key={session.session_id}
-            className={i > 0 ? 'border-t border-[var(--border-subtle)]' : ''}
-          >
-            <SessionGroup session={session} />
-          </div>
+      <div className="space-y-3">
+        {project.sessions.map((session) => (
+          <SessionGroup key={session.session_id} session={session} />
         ))}
       </div>
     </div>
