@@ -10,6 +10,16 @@ const AGENT_STYLES: Record<string, AgentStyle> = {
     bg: 'bg-sky-500/8',
     border: 'border-sky-500/30',
   },
+  Plan: {
+    dot: 'bg-indigo-500',
+    bg: 'bg-indigo-500/8',
+    border: 'border-indigo-500/30',
+  },
+  'general-purpose': {
+    dot: 'bg-slate-400',
+    bg: 'bg-slate-400/8',
+    border: 'border-slate-400/30',
+  },
   'page-builder': {
     dot: 'bg-emerald-500',
     bg: 'bg-emerald-500/8',
@@ -34,6 +44,11 @@ const AGENT_STYLES: Record<string, AgentStyle> = {
     dot: 'bg-rose-500',
     bg: 'bg-rose-500/8',
     border: 'border-rose-500/30',
+  },
+  'claude-code-guide': {
+    dot: 'bg-cyan-500',
+    bg: 'bg-cyan-500/8',
+    border: 'border-cyan-500/30',
   },
 }
 

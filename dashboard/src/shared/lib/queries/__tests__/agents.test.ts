@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type Database from 'better-sqlite3'
-import { createTestDb, insertApiRequest, insertToolDetail } from '../../__tests__/test-helpers'
+import { createTestDb, insertApiRequest, insertToolDetail, insertLog } from '../../__tests__/test-helpers'
 
 let db: Database.Database
 
@@ -12,7 +12,7 @@ vi.mock('@/shared/lib/db', async (importOriginal) => {
   }
 })
 
-import { getActiveAgentSessions, getSessionAgentBlocks } from '../agents'
+import { getActiveAgentSessions, getSessionAgentBlocks, getRunningAgentCounts } from '../agents'
 
 describe('getActiveAgentSessions', () => {
   beforeEach(() => {
@@ -128,5 +128,34 @@ describe('getSessionAgentBlocks', () => {
     const result = getSessionAgentBlocks(['sess-1'])
     expect(result).toHaveLength(1)
     expect(result[0].detail_name).toBe('Explore')
+  })
+})
+
+describe('getRunningAgentCounts', () => {
+  beforeEach(() => {
+    db = createTestDb()
+  })
+
+  it('returns running count when decisions exceed results', () => {
+    insertLog(db, { session_id: 'sess-1', event_name: 'tool_decision', tool_name: 'Agent' })
+    insertLog(db, { session_id: 'sess-1', event_name: 'tool_decision', tool_name: 'Agent' })
+    insertLog(db, { session_id: 'sess-1', event_name: 'tool_result', tool_name: 'Agent', tool_success: 1 })
+
+    const result = getRunningAgentCounts(['sess-1'])
+    expect(result).toHaveLength(1)
+    expect(result[0].running_count).toBe(1)
+  })
+
+  it('returns empty when all agents completed', () => {
+    insertLog(db, { session_id: 'sess-1', event_name: 'tool_decision', tool_name: 'Agent' })
+    insertLog(db, { session_id: 'sess-1', event_name: 'tool_result', tool_name: 'Agent', tool_success: 1 })
+
+    const result = getRunningAgentCounts(['sess-1'])
+    expect(result).toHaveLength(0)
+  })
+
+  it('returns empty for empty session ids', () => {
+    const result = getRunningAgentCounts([])
+    expect(result).toEqual([])
   })
 })

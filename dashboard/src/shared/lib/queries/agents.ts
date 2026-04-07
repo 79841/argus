@@ -1,6 +1,12 @@
 import { getDb } from '../db'
 import { API_REQUEST_FILTER } from './helpers'
 
+const KNOWN_AGENT_TYPES = [
+  'Explore', 'Plan', 'general-purpose',
+  'page-builder', 'infra-builder', 'plan-writer',
+  'data-seeder', 'merge-manager', 'claude-code-guide',
+]
+
 export type ActiveAgentSession = {
   session_id: string
   agent_type: string
@@ -43,6 +49,7 @@ export const getSessionAgentBlocks = (sessionIds: string[]): SessionAgentBlock[]
   if (sessionIds.length === 0) return []
   const db = getDb()
   const placeholders = sessionIds.map(() => '?').join(',')
+  const agentPlaceholders = KNOWN_AGENT_TYPES.map(() => '?').join(',')
   return db.prepare(`
     SELECT
       session_id,
@@ -52,9 +59,33 @@ export const getSessionAgentBlocks = (sessionIds: string[]): SessionAgentBlock[]
       timestamp
     FROM tool_details
     WHERE detail_type = 'agent'
+      AND detail_name IN (${agentPlaceholders})
       AND session_id IN (${placeholders})
     ORDER BY timestamp ASC
-  `).all(...sessionIds) as SessionAgentBlock[]
+  `).all(...KNOWN_AGENT_TYPES, ...sessionIds) as SessionAgentBlock[]
+}
+
+export type RunningAgentCount = {
+  session_id: string
+  running_count: number
+}
+
+export const getRunningAgentCounts = (sessionIds: string[]): RunningAgentCount[] => {
+  if (sessionIds.length === 0) return []
+  const db = getDb()
+  const placeholders = sessionIds.map(() => '?').join(',')
+  return db.prepare(`
+    SELECT
+      session_id,
+      COALESCE(sum(CASE WHEN event_name = 'tool_decision' THEN 1 ELSE 0 END), 0)
+        - COALESCE(sum(CASE WHEN event_name = 'tool_result' THEN 1 ELSE 0 END), 0)
+        as running_count
+    FROM agent_logs
+    WHERE tool_name = 'Agent'
+      AND session_id IN (${placeholders})
+    GROUP BY session_id
+    HAVING running_count > 0
+  `).all(...sessionIds) as RunningAgentCount[]
 }
 
 export type AgentBlock = {
@@ -79,11 +110,12 @@ export type AgentProject = {
 export const groupAgentsByProject = (
   sessions: ActiveAgentSession[],
   blocks: SessionAgentBlock[],
+  runningCounts?: RunningAgentCount[],
 ): AgentProject[] => {
   const blocksBySession = new Map<string, AgentBlock[]>()
   for (const b of blocks) {
     const status: AgentBlock['status'] =
-      b.success === null ? 'running' : b.success === 1 ? 'success' : 'failure'
+      b.success === 1 ? 'success' : b.success === 0 ? 'failure' : 'success'
     const entry: AgentBlock = {
       name: b.detail_name,
       status,
@@ -95,14 +127,31 @@ export const groupAgentsByProject = (
     else blocksBySession.set(b.session_id, [entry])
   }
 
+  const runningMap = new Map<string, number>()
+  if (runningCounts) {
+    for (const r of runningCounts) {
+      runningMap.set(r.session_id, r.running_count)
+    }
+  }
+
   const projectMap = new Map<string, AgentSession[]>()
   for (const s of sessions) {
     const key = s.project_name || 'Unknown'
+    const agents = blocksBySession.get(s.session_id) ?? []
+    const runningCount = runningMap.get(s.session_id) ?? 0
+    for (let i = 0; i < runningCount; i++) {
+      agents.push({
+        name: '',
+        status: 'running',
+        duration_ms: 0,
+        timestamp: new Date().toISOString(),
+      })
+    }
     const session: AgentSession = {
       session_id: s.session_id,
       agent_type: s.agent_type,
       first_event: s.first_event,
-      agents: blocksBySession.get(s.session_id) ?? [],
+      agents,
     }
     const arr = projectMap.get(key)
     if (arr) arr.push(session)

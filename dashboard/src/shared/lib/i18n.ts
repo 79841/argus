@@ -160,6 +160,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'agents.empty': '활성 세션 없음',
     'agents.emptyDescription': '최근 5분 이내 활동이 있는 세션이 표시됩니다.',
     'agents.noAgents': '에이전트 없음',
+    'agents.running': '실행 중',
 
     // Sessions page
     'sessions.search.placeholder': '세션 ID, 프로젝트, 모델 검색...',
@@ -792,6 +793,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'agents.empty': 'No active sessions',
     'agents.emptyDescription': 'Sessions with activity in the last 5 minutes will appear here.',
     'agents.noAgents': 'No agents',
+    'agents.running': 'Running',
 
     // Sessions page
     'sessions.search.placeholder': 'Search session ID, project, model...',

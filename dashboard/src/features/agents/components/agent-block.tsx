@@ -1,5 +1,6 @@
 import { cn } from '@/shared/lib/utils'
 import { formatDuration } from '@/shared/lib/format'
+import { useLocale } from '@/shared/lib/i18n'
 import type { AgentBlock as AgentBlockType } from '@/shared/lib/queries'
 import { getAgentStyle } from '../lib/agent-colors'
 
@@ -8,9 +9,11 @@ type AgentBlockProps = {
 }
 
 export const AgentBlock = ({ agent }: AgentBlockProps) => {
+  const { t } = useLocale()
   const style = getAgentStyle(agent.name)
   const isRunning = agent.status === 'running'
   const isFailed = agent.status === 'failure'
+  const displayName = agent.name || t('agents.running')
 
   return (
     <div
@@ -26,12 +29,14 @@ export const AgentBlock = ({ agent }: AgentBlockProps) => {
         <span
           className={cn(
             'inline-block h-[7px] w-[7px] shrink-0 rounded-full',
-            style.dot,
-            isRunning && 'animate-pulse',
+            isRunning ? 'bg-emerald-500 animate-pulse' : style.dot,
           )}
         />
-        <span className="text-xs font-semibold text-foreground/90 truncate">
-          {agent.name}
+        <span className={cn(
+          'text-xs font-semibold truncate',
+          isRunning ? 'text-muted-foreground' : 'text-foreground/90',
+        )}>
+          {displayName}
         </span>
       </div>
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">

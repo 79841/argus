@@ -29,6 +29,7 @@ import {
   getSuggestionMetrics,
   getActiveAgentSessions,
   getSessionAgentBlocks,
+  getRunningAgentCounts,
   groupAgentsByProject,
 } from '../../../src/shared/lib/queries'
 import { generateSuggestions } from '../../../src/shared/lib/suggestions'
@@ -228,7 +229,8 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
       const sessions = getActiveAgentSessions()
       const sessionIds = sessions.map((s) => s.session_id)
       const blocks = getSessionAgentBlocks(sessionIds)
-      return { projects: groupAgentsByProject(sessions, blocks) }
+      const runningCounts = getRunningAgentCounts(sessionIds)
+      return { projects: groupAgentsByProject(sessions, blocks, runningCounts) }
     }
 
     case 'setup/status':
