@@ -36,6 +36,13 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.setup': '설정 가이드',
     'settings.agentConnection': '에이전트 연결',
     'settings.projectConnection': '프로젝트 연결',
+    'settings.hooks': '실시간 추적',
+    'settings.hooks.title': '실시간 에이전트 추적',
+    'settings.hooks.description': 'Claude Code Hooks를 사용하여 에이전트 실행 상태를 실시간으로 추적합니다.',
+    'settings.hooks.connected': '연결됨',
+    'settings.hooks.connect': '활성화',
+    'settings.hooks.disconnect': '비활성화',
+    'settings.hooks.noProjects': '등록된 프로젝트가 없습니다. 프로젝트 연결에서 먼저 프로젝트를 추가하세요.',
 
     // General section
     'settings.theme': '테마',
@@ -672,6 +679,13 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.setup': 'Setup',
     'settings.agentConnection': 'Agent Connection',
     'settings.projectConnection': 'Project Connection',
+    'settings.hooks': 'Live Tracking',
+    'settings.hooks.title': 'Real-time Agent Tracking',
+    'settings.hooks.description': 'Use Claude Code Hooks to track agent execution status in real-time.',
+    'settings.hooks.connected': 'Connected',
+    'settings.hooks.connect': 'Enable',
+    'settings.hooks.disconnect': 'Disable',
+    'settings.hooks.noProjects': 'No registered projects. Add a project in Project Connection first.',
 
     // General section
     'settings.theme': 'Theme',

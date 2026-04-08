@@ -1,7 +1,7 @@
 export type Theme = 'light' | 'dark' | 'system'
 export type AgentTheme = 'default' | 'claude' | 'codex' | 'gemini'
 
-export type Category = 'general' | 'pricing' | 'agentConnection' | 'projectConnection'
+export type Category = 'general' | 'pricing' | 'agentConnection' | 'projectConnection' | 'hooksConnection'
 
 export type AgentConnectionStatus = {
   type: string
