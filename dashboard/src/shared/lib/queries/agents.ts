@@ -101,35 +101,17 @@ export type AgentProject = {
 
 export const groupAgentsByProject = (
   sessions: ActiveAgentSession[],
-  blocks: SessionAgentBlock[],
-  runningCounts?: RunningAgentCount[],
+  runningCounts: RunningAgentCount[],
 ): AgentProject[] => {
-  const blocksBySession = new Map<string, AgentBlock[]>()
-  for (const b of blocks) {
-    const status: AgentBlock['status'] =
-      b.success === 1 ? 'success' : b.success === 0 ? 'failure' : 'success'
-    const entry: AgentBlock = {
-      name: b.detail_name,
-      status,
-      duration_ms: b.duration_ms,
-      timestamp: b.timestamp,
-    }
-    const arr = blocksBySession.get(b.session_id)
-    if (arr) arr.push(entry)
-    else blocksBySession.set(b.session_id, [entry])
-  }
-
   const runningMap = new Map<string, number>()
-  if (runningCounts) {
-    for (const r of runningCounts) {
-      runningMap.set(r.session_id, r.running_count)
-    }
+  for (const r of runningCounts) {
+    runningMap.set(r.session_id, r.running_count)
   }
 
   const projectMap = new Map<string, AgentSession[]>()
   for (const s of sessions) {
     const key = s.project_name || 'Unknown'
-    const agents = blocksBySession.get(s.session_id) ?? []
+    const agents: AgentBlock[] = []
     const runningCount = runningMap.get(s.session_id) ?? 0
     for (let i = 0; i < runningCount; i++) {
       agents.push({

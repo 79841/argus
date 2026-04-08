@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getActiveAgentSessions, getSessionAgentBlocks, getRunningAgentCounts, groupAgentsByProject } from '@/shared/lib/queries'
+import { getActiveAgentSessions, getRunningAgentCounts, groupAgentsByProject } from '@/shared/lib/queries'
 import type { AgentProject } from '@/shared/lib/queries'
 import { serverError } from '@/shared/lib/api-utils'
 
@@ -13,9 +13,8 @@ export async function GET() {
   try {
     const sessions = getActiveAgentSessions()
     const sessionIds = sessions.map((s) => s.session_id)
-    const blocks = getSessionAgentBlocks(sessionIds)
     const runningCounts = getRunningAgentCounts(sessionIds)
-    const projects = groupAgentsByProject(sessions, blocks, runningCounts)
+    const projects = groupAgentsByProject(sessions, runningCounts)
 
     return NextResponse.json({ projects } satisfies AgentsApiResponse)
   } catch (error) {

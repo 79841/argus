@@ -28,7 +28,6 @@ import {
   getModelCostEfficiency,
   getSuggestionMetrics,
   getActiveAgentSessions,
-  getSessionAgentBlocks,
   getRunningAgentCounts,
   groupAgentsByProject,
 } from '../../../src/shared/lib/queries'
@@ -228,9 +227,8 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     case 'agents': {
       const sessions = getActiveAgentSessions()
       const sessionIds = sessions.map((s) => s.session_id)
-      const blocks = getSessionAgentBlocks(sessionIds)
       const runningCounts = getRunningAgentCounts(sessionIds)
-      return { projects: groupAgentsByProject(sessions, blocks, runningCounts) }
+      return { projects: groupAgentsByProject(sessions, runningCounts) }
     }
 
     case 'setup/status':
