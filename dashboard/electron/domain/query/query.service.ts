@@ -225,10 +225,23 @@ export const handleQuery = async (name: string, params?: QueryParams): Promise<u
     }
 
     case 'agents': {
+      const { hooksState, mergeHookAndOtelProjects } = await import('../../../src/shared/lib/hooks-state')
       const sessions = getActiveAgentSessions()
       const sessionIds = sessions.map((s) => s.session_id)
       const runningCounts = getRunningAgentCounts(sessionIds)
-      return { projects: groupAgentsByProject(sessions, runningCounts) }
+      const otelProjects = groupAgentsByProject(sessions, runningCounts)
+
+      if (hooksState.hasActiveSessions()) {
+        const hookProjects = hooksState.getProjects()
+        return { projects: mergeHookAndOtelProjects(hookProjects, otelProjects) }
+      }
+      return { projects: otelProjects }
+    }
+
+    case 'setup/hooks': {
+      const { getHooksStatus } = await import('../../../src/shared/lib/setup-hooks')
+      const projectPath = str(params?.project_path)
+      return getHooksStatus(projectPath)
     }
 
     case 'setup/status':

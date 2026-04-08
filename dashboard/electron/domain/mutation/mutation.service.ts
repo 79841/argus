@@ -49,6 +49,12 @@ export const handleMutate = async (name: string, body?: unknown): Promise<unknow
       return { results: disconnectAgents(validAgents) }
     }
 
+    case 'setup/hooks': {
+      const { connectHooks } = await import('../../../src/shared/lib/setup-hooks')
+      const { project_path, endpoint } = body as { project_path: string; endpoint?: string }
+      return connectHooks(project_path, endpoint ?? 'http://localhost:9845')
+    }
+
     default:
       throw new Error(`Unknown mutate: ${name}`)
   }
